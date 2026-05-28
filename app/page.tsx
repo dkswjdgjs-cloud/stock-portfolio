@@ -72,16 +72,37 @@ export default function Home() {
     const cashIncomeTotal = incomeData.reduce((s, c) => s + c.amount, 0);
     const calcedSummary = calcSummary(transData);
     calcedSummary.cumulativeProfit += cashIncomeTotal;
+
+    // 현재 평가액은 holdings 계산 후 채워짐 (아래에서 설정)
     setSummary(calcedSummary);
     setDailySettlement(calcDailySettlement(transData));
 
     const baseHoldings = calcHoldings(transData, '전체');
     const holdingsWithPrices = await fetchPrices(baseHoldings);
     const totalVal = holdingsWithPrices.reduce((s, h) => s + h.valuation, 0);
-    setHoldings(holdingsWithPrices.map(h => ({
+    const cashTotal = balanceData.reduce((s, b) => s + b.balance, 0);
+    const finalHoldings = holdingsWithPrices.map(h => ({
       ...h,
       weight: totalVal > 0 ? (h.valuation / totalVal) * 100 : 0,
-    })));
+    }));
+    setHoldings(finalHoldings);
+
+    // 현재 평가액 = 보유종목 평가액 합계 + 현금성 자산
+    const currMonthValue = totalVal + cashTotal;
+
+    // 누적 투입액
+    const totalInvested = transData
+      .filter((t: any) => t.account_transfer)
+      .reduce((sum: number, t: any) => {
+        const amount = t.transfer_amount || 0;
+        return t.account_transfer === '입금' ? sum + amount : sum - amount;
+      }, 0);
+
+    setSummary(prev => ({
+      ...prev,
+      currMonthValue,
+      totalInvested,
+    }));
     setLastUpdated(new Date());
   }, [fetchPrices]);
 

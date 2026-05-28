@@ -225,16 +225,22 @@ export default function Dashboard({
         {activeTab === 0 && (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
-              {[
-                { label: '전월 평가액', value: summary.prevMonthValue },
-                { label: '당월 투입액', value: summary.currMonthInvestment },
-                { label: '현재 평가액', value: summary.currMonthValue },
-              ].map((item, i) => (
-                <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                  <p className="text-xs text-slate-500 tracking-wider mb-2">{item.label}</p>
-                  <p className="text-2xl font-bold text-slate-100">{formatCurrency(item.value)}</p>
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                <p className="text-xs text-slate-500 tracking-wider mb-2">전월 평가액</p>
+                <p className="text-2xl font-bold text-slate-100">{formatCurrency(summary.prevMonthValue)}</p>
+              </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                <p className="text-xs text-slate-500 tracking-wider mb-2">투입금액</p>
+                <p className="text-2xl font-bold text-slate-100">{formatCurrency(summary.totalInvested)}</p>
+                <div className="mt-2 pt-2 border-t border-slate-700">
+                  <p className="text-xs text-slate-500">당월 투입액</p>
+                  <p className="text-sm text-slate-300">{formatCurrency(summary.currMonthInvestment)}</p>
                 </div>
-              ))}
+              </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                <p className="text-xs text-slate-500 tracking-wider mb-2">현재 평가액</p>
+                <p className="text-2xl font-bold text-slate-100">{formatCurrency(summary.currMonthValue)}</p>
+              </div>
             </div>
             <div className="grid grid-cols-4 gap-4">
               {[
