@@ -15,7 +15,7 @@ export default function Home() {
     prevMonthValue: 0, currMonthInvestment: 0, currMonthValue: 0,
     cumulativeProfit: 0, cumulativeReturn: 0, annualProfit: 0,
     annualReturn: 0, monthlyProfit: 0, monthlyReturn: 0,
-    dailyProfit: 0, dailyReturn: 0,
+    dailyProfit: 0, dailyReturn: 0, totalInvested: 0,
   });
   const [dailySettlement, setDailySettlement] = useState<DailySettlement[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
