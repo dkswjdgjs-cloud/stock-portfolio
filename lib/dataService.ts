@@ -77,6 +77,7 @@ export function calcSummary(transactions: Transaction[]): SummaryData {
     monthlyReturn: totalInvested > 0 ? (monthlyProfit / totalInvested) * 100 : 0,
     dailyProfit,
     dailyReturn: totalInvested > 0 ? (dailyProfit / totalInvested) * 100 : 0,
+    totalInvested,
   };
 }
 
