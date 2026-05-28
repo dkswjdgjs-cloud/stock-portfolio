@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef } from 'react';
 import { TrendingUp, RefreshCw, Plus, LayoutDashboard, Building2, Clock } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
 import { formatCurrency, formatPercent, cn } from '@/lib/utils';
 import { AccountHolding, SummaryData, DailySettlement, Transaction, CashIncome, CashBalance } from '@/types';
 
@@ -668,10 +668,20 @@ export default function Dashboard({
                 </button>
               </div>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={snapshots}>
+                <AreaChart data={snapshots} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="snapshot_date" tick={{ fill: '#64748b', fontSize: 10 }} />
-                  <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} />
+                  <ReferenceLine y={0} stroke="#475569" strokeWidth={1.5} />
+                  <XAxis
+                    dataKey="snapshot_date"
+                    tick={{ fill: '#64748b', fontSize: 10 }}
+                    interval={30}
+                    tickFormatter={(v) => v?.slice(0, 7)}
+                  />
+                  <YAxis
+                    tick={{ fill: '#64748b', fontSize: 10 }}
+                    tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`}
+                    domain={[-5000000, 'auto']}
+                  />
                   <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '11px' }}
                     formatter={(v) => formatCurrency(Number(v))} />
                   <Area type="monotone" dataKey="total_valuation" name="평가액" stroke="#3b82f6" fill="#3b82f620" strokeWidth={2} />
