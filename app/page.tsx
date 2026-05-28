@@ -19,6 +19,14 @@ export default function Home() {
   });
   const [dailySettlement, setDailySettlement] = useState<DailySettlement[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [snapshots, setSnapshots] = useState<any[]>([]);
+  const [csvInput, setCsvInput] = useState('');
+  const [snapshotForm, setSnapshotForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    valuation: '',
+    totalInvested: '',
+    cumulativeProfit: '',
+  });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -49,6 +57,12 @@ export default function Home() {
       const return_rate = h.avg_price > 0 ? ((curr_price - h.avg_price) / h.avg_price) * 100 : 0;
       return { ...h, curr_price, valuation, profit, return_rate, daily_change: priceData.dailyChange };
     });
+  }, []);
+
+  const loadSnapshots = useCallback(async () => {
+    const res = await fetch('/api/snapshot');
+    const data = await res.json();
+    setSnapshots(data || []);
   }, []);
 
   const loadAll = useCallback(async () => {
@@ -104,7 +118,8 @@ export default function Home() {
       totalInvested,
     }));
     setLastUpdated(new Date());
-  }, [fetchPrices]);
+    await loadSnapshots();
+  }, [fetchPrices, loadSnapshots]);
 
   useEffect(() => {
     if (mounted) {
@@ -166,6 +181,53 @@ export default function Home() {
     await loadAll();
   };
 
+  const handleSaveSnapshot = async () => {
+    const res = await fetch('/api/snapshot-save', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) await loadSnapshots();
+    alert('스냅샷 저장 완료!');
+  };
+
+  const handleAddSnapshot = async () => {
+    await fetch('/api/snapshot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date: snapshotForm.date,
+        valuation: parseFloat(snapshotForm.valuation) || 0,
+        totalInvested: parseFloat(snapshotForm.totalInvested) || 0,
+        cumulativeProfit: parseFloat(snapshotForm.cumulativeProfit) || 0,
+      }),
+    });
+    await loadSnapshots();
+  };
+
+  const handleUploadCSV = async () => {
+    const lines = csvInput.trim().split('\n').filter(l => l.trim());
+    const rows = lines.map(line => {
+      const [date, valuation, totalInvested, cumulativeProfit] = line.split(',');
+      return {
+        date: date.trim(),
+        valuation: parseFloat(valuation) || 0,
+        totalInvested: parseFloat(totalInvested) || 0,
+        cumulativeProfit: parseFloat(cumulativeProfit) || 0,
+      };
+    });
+    await fetch('/api/snapshot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rows),
+    });
+    await loadSnapshots();
+    setCsvInput('');
+    alert(`${rows.length}개 데이터 업로드 완료!`);
+  };
+
+  const handleDeleteSnapshot = async (date: string) => {
+    await fetch(`/api/snapshot?date=${date}`, { method: 'DELETE' });
+    await loadSnapshots();
+  };
+
   const handleAccountFilterChange = async (filter: string) => {
     setAccountFilter(filter);
     const baseHoldings = calcHoldings(transactions, filter);
@@ -193,6 +255,11 @@ export default function Home() {
       onAddCashIncome={handleAddCashIncome}
       onDeleteCashIncome={handleDeleteCashIncome}
       onUpdateCashBalance={handleUpdateCashBalance}
+      snapshots={snapshots}
+      onSaveSnapshot={handleSaveSnapshot}
+      onAddSnapshot={handleAddSnapshot}
+      onUploadCSV={handleUploadCSV}
+      onDeleteSnapshot={handleDeleteSnapshot}
       onRefresh={handleRefresh}
       isRefreshing={isRefreshing}
       lastUpdated={lastUpdated}

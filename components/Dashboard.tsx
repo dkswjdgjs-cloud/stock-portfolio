@@ -23,6 +23,11 @@ interface DashboardProps {
   onAddCashIncome: (c: Omit<CashIncome, 'id' | 'created_at'>) => Promise<void>;
   onDeleteCashIncome: (id: string) => Promise<void>;
   onUpdateCashBalance: (account: string, balance: number) => Promise<void>;
+  snapshots: any[];
+  onSaveSnapshot: () => Promise<void>;
+  onAddSnapshot: () => Promise<void>;
+  onUploadCSV: () => Promise<void>;
+  onDeleteSnapshot: (date: string) => Promise<void>;
   onRefresh: () => void;
   isRefreshing: boolean;
   lastUpdated: Date | null;
@@ -34,7 +39,8 @@ export default function Dashboard({
   transactions, cashIncomes, cashBalances, summary, holdings, dailySettlement,
   onAddTransaction, onUpdateTransaction, onDeleteTransaction,
   onAddCashIncome, onDeleteCashIncome, onUpdateCashBalance,
-  onRefresh, isRefreshing, lastUpdated, accountFilter, onAccountFilterChange
+  onRefresh, isRefreshing, lastUpdated, accountFilter, onAccountFilterChange,
+  snapshots, onSaveSnapshot, onAddSnapshot, onUploadCSV, onDeleteSnapshot
 }: DashboardProps) {
   const [activeTab, setActiveTab] = useState(0);
   const [pieFilter, setPieFilter] = useState('종목별');
@@ -45,6 +51,13 @@ export default function Dashboard({
   const [editingCashAccount, setEditingCashAccount] = useState<string | null>(null);
   const [viewTab, setViewTab] = useState<'trade' | 'income'>('trade');
   const [cashInput, setCashInput] = useState('');
+  const [csvInput, setCsvInput] = useState('');
+  const [snapshotForm, setSnapshotForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    valuation: '',
+    totalInvested: '',
+    cumulativeProfit: '',
+  });
 
   const [form, setForm] = useState({
     trade_date: new Date().toISOString().split('T')[0],
@@ -644,20 +657,104 @@ export default function Dashboard({
 
         {/* 탭3: 일일 결산 */}
         {activeTab === 2 && (
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-            <h2 className="text-xs text-slate-400 tracking-wider mb-4">| 성과 추이 MATRIX</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={dailySettlement}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} />
-                <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} />
-                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '11px' }}
-                  formatter={(v) => formatCurrency(Number(v))} />
-                <Area type="monotone" dataKey="valuation" name="평가액" stroke="#3b82f6" fill="#3b82f620" strokeWidth={2} />
-                <Area type="monotone" dataKey="principal" name="투자금" stroke="#10b981" fill="#10b98120" strokeWidth={2} />
-                <Area type="monotone" dataKey="cumulativeProfit" name="누적수익금" stroke="#f59e0b" fill="#f59e0b20" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="space-y-4">
+            {/* 그래프 */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xs text-slate-400 tracking-wider">| 성과 추이 MATRIX</h2>
+                <button onClick={onSaveSnapshot}
+                  className="flex items-center gap-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg transition-colors">
+                  오늘 스냅샷 저장
+                </button>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={snapshots}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <XAxis dataKey="snapshot_date" tick={{ fill: '#64748b', fontSize: 10 }} />
+                  <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} />
+                  <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '11px' }}
+                    formatter={(v) => formatCurrency(Number(v))} />
+                  <Area type="monotone" dataKey="total_valuation" name="평가액" stroke="#3b82f6" fill="#3b82f620" strokeWidth={2} />
+                  <Area type="monotone" dataKey="total_invested" name="투자금" stroke="#10b981" fill="#10b98120" strokeWidth={2} />
+                  <Area type="monotone" dataKey="total_profit" name="누적수익금" stroke="#f59e0b" fill="#f59e0b20" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* CSV 업로드 */}
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                <p className="text-xs text-slate-400 tracking-wider mb-4">| CSV 일괄 업로드</p>
+                <p className="text-xs text-slate-500 mb-3">CSV 형식: 날짜,평가액,누적투자금,누적수익금</p>
+                <p className="text-xs text-slate-500 mb-3">예시: 2025-01-31,50000000,40000000,10000000</p>
+                <textarea
+                  value={csvInput}
+                  onChange={e => setCsvInput(e.target.value)}
+                  placeholder="2025-01-31,50000000,40000000,10000000&#10;2025-02-28,55000000,42000000,13000000"
+                  className="w-full h-40 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                />
+                <button onClick={onUploadCSV}
+                  className="mt-3 w-full text-xs bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition-colors">
+                  CSV 업로드
+                </button>
+              </div>
+
+              {/* 수기 입력 */}
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                <p className="text-xs text-slate-400 tracking-wider mb-4">| 수기 입력</p>
+                <div className="space-y-3">
+                  {[
+                    { label: '날짜', key: 'date', type: 'date' },
+                    { label: '평가액', key: 'valuation', type: 'number' },
+                    { label: '누적투자금', key: 'totalInvested', type: 'number' },
+                    { label: '누적수익금', key: 'cumulativeProfit', type: 'number' },
+                  ].map(({ label, key, type }) => (
+                    <div key={key}>
+                      <label className="text-xs text-slate-400 mb-1 block">{label}</label>
+                      <input type={type} value={(snapshotForm as any)[key]}
+                        onChange={e => setSnapshotForm(f => ({ ...f, [key]: e.target.value }))}
+                        className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500" />
+                    </div>
+                  ))}
+                  <button onClick={onAddSnapshot}
+                    className="w-full text-xs bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition-colors mt-2">
+                    저장
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 저장된 데이터 목록 */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+              <p className="text-xs text-slate-400 tracking-wider mb-4">| 저장된 일일 결산 데이터</p>
+              <div style={{height: '200px', overflowY: 'auto'}}>
+                <table className="w-full text-xs">
+                  <thead className="sticky top-0 bg-slate-900">
+                    <tr className="text-slate-500 border-b border-slate-800">
+                      {['날짜', '평가액', '누적투자금', '누적수익금', ''].map(h => (
+                        <th key={h} className="text-left py-2 px-2 font-medium">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {snapshots.map((s, i) => (
+                      <tr key={i} className="border-b border-slate-800/50 hover:bg-slate-800/30">
+                        <td className="py-2 px-2 text-slate-400">{s.snapshot_date}</td>
+                        <td className="py-2 px-2">{formatCurrency(s.total_valuation || 0)}</td>
+                        <td className="py-2 px-2">{formatCurrency(s.total_invested || 0)}</td>
+                        <td className={cn('py-2 px-2', (s.total_profit || 0) >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                          {formatCurrency(s.total_profit || 0)}
+                        </td>
+                        <td className="py-2 px-2">
+                          <button onClick={() => onDeleteSnapshot(s.snapshot_date)}
+                            className="text-slate-600 hover:text-red-400">✕</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
       </div>
