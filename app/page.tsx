@@ -200,14 +200,15 @@ export default function Home() {
   const handleUploadCSV = async (csvInput: string) => {
     const lines = csvInput.trim().split('\n').filter(l => l.trim());
     const rows = lines.map(line => {
-      const [date, valuation, totalInvested, cumulativeProfit] = line.split(',');
+      const parts = line.split(',');
       return {
-        date: date.trim(),
-        valuation: parseFloat(valuation) || 0,
-        totalInvested: parseFloat(totalInvested) || 0,
-        cumulativeProfit: parseFloat(cumulativeProfit) || 0,
+        date: parts[0]?.trim().replace(/[^0-9-]/g, ''),
+        valuation: parseFloat(parts[1]?.trim()) || 0,
+        totalInvested: parseFloat(parts[2]?.trim()) || 0,
+        cumulativeProfit: parseFloat(parts[3]?.trim()) || 0,
       };
-    });
+    }).filter(r => r.date && r.date.length === 10);
+    console.log('CSV rows sample:', rows.slice(0, 3));
     await fetch('/api/snapshot', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
