@@ -680,7 +680,7 @@ export default function Dashboard({
                   <YAxis
                     tick={{ fill: '#64748b', fontSize: 10 }}
                     tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`}
-                    domain={[-5000000, (dataMax: number) => Math.ceil(dataMax * 1.05 / 10000000) * 10000000]}
+                    domain={[-10000000, (dataMax: number) => Math.ceil(dataMax * 1.05 / 10000000) * 10000000]}
                   />
                   <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '11px' }}
                     formatter={(v) => formatCurrency(Number(v))} />
