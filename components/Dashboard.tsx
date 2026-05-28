@@ -25,8 +25,8 @@ interface DashboardProps {
   onUpdateCashBalance: (account: string, balance: number) => Promise<void>;
   snapshots: any[];
   onSaveSnapshot: () => Promise<void>;
-  onAddSnapshot: () => Promise<void>;
-  onUploadCSV: () => Promise<void>;
+  onAddSnapshot: (data: {date: string; valuation: number; totalInvested: number; cumulativeProfit: number}) => Promise<void>;
+  onUploadCSV: (csv: string) => Promise<void>;
   onDeleteSnapshot: (date: string) => Promise<void>;
   onRefresh: () => void;
   isRefreshing: boolean;
@@ -684,18 +684,45 @@ export default function Dashboard({
             <div className="grid grid-cols-2 gap-4">
               {/* CSV 업로드 */}
               <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                <p className="text-xs text-slate-400 tracking-wider mb-4">| CSV 일괄 업로드</p>
+                <p className="text-xs text-slate-400 tracking-wider mb-4">| CSV 파일 업로드</p>
                 <p className="text-xs text-slate-500 mb-3">CSV 형식: 날짜,평가액,누적투자금,누적수익금</p>
-                <p className="text-xs text-slate-500 mb-3">예시: 2025-01-31,50000000,40000000,10000000</p>
-                <textarea
-                  value={csvInput}
-                  onChange={e => setCsvInput(e.target.value)}
-                  placeholder="2025-01-31,50000000,40000000,10000000&#10;2025-02-28,55000000,42000000,13000000"
-                  className="w-full h-40 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                <p className="text-xs text-slate-500 mb-3">첫 번째 행은 헤더로 자동 무시됩니다</p>
+                <div
+                  className="w-full h-32 border-2 border-dashed border-slate-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-colors"
+                  onClick={() => document.getElementById('csv-file-input')?.click()}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = ev => setCsvInput(ev.target?.result as string || '');
+                      reader.readAsText(file);
+                    }
+                  }}
+                >
+                  <p className="text-slate-500 text-xs mb-1">📁 클릭하거나 파일을 드래그하세요</p>
+                  <p className="text-slate-600 text-xs">{csvInput ? `✅ 파일 로드됨 (${csvInput.split('\n').filter(l=>l.trim()).length}줄)` : '.csv 파일'}</p>
+                </div>
+                <input
+                  id="csv-file-input"
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = ev => setCsvInput(ev.target?.result as string || '');
+                      reader.readAsText(file);
+                    }
+                  }}
                 />
-                <button onClick={onUploadCSV}
-                  className="mt-3 w-full text-xs bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition-colors">
-                  CSV 업로드
+                <button
+                  onClick={() => onUploadCSV(csvInput)}
+                  disabled={!csvInput}
+                  className="mt-3 w-full text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white py-2 rounded-lg transition-colors">
+                  {csvInput ? `업로드 (${csvInput.split('\n').filter(l=>l.trim()).length}줄)` : 'CSV 파일을 먼저 선택하세요'}
                 </button>
               </div>
 
@@ -716,7 +743,12 @@ export default function Dashboard({
                         className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500" />
                     </div>
                   ))}
-                  <button onClick={onAddSnapshot}
+                  <button onClick={() => onAddSnapshot({
+                      date: snapshotForm.date,
+                      valuation: parseFloat(snapshotForm.valuation) || 0,
+                      totalInvested: parseFloat(snapshotForm.totalInvested) || 0,
+                      cumulativeProfit: parseFloat(snapshotForm.cumulativeProfit) || 0,
+                    })}
                     className="w-full text-xs bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition-colors mt-2">
                     저장
                   </button>

@@ -188,21 +188,16 @@ export default function Home() {
     alert('스냅샷 저장 완료!');
   };
 
-  const handleAddSnapshot = async () => {
+  const handleAddSnapshot = async (data: {date: string; valuation: number; totalInvested: number; cumulativeProfit: number}) => {
     await fetch('/api/snapshot', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        date: snapshotForm.date,
-        valuation: parseFloat(snapshotForm.valuation) || 0,
-        totalInvested: parseFloat(snapshotForm.totalInvested) || 0,
-        cumulativeProfit: parseFloat(snapshotForm.cumulativeProfit) || 0,
-      }),
+      body: JSON.stringify(data),
     });
     await loadSnapshots();
   };
 
-  const handleUploadCSV = async () => {
+  const handleUploadCSV = async (csvInput: string) => {
     const lines = csvInput.trim().split('\n').filter(l => l.trim());
     const rows = lines.map(line => {
       const [date, valuation, totalInvested, cumulativeProfit] = line.split(',');
