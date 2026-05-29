@@ -53,6 +53,10 @@ export default function Dashboard({
   const [cashInput, setCashInput] = useState('');
   const [csvInput, setCsvInput] = useState('');
   const [showCsvForm, setShowCsvForm] = useState(false);
+  const [showTradeTable, setShowTradeTable] = useState(false);
+  const [showIncomeTable, setShowIncomeTable] = useState(false);
+  const [showTradeTable, setShowTradeTable] = useState(false);
+  const [showIncomeTable, setShowIncomeTable] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
   const [snapshotForm, setSnapshotForm] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -471,10 +475,16 @@ export default function Dashboard({
                     </button>
                   ))}
                 </div>
-                <button onClick={() => { setShowForm(!showForm); setFormTab(viewTab === 'income' ? 'income' : 'trade'); }}
-                  className="flex items-center gap-1 text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg transition-colors">
-                  <Plus className="w-3 h-3" /> {viewTab === 'income' ? '소득 추가' : '거래 추가'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => { viewTab === 'income' ? setShowIncomeTable(v => !v) : setShowTradeTable(v => !v); }}
+                    className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg transition-colors">
+                    {viewTab === 'income' ? (showIncomeTable ? '닫기' : '열기') : (showTradeTable ? '닫기' : '열기')}
+                  </button>
+                  <button onClick={() => { setShowForm(!showForm); setFormTab(viewTab === 'income' ? 'income' : 'trade'); }}
+                    className="flex items-center gap-1 text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg transition-colors">
+                    <Plus className="w-3 h-3" /> {viewTab === 'income' ? '소득 추가' : '거래 추가'}
+                  </button>
+                </div>
               </div>
 
               {/* 입력 폼 */}
@@ -574,7 +584,7 @@ export default function Dashboard({
               )}
 
               {/* 거래 내역 테이블 - 고정 높이 + 스크롤 */}
-              {viewTab === 'trade' && <div className="overflow-x-auto">
+              {viewTab === 'trade' && showTradeTable && <div className="overflow-x-auto">
                 <div style={{height: '320px', overflowY: 'auto'}}>
                   <table className="w-full text-xs">
                     <thead className="sticky top-0 bg-white">
@@ -632,7 +642,7 @@ export default function Dashboard({
 
               </div>}
               {/* 현금 소득 내역 */}
-              {viewTab === 'income' && (
+              {viewTab === 'income' && showIncomeTable && (
                 <div className="mt-4">
                   <p className="text-xs text-gray-500 tracking-wider mb-2">| 현금 소득 내역</p>
                   <div style={{height: '320px', overflowY: 'auto'}}>
