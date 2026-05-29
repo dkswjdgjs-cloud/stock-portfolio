@@ -55,8 +55,6 @@ export default function Dashboard({
   const [showCsvForm, setShowCsvForm] = useState(false);
   const [showTradeTable, setShowTradeTable] = useState(false);
   const [showIncomeTable, setShowIncomeTable] = useState(false);
-  const [showTradeTable, setShowTradeTable] = useState(false);
-  const [showIncomeTable, setShowIncomeTable] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
   const [snapshotForm, setSnapshotForm] = useState({
     date: new Date().toISOString().split('T')[0],
