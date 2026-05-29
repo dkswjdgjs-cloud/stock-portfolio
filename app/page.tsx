@@ -28,7 +28,7 @@ export default function Home() {
   const allHoldingsRef = useRef<AccountHolding[]>([]);
   const accountFilterRef = useRef<string>('전체');
   const isLoadingRef = useRef<boolean>(false);
-  const loadAllRef = useRef<(forceRefresh?: boolean) => Promise<void>>();
+  const loadAllRef = useRef<((forceRefresh?: boolean) => Promise<void>) | undefined>(undefined);
 
   useEffect(() => { setMounted(true); setLastUpdated(new Date()); }, []);
   useEffect(() => { accountFilterRef.current = accountFilter; }, [accountFilter]);
