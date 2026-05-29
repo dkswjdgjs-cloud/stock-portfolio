@@ -53,6 +53,10 @@ export default function Dashboard({
   const [cashInput, setCashInput] = useState('');
   const [csvInput, setCsvInput] = useState('');
   const [showCsvForm, setShowCsvForm] = useState(false);
+  const [sortKey, setSortKey] = useState('');
+  const [sortDir, setSortDir] = useState(1);
+  const [sortKey, setSortKey] = useState('');
+  const [sortDir, setSortDir] = useState(1);
   const [graphFilter, setGraphFilter] = useState('daily');
   const [targetValue, setTargetValue] = useState(() => {
     if (typeof window === 'undefined') return 0;
@@ -193,6 +197,38 @@ export default function Dashboard({
   };
 
   const isPos = (v: number) => v >= 0;
+  const handleExportCSV = () => {
+    const headers = ['계좌','TICKER','종목명','평균단가','수량','현재단가','평가액','수익율','수익금','비중','섹터','일일등락'];
+    const rows = displayHoldings.map(h => [
+      h.account, h.ticker, h.stock_name,
+      h.avg_price.toFixed(2), h.quantity, h.curr_price.toFixed(2),
+      h.valuation.toFixed(0), h.return_rate.toFixed(2)+'%',
+      h.profit.toFixed(0), h.weight.toFixed(2)+'%', h.sector,
+      (h.daily_change * h.quantity).toFixed(0),
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `holdings_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+  const handleExportTransCSV = () => {
+    const headers = ['날짜','계좌','티커','종목명','입출금','금액','매수/매도','수량','매수단가','매도단가','손익','수익율'];
+    const rows = transactions.map(t => [
+      t.trade_date, t.account, t.ticker||'', t.stock_name||'',
+      t.account_transfer||'', t.transfer_amount||'',
+      t.trade_type||'', t.quantity||'',
+      t.buy_price||'', t.sell_price||'',
+      t.profit_loss||'', t.profit_rate||'',
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `transactions_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
   const pieData = getPieData();
 
   const TABS = [
@@ -205,7 +241,52 @@ export default function Dashboard({
   const selectClass = "w-full bg-gray-200 border border-gray-400 rounded px-2 py-1.5 text-xs text-[#1a1a1a]";
 
   // 계좌 필터링된 holdings
-  const displayHoldings = filteredHoldings;
+  const sortedHoldings = [...filteredHoldings].sort((a, b) => {
+    if (!sortKey) return 0;
+    const av = (a as any)[sortKey];
+    const bv = (b as any)[sortKey];
+    if (typeof av === 'number') return (av - bv) * sortDir;
+    return String(av).localeCompare(String(bv)) * sortDir;
+  });
+  const displayHoldings = sortedHoldings;
+
+  const handleExportCSV = () => {
+    const headers = ['계좌', 'TICKER', '종목명', '평균단가', '수량', '현재단가', '평가액', '수익율', '수익금', '비중', '섹터', '일일등락'];
+    const rows = displayHoldings.map(h => [
+      h.account, h.ticker, h.stock_name,
+      h.avg_price.toFixed(2), h.quantity,
+      h.curr_price.toFixed(2),
+      h.valuation.toFixed(0),
+      h.return_rate.toFixed(2) + '%',
+      h.profit.toFixed(0),
+      h.weight.toFixed(2) + '%',
+      h.sector,
+      (h.daily_change * h.quantity).toFixed(0),
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `holdings_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  const handleExportTransCSV = () => {
+    const headers = ['날짜', '계좌', '티커', '종목명', '입출금', '금액', '매수/매도', '수량', '매수단가', '매도단가', '손익', '수익율'];
+    const rows = transactions.map(t => [
+      t.trade_date, t.account, t.ticker || '', t.stock_name || '',
+      t.account_transfer || '', t.transfer_amount || '',
+      t.trade_type || '', t.quantity || '',
+      t.buy_price || '', t.sell_price || '',
+      t.profit_loss || '', t.profit_rate || '',
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `transactions_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 text-[#1a1a1a] ">
@@ -427,17 +508,24 @@ export default function Dashboard({
             <div className="bg-white border border-gray-200 rounded-md p-5">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xs text-[#666666] tracking-wider">| 계좌 상세 내역</h2>
-                <select value={accountFilter} onChange={e => onAccountFilterChange(e.target.value)}
-                  className="text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1 text-[#333333]">
-                  {ACCOUNTS.map(a => <option key={a}>{a}</option>)}
-                </select>
+                <div className="flex items-center gap-2">
+                  <button onClick={handleExportCSV} className="text-xs bg-gray-100 hover:bg-gray-200 text-[#333333] border border-gray-300 px-2 py-1.5 rounded-lg">⬇ 보유종목</button>
+                  <button onClick={handleExportTransCSV} className="text-xs bg-gray-100 hover:bg-gray-200 text-[#333333] border border-gray-300 px-2 py-1.5 rounded-lg">⬇ 거래내역</button>
+                  <select value={accountFilter} onChange={e => onAccountFilterChange(e.target.value)}
+                    className="text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1 text-[#333333]">
+                    {ACCOUNTS.map(a => <option key={a}>{a}</option>)}
+                  </select>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-[#999999] border-b border-gray-200">
-                      {['계좌', 'TICKER', '종목명', '평균단가', '수량', '현재단가', '평가액', '수익율', '수익금', '비중', '섹터', '일일등락'].map(h => (
-                        <th key={h} className="text-left py-2 px-2 font-medium tracking-wider">{h}</th>
+                      {[['계좌','account'],['TICKER','ticker'],['종목명','stock_name'],['평균단가','avg_price'],['수량','quantity'],['현재단가','curr_price'],['평가액','valuation'],['수익율','return_rate'],['수익금','profit'],['비중','weight'],['섹터','sector'],['일일등락','daily_change']].map(([label, key]) => (
+                        <th key={key} onClick={() => { setSortKey(key); setSortDir(sortKey === key ? -sortDir : 1); }}
+                          className="text-left py-2 px-2 font-medium tracking-wider cursor-pointer hover:text-blue-600 select-none">
+                          {label}{sortKey === key ? (sortDir === 1 ? ' ↑' : ' ↓') : ''}
+                        </th>
                       ))}
                     </tr>
                   </thead>
