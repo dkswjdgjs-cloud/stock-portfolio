@@ -341,7 +341,21 @@ export default function Dashboard({
                 </select>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[1000px] text-xs">
+                <table className="w-full min-w-[1200px] text-xs" style={{tableLayout:'fixed'}}>
+                  <colgroup>
+                    <col style={{width:'7%'}} />
+                    <col style={{width:'7%'}} />
+                    <col style={{width:'12%'}} />
+                    <col style={{width:'9%'}} />
+                    <col style={{width:'5%'}} />
+                    <col style={{width:'9%'}} />
+                    <col style={{width:'10%'}} />
+                    <col style={{width:'7%'}} />
+                    <col style={{width:'10%'}} />
+                    <col style={{width:'5%'}} />
+                    <col style={{width:'8%'}} />
+                    <col style={{width:'11%'}} />
+                  </colgroup>
                   <thead>
                     <tr className="text-slate-500 border-b border-slate-800">
                       {['계좌', 'TICKER', '종목명', '평균단가', '수량', '현재단가', '평가액', '수익율', '수익금', '비중', '섹터', '일일등락'].map(h => (
