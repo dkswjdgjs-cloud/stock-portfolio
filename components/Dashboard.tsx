@@ -55,7 +55,7 @@ export default function Dashboard({
   const [showCsvForm, setShowCsvForm] = useState(false);
   const [sortKey, setSortKey] = useState('');
   const [sortKey, setSortKey] = useState('');
-  const [sortDir, setSortDir] = useState(1);
+  const [sortDir, setSortDir] = useState<1|-1>(1);
   const [graphFilter, setGraphFilter] = useState('daily');
   const [targetValue, setTargetValue] = useState(0);
   const [targetInput, setTargetInput] = useState('');
