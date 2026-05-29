@@ -47,9 +47,9 @@ export default function Home() {
         const res = await fetch(`/api/stock?ticker=${ticker}&market=${market}`);
         const data = await res.json();
         if (data.price) {
-            const rate = (market === 'US' && data.exchangeRate) ? data.exchangeRate : 1;
-            priceMap.set(ticker, { price: data.price * rate, priceOriginal: data.price, dailyChange: data.dailyChange * rate, exchangeRate: rate });
-          }
+          const rate = (market === 'US' && data.exchangeRate) ? data.exchangeRate : 1;
+          priceMap.set(ticker, { price: data.price * rate, priceOriginal: data.price, dailyChange: data.dailyChange * rate, exchangeRate: rate });
+        }
       } catch {}
     }));
 
@@ -58,8 +58,8 @@ export default function Home() {
       if (!priceData) return h;
       const isUSD = h.currency === 'USD';
       const rate = priceData.exchangeRate || 1;
-      const curr_price = priceData.priceOriginal || priceData.price; // 표시용: 달러 그대로
-      const valuationKRW = priceData.price * h.quantity; // 원화 평가액
+      const curr_price = priceData.priceOriginal || priceData.price;
+      const valuationKRW = priceData.price * h.quantity;
       const avgPriceKRW = isUSD ? h.avg_price * rate : h.avg_price;
       const profit = (priceData.price - avgPriceKRW) * h.quantity;
       const return_rate = avgPriceKRW > 0 ? ((priceData.price - avgPriceKRW) / avgPriceKRW) * 100 : 0;
@@ -93,19 +93,25 @@ export default function Home() {
     setCashBalances(balanceData);
     setSnapshots(currentSnapshots || []);
 
-    // 현금 소득을 수익금에 합산
     const cashIncomeTotal = incomeData.reduce((s, c) => s + c.amount, 0);
     const calcedSummary = calcSummary(transData, currentSnapshots || []);
     calcedSummary.cumulativeProfit += cashIncomeTotal;
-
-    // 현재 평가액은 holdings 계산 후 채워짐 (아래에서 설정)
     setSummary(calcedSummary);
     setDailySettlement(calcDailySettlement(transData));
 
-    const baseHoldings = calcHoldings(transData, accountFilter);
-    const holdingsWithPrices = await fetchPrices(baseHoldings);
-    const totalVal = holdingsWithPrices.reduce((s, h) => s + h.valuation, 0);
+    // summary 계산용 → 항상 전체 기준
+    const baseHoldingsAll = calcHoldings(transData, '전체');
+    const holdingsAllWithPrices = await fetchPrices(baseHoldingsAll);
+    const totalValAll = holdingsAllWithPrices.reduce((s, h) => s + h.valuation, 0);
     const cashTotal = balanceData.reduce((s, b) => s + b.balance, 0);
+    const currMonthValue = totalValAll + cashTotal;
+
+    // 화면 표시용 → 현재 필터 기준
+    const baseHoldings = calcHoldings(transData, accountFilter);
+    const holdingsWithPrices = accountFilter === '전체'
+      ? holdingsAllWithPrices
+      : await fetchPrices(baseHoldings);
+    const totalVal = holdingsWithPrices.reduce((s, h) => s + h.valuation, 0);
     const finalHoldings = holdingsWithPrices.map(h => ({
       ...h,
       weight: totalVal > 0 ? (h.valuation / totalVal) * 100 : 0,
@@ -113,10 +119,6 @@ export default function Home() {
     setPrevHoldings(finalHoldings);
     setHoldings(finalHoldings);
 
-    // 현재 평가액 = 보유종목 평가액 합계 + 현금성 자산
-    const currMonthValue = totalVal + cashTotal;
-
-    // 누적 투입액
     const totalInvested = transData
       .filter((t: any) => t.account_transfer)
       .reduce((sum: number, t: any) => {
@@ -130,22 +132,18 @@ export default function Home() {
       const prevMonthValuation = prev.prevMonthValuation || 0;
       const prevMonthInvested = prev.prevMonthInvested || 0;
 
-      // 누적수익금 = 현재평가액 - 현재투자원금
       const cumulativeProfit = currMonthValue - totalInvested;
       const cumulativeReturn = totalInvested > 0 ? (cumulativeProfit / totalInvested) * 100 : 0;
 
-      // 연수익금 = 현재평가액 - 전년도말 평가액 - (현재투자원금 - 전년도말 투자원금)
       const annualProfit = currMonthValue - prevYearValuation - (totalInvested - prevYearInvested);
       const annualBase = prevYearValuation + (totalInvested - prevYearInvested);
       const annualReturn = annualBase > 0 ? (annualProfit / annualBase) * 100 : 0;
 
-      // 월수익금 = 현재평가액 - 전월말 평가액 - (현재투자원금 - 전월말 투자원금)
       const monthlyProfit = currMonthValue - prevMonthValuation - (totalInvested - prevMonthInvested);
       const monthlyBase = prevMonthValuation + (totalInvested - prevMonthInvested);
       const monthlyReturn = monthlyBase > 0 ? (monthlyProfit / monthlyBase) * 100 : 0;
 
-      // 일수익금 = 보유종목 일일등락금액 * 수량 합계
-      const dailyProfit = holdingsWithPrices.reduce((sum: number, h: any) => {
+      const dailyProfit = holdingsAllWithPrices.reduce((sum: number, h: any) => {
         return sum + (h.daily_change || 0) * (h.quantity || 0);
       }, 0);
       const dailyReturn = currMonthValue > 0 ? (dailyProfit / (currMonthValue - dailyProfit)) * 100 : 0;
