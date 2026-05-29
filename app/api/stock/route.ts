@@ -3,6 +3,8 @@ const KIS_APP_KEY = process.env.KIS_APP_KEY!;
 const KIS_APP_SECRET = process.env.KIS_APP_SECRET!;
 const KIS_BASE_URL = 'https://openapi.koreainvestment.com:9443';
 let tokenCache: { token: string; expires: number } | null = null;
+let exchangeRateCache: { rate: number; expires: number } | null = null;
+
 async function getAccessToken() {
   if (tokenCache && Date.now() < tokenCache.expires) return tokenCache.token;
   const res = await fetch(`${KIS_BASE_URL}/oauth2/tokenP`, {
@@ -14,6 +16,29 @@ async function getAccessToken() {
   tokenCache = { token: data.access_token, expires: Date.now() + (data.expires_in - 60) * 1000 };
   return tokenCache.token;
 }
+
+async function getUSDKRWRate(token: string): Promise<number> {
+  if (exchangeRateCache && Date.now() < exchangeRateCache.expires) return exchangeRateCache.rate;
+  try {
+    const res = await fetch(`${KIS_BASE_URL}/uapi/overseas-price/v1/quotations/price?AUTH=&EXCD=FX&SYMB=USDKRW`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        appkey: KIS_APP_KEY,
+        appsecret: KIS_APP_SECRET,
+        tr_id: 'HHDFS00000300',
+      },
+    });
+    const data = await res.json();
+    const rate = parseFloat(data.output?.last || '0');
+    if (rate > 0) {
+      exchangeRateCache = { rate, expires: Date.now() + 60 * 60 * 1000 };
+      return rate;
+    }
+  } catch {}
+  return 1380; // 기본값
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const ticker = searchParams.get('ticker');
@@ -31,6 +56,7 @@ export async function GET(request: NextRequest) {
     };
     let price = 0;
     let dailyChange = 0;
+    let exchangeRate = 1;
     if (isKR) {
       const url = `${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}`;
       const response = await fetch(url, { headers });
@@ -40,6 +66,7 @@ export async function GET(request: NextRequest) {
       const dailySign = data.output?.prdy_vrss_sign;
       dailyChange = (dailySign === '4' || dailySign === '5') ? -Math.abs(dailyChangeAmt) : Math.abs(dailyChangeAmt);
     } else {
+      exchangeRate = await getUSDKRWRate(token);
       const exchanges = ['NAS', 'AMS', 'NYS', 'TSE', 'HKS'];
       for (const excd of exchanges) {
         const url = `${KIS_BASE_URL}/uapi/overseas-price/v1/quotations/price?AUTH=&EXCD=${excd}&SYMB=${ticker}`;
@@ -54,7 +81,7 @@ export async function GET(request: NextRequest) {
         }
       }
     }
-    return NextResponse.json({ ticker, price, dailyChange, market });
+    return NextResponse.json({ ticker, price, dailyChange, exchangeRate, market });
   } catch (error) {
     console.error('KIS API error:', error);
     return NextResponse.json({ error: 'Failed to fetch price' }, { status: 500 });
