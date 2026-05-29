@@ -133,6 +133,12 @@ export default function Home() {
       const monthlyBase = prevMonthValuation + (totalInvested - prevMonthInvested);
       const monthlyReturn = monthlyBase > 0 ? (monthlyProfit / monthlyBase) * 100 : 0;
 
+      // 일수익금 = 보유종목 일일등락 합계
+      const dailyProfit = holdingsWithPrices.reduce((sum: number, h: any) => {
+        return sum + (h.dailyChange || 0);
+      }, 0);
+      const dailyReturn = currMonthValue > 0 ? (dailyProfit / (currMonthValue - dailyProfit)) * 100 : 0;
+
       return {
         ...prev,
         currMonthValue,
@@ -143,6 +149,8 @@ export default function Home() {
         annualReturn,
         monthlyProfit,
         monthlyReturn,
+        dailyProfit,
+        dailyReturn,
       };
     });
     setLastUpdated(new Date());
