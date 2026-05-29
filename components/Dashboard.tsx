@@ -88,7 +88,13 @@ export default function Dashboard({
 
   const getPieData = () => {
     if (pieFilter === '종목별') {
-      const data = filteredHoldings.map(h => ({ name: h.stock_name, ticker: h.ticker, value: h.valuation }));
+      const tickerMap = new Map<string, { name: string; ticker: string; value: number }>();
+      filteredHoldings.forEach(h => {
+        const existing = tickerMap.get(h.ticker);
+        if (existing) { existing.value += h.valuation; }
+        else { tickerMap.set(h.ticker, { name: h.stock_name, ticker: h.ticker, value: h.valuation }); }
+      });
+      const data = Array.from(tickerMap.values());
       if (totalCashBalance > 0) data.push({ name: '현금성 자산', ticker: 'CASH', value: totalCashBalance });
       return data;
     }
