@@ -54,7 +54,7 @@ export default function Dashboard({
   const [csvInput, setCsvInput] = useState('');
   const [showCsvForm, setShowCsvForm] = useState(false);
   const [sortKey, setSortKey] = useState('');
-  const [sortDir, setSortDir] = useState<1|-1>(1);
+  const [sortDir, setSortDir] = useState(1);
   const [graphFilter, setGraphFilter] = useState('daily');
   const [targetValue, setTargetValue] = useState(0);
   const [targetInput, setTargetInput] = useState('');
@@ -487,7 +487,7 @@ export default function Dashboard({
                   <thead>
                     <tr className="text-[#999999] border-b border-gray-200">
                       {[['계좌','account'],['TICKER','ticker'],['종목명','stock_name'],['평균단가','avg_price'],['수량','quantity'],['현재단가','curr_price'],['평가액','valuation'],['수익율','return_rate'],['수익금','profit'],['비중','weight'],['섹터','sector'],['일일등락','daily_change']].map(([label, key]) => (
-                        <th key={key} onClick={() => { setSortKey(key); setSortDir(sortKey === key ? -sortDir : 1); }}
+                        <th key={key} onClick={() => { setSortKey(key); setSortDir(sortKey === key ? (sortDir === 1 ? -1 : 1) : 1); }}
                           className="text-left py-2 px-2 font-medium tracking-wider cursor-pointer hover:text-blue-600 select-none">
                           {label}{sortKey === key ? (sortDir === 1 ? ' ↑' : ' ↓') : ''}
                         </th>
