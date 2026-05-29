@@ -293,12 +293,12 @@ export default function Dashboard({
               const firstSnap = snapshots.length > 0 ? snapshots[0] : null;
               const lastSnap = snapshots.length > 0 ? snapshots[snapshots.length - 1] : null;
               let cagr = 0;
-              if (firstSnap && lastSnap && firstSnap.total_invested > 0) {
+              if (firstSnap && lastSnap && summary.totalInvested > 0) {
                 const startDate = new Date(firstSnap.snapshot_date);
-                const endDate = new Date(lastSnap.snapshot_date);
+                const endDate = new Date();
                 const years = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
                 if (years > 0) {
-                  cagr = (Math.pow(summary.currMonthValue / firstSnap.total_invested, 1 / years) - 1) * 100;
+                  cagr = (Math.pow(summary.currMonthValue / summary.totalInvested, 1 / years) - 1) * 100;
                 }
               }
               // MDD 계산
