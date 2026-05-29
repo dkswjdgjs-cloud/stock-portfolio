@@ -54,7 +54,6 @@ export default function Dashboard({
   const [csvInput, setCsvInput] = useState('');
   const [showCsvForm, setShowCsvForm] = useState(false);
   const [graphFilter, setGraphFilter] = useState('daily');
-  const [graphFilter, setGraphFilter] = useState('daily');
   const [showTradeTable, setShowTradeTable] = useState(false);
   const [showIncomeTable, setShowIncomeTable] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
