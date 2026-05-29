@@ -54,6 +54,12 @@ export default function Dashboard({
   const [csvInput, setCsvInput] = useState('');
   const [showCsvForm, setShowCsvForm] = useState(false);
   const [graphFilter, setGraphFilter] = useState('daily');
+  const [targetValue, setTargetValue] = useState<number>(0);
+  const [targetInput, setTargetInput] = useState<string>('');
+  const [showTargetInput, setShowTargetInput] = useState(false);
+  const [targetValue, setTargetValue] = useState<number>(0);
+  const [targetInput, setTargetInput] = useState<string>('');
+  const [showTargetInput, setShowTargetInput] = useState(false);
   const [showTradeTable, setShowTradeTable] = useState(false);
   const [showIncomeTable, setShowIncomeTable] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
@@ -284,6 +290,81 @@ export default function Dashboard({
                 </div>
               ))}
             </div>
+            {/* CAGR / MDD / 목표 달성률 카드 */}
+            {(() => {
+              // CAGR 계산
+              const firstSnap = snapshots.length > 0 ? snapshots[0] : null;
+              const lastSnap = snapshots.length > 0 ? snapshots[snapshots.length - 1] : null;
+              let cagr = 0;
+              if (firstSnap && lastSnap && firstSnap.total_invested > 0) {
+                const startDate = new Date(firstSnap.snapshot_date);
+                const endDate = new Date(lastSnap.snapshot_date);
+                const years = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+                if (years > 0) {
+                  cagr = (Math.pow(summary.currMonthValue / firstSnap.total_invested, 1 / years) - 1) * 100;
+                }
+              }
+              // MDD 계산
+              let mdd = 0;
+              let peak = 0;
+              snapshots.forEach(s => {
+                const val = s.total_valuation || 0;
+                if (val > peak) peak = val;
+                const drawdown = peak > 0 ? (val - peak) / peak * 100 : 0;
+                if (drawdown < mdd) mdd = drawdown;
+              });
+              // 목표 달성률
+              const targetAchievement = targetValue > 0 ? (summary.currMonthValue / targetValue) * 100 : 0;
+              return (
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-white border border-gray-200 rounded-md p-5">
+                    <p className="text-xs text-[#999999] tracking-wider mb-2">CAGR (연평균 수익률)</p>
+                    <p className={cn("text-xl font-semibold", cagr >= 0 ? "text-emerald-600" : "text-red-500")}>
+                      {cagr.toFixed(2)}%
+                    </p>
+                    <p className="text-xs text-[#999999] mt-1">
+                      {firstSnap ? firstSnap.snapshot_date : '-'} ~ 현재
+                    </p>
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-md p-5">
+                    <p className="text-xs text-[#999999] tracking-wider mb-2">MDD (최대낙폭)</p>
+                    <p className="text-xl font-semibold text-red-500">{mdd.toFixed(2)}%</p>
+                    <p className="text-xs text-[#999999] mt-1">고점 대비 최대 하락폭</p>
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-md p-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-[#999999] tracking-wider">목표 평가액</p>
+                      <button onClick={() => setShowTargetInput(v => !v)}
+                        className="text-xs text-blue-600 hover:text-blue-700">설정</button>
+                    </div>
+                    {showTargetInput && (
+                      <div className="flex gap-1 mb-2">
+                        <input type="number" value={targetInput}
+                          onChange={e => setTargetInput(e.target.value)}
+                          placeholder="목표 금액 입력"
+                          className="flex-1 text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500" />
+                        <button onClick={() => { setTargetValue(parseFloat(targetInput) || 0); setShowTargetInput(false); }}
+                          className="text-xs bg-blue-600 text-white px-2 py-1 rounded">확인</button>
+                      </div>
+                    )}
+                    {targetValue > 0 ? (
+                      <>
+                        <p className={cn("text-xl font-semibold", targetAchievement >= 100 ? "text-emerald-600" : "text-blue-600")}>
+                          {targetAchievement.toFixed(1)}%
+                        </p>
+                        <p className="text-xs text-[#999999] mt-1">목표: {formatCurrency(targetValue)}</p>
+                        <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div className={cn("h-full rounded-full transition-all", targetAchievement >= 100 ? "bg-emerald-500" : "bg-blue-500")}
+                            style={{width: `${Math.min(targetAchievement, 100)}%`}} />
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-sm text-[#999999]">목표 금액을 설정하세요</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* 파이차트 + 상세내역 */}
             <div className="grid grid-cols-2 gap-4">
@@ -746,6 +827,7 @@ export default function Dashboard({
                     domain={[-10000000, (dataMax: number) => Math.ceil(dataMax * 1.05 / 10000000) * 10000000]}
                   />
                   <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4 2" />
+                  {targetValue > 0 && <ReferenceLine y={targetValue} stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="6 3" label={{ value: `목표 ${(targetValue/1000000).toFixed(0)}M`, position: "right", fontSize: 10, fill: "#3b82f6" }} />}
                   <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }}
                     formatter={(v) => formatCurrency(Number(v))} />
                   <Area isAnimationActive={false} type="monotone" dataKey="total_valuation" name="평가액" stroke="#3b82f6" fill="#3b82f620" strokeWidth={2} />
