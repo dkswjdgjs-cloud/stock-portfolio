@@ -38,7 +38,7 @@ export default function Home() {
 
   const fetchPrices = useCallback(async (baseHoldings: AccountHolding[]) => {
     const uniqueTickers = [...new Set(baseHoldings.map(h => h.ticker))];
-    const priceMap = new Map<string, { price: number; dailyChange: number }>();
+    const priceMap = new Map<string, { price: number; priceOriginal: number; dailyChange: number; exchangeRate: number }>();
 
     await Promise.all(uniqueTickers.map(async ticker => {
       try {
@@ -47,7 +47,7 @@ export default function Home() {
         const data = await res.json();
         if (data.price) {
             const rate = (market === 'US' && data.exchangeRate) ? data.exchangeRate : 1;
-            priceMap.set(ticker, { price: data.price * rate, dailyChange: data.dailyChange * rate });
+            priceMap.set(ticker, { price: data.price * rate, priceOriginal: data.price, dailyChange: data.dailyChange * rate, exchangeRate: rate });
           }
       } catch {}
     }));
