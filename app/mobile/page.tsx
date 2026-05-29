@@ -94,8 +94,6 @@ export default function MobilePage() {
       setSnapshots(snapData || []);
 
       const cashIncomeTotal = incomeData.reduce((s: number, c: CashIncome) => s + c.amount, 0);
-      const calcedSummary = calcSummary(transData, snapData || []);
-      calcedSummary.cumulativeProfit += cashIncomeTotal;
 
       const baseAll = calcHoldings(transData, '전체');
       const allWithPrices = await fetchPrices(baseAll);
@@ -109,7 +107,7 @@ export default function MobilePage() {
         return t.account_transfer === '입금' ? sum + (t.transfer_amount || 0) : sum - (t.transfer_amount || 0);
       }, 0);
 
-      setSummary(prev => {
+      setSummary(() => {
         const calcedWithSnap = calcSummary(transData, snapData || []);
         const { prevYearValuation = 0, prevYearInvested = 0, prevMonthValuation = 0, prevMonthInvested = 0 } = calcedWithSnap;
         const cumulativeProfit = currMonthValue - totalInvested + cashIncomeTotal;
@@ -243,7 +241,7 @@ export default function MobilePage() {
 
   if (loading) {
     return (
-      <div style={{ height: '100dvh', background: '#1e2433', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 14 }}>
+      <div style={{ height: '100dvh', background: '#1e2433', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 17 }}>
         로딩 중...
       </div>
     );
@@ -257,16 +255,16 @@ export default function MobilePage() {
     tabBar: { background: 'white', borderTop: '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0 },
     tabItem: { flex: 1, textAlign: 'center', padding: '8px 0', cursor: 'pointer', border: 'none', background: 'transparent' },
     card: { background: 'white', margin: '8px 12px', borderRadius: 12, border: '0.5px solid #e5e7eb', padding: 14 },
-    srow: { display: 'flex', alignItems: 'center', padding: '12px 16px', borderBottom: '0.5px solid #f3f4f6' },
-    sicon: { width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, flexShrink: 0, marginRight: 12 },
-    metricCard: { background: '#f9fafb', border: '0.5px solid #e5e7eb', borderRadius: 11, padding: 11, flex: 1 },
-    legendRow: { display: 'flex', alignItems: 'center', gap: 9, padding: '9px 13px' },
-    drow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '7px 4px', borderBottom: '0.5px solid #f9fafb' },
+    srow: { display: 'flex', alignItems: 'center', padding: '13px 16px', borderBottom: '0.5px solid #f3f4f6' },
+    sicon: { width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0, marginRight: 12 },
+    metricCard: { background: '#f9fafb', border: '0.5px solid #e5e7eb', borderRadius: 11, padding: 12, flex: 1 },
+    legendRow: { display: 'flex', alignItems: 'center', gap: 9, padding: '11px 13px' },
+    drow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: '0.5px solid #f9fafb' },
   };
 
   return (
     <div style={S.wrap}>
-      {/* 헤더 */}
+      {/* 헤더 — 글씨 크기 유지 */}
       <div style={S.header}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <span style={{ color: '#9ca3af', fontSize: 11, letterSpacing: '0.08em' }}>
@@ -302,14 +300,14 @@ export default function MobilePage() {
         {/* 탭1: 계좌 내역 */}
         {tab === 'account' && (
           <>
-            <div style={{ background: 'white', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '0.5px solid #f3f4f6' }}>
+            <div style={{ background: 'white', padding: '11px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '0.5px solid #f3f4f6' }}>
               <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 20, padding: 3, gap: 2 }}>
                 {(['시세', '평가'] as const).map(m => (
-                  <button key={m} onClick={() => setViewMode(m)} style={{ fontSize: 11, padding: '4px 14px', borderRadius: 18, border: 'none', cursor: 'pointer', background: viewMode === m ? '#111827' : 'transparent', color: viewMode === m ? 'white' : '#9ca3af', fontWeight: viewMode === m ? 600 : 500 }}>{m}</button>
+                  <button key={m} onClick={() => setViewMode(m)} style={{ fontSize: 13, padding: '5px 16px', borderRadius: 18, border: 'none', cursor: 'pointer', background: viewMode === m ? '#111827' : 'transparent', color: viewMode === m ? 'white' : '#9ca3af', fontWeight: viewMode === m ? 600 : 500 }}>{m}</button>
                 ))}
               </div>
               <select value={accountFilter} onChange={e => handleAccountFilter(e.target.value)}
-                style={{ fontSize: 12, border: '0.5px solid #e5e7eb', borderRadius: 20, padding: '5px 12px', color: '#111827', background: 'white', outline: 'none' }}>
+                style={{ fontSize: 14, border: '0.5px solid #e5e7eb', borderRadius: 20, padding: '6px 14px', color: '#111827', background: 'white', outline: 'none' }}>
                 {ACCOUNTS.map(a => <option key={a}>{a}</option>)}
               </select>
             </div>
@@ -321,8 +319,8 @@ export default function MobilePage() {
                   <div key={i} style={S.srow}>
                     <div style={{ ...S.sicon, background: ic.bg, color: ic.color }}>{ic.label}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 500, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{h.stock_name}</p>
-                      <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 2, margin: '2px 0 0' }}>
+                      <p style={{ fontSize: 15, fontWeight: 500, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{h.stock_name}</p>
+                      <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 3, margin: '3px 0 0' }}>
                         {viewMode === '시세'
                           ? `${h.curr_price.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${h.currency === 'KRW' ? '원' : '$'}`
                           : `${h.quantity.toLocaleString()}주`}
@@ -330,17 +328,17 @@ export default function MobilePage() {
                     </div>
                     {viewMode === '시세' ? (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>
+                        <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: 0 }}>
                           {h.curr_price.toLocaleString('ko-KR', { maximumFractionDigits: 0 })}
                         </p>
-                        <p style={{ fontSize: 11, color: pos(h.daily_change), marginTop: 2, margin: '2px 0 0' }}>
+                        <p style={{ fontSize: 13, color: pos(h.daily_change), marginTop: 3, margin: '3px 0 0' }}>
                           {h.curr_price > 0 ? pct((h.daily_change / (h.curr_price - h.daily_change || 1)) * 100) : '-'}
                         </p>
                       </div>
                     ) : (
                       <div style={{ textAlign: 'right', flexShrink: 0, maxWidth: '55%' }}>
-                        <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(h.valuation)}</p>
-                        <p style={{ fontSize: 10, color: pos(h.profit), marginTop: 2, margin: '2px 0 0' }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(h.valuation)}</p>
+                        <p style={{ fontSize: 12, color: pos(h.profit), marginTop: 3, margin: '3px 0 0' }}>
                           {h.profit >= 0 ? '+' : ''}{formatWFull(h.profit)}({pct(h.return_rate)})
                         </p>
                       </div>
@@ -349,24 +347,26 @@ export default function MobilePage() {
                 );
               })}
 
+              {/* 현금성 자산 */}
               <div style={{ ...S.srow, background: '#f9fafb' }}>
-                <div style={{ ...S.sicon, background: '#e0f2fe', color: '#0369a1', fontSize: 16 }}>💰</div>
+                <div style={{ ...S.sicon, background: '#e0f2fe', color: '#0369a1', fontSize: 18 }}>💰</div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 500, color: '#374151', margin: 0 }}>현금성 자산</p>
-                  <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 2, margin: '2px 0 0' }}>{accountFilter === '전체' ? '전체 계좌' : accountFilter}</p>
+                  <p style={{ fontSize: 15, fontWeight: 500, color: '#374151', margin: 0 }}>현금성 자산</p>
+                  <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 3, margin: '3px 0 0' }}>{accountFilter === '전체' ? '전체 계좌' : accountFilter}</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(accountCash)}</p>
-                  <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 2, margin: '2px 0 0' }}>-</p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(accountCash)}</p>
+                  <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 3, margin: '3px 0 0' }}>-</p>
                 </div>
               </div>
             </div>
 
-            <div style={{ background: 'white', padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f3f4f6', marginBottom: 8 }}>
-              <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>선택 합계 · {holdings.length}종목 + 현금</p>
+            {/* 합계 */}
+            <div style={{ background: 'white', padding: '13px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f3f4f6', marginBottom: 8 }}>
+              <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>선택 합계 · {holdings.length}종목 + 현금</p>
               <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>{formatWFull(totalEval)}</p>
-                <p style={{ fontSize: 11, color: pos(totalProfit), marginTop: 2, margin: '2px 0 0' }}>
+                <p style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: 0 }}>{formatWFull(totalEval)}</p>
+                <p style={{ fontSize: 13, color: pos(totalProfit), marginTop: 2, margin: '2px 0 0' }}>
                   {totalProfit >= 0 ? '+' : ''}{formatWFull(totalProfit)}
                 </p>
               </div>
@@ -380,19 +380,19 @@ export default function MobilePage() {
             <div style={{ padding: '8px 12px 0' }}>
               <div style={{ display: 'flex', gap: 7 }}>
                 <div style={S.metricCard}>
-                  <p style={{ fontSize: 9, color: '#6b7280', marginBottom: 4, margin: '0 0 4px' }}>CAGR</p>
-                  <p style={{ fontSize: 16, fontWeight: 600, color: pos(cagr), margin: 0 }}>{cagr.toFixed(1)}%</p>
-                  <p style={{ fontSize: 8, color: '#9ca3af', marginTop: 2, margin: '2px 0 0' }}>연평균 수익률</p>
+                  <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 4px' }}>CAGR</p>
+                  <p style={{ fontSize: 19, fontWeight: 600, color: pos(cagr), margin: 0 }}>{cagr.toFixed(1)}%</p>
+                  <p style={{ fontSize: 10, color: '#9ca3af', margin: '2px 0 0' }}>연평균 수익률</p>
                 </div>
                 <div style={S.metricCard}>
-                  <p style={{ fontSize: 9, color: '#6b7280', marginBottom: 4, margin: '0 0 4px' }}>MDD</p>
-                  <p style={{ fontSize: 16, fontWeight: 600, color: '#ef4444', margin: 0 }}>{mdd.toFixed(1)}%</p>
-                  <p style={{ fontSize: 8, color: '#9ca3af', marginTop: 2, margin: '2px 0 0' }}>최대 낙폭</p>
+                  <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 4px' }}>MDD</p>
+                  <p style={{ fontSize: 19, fontWeight: 600, color: '#ef4444', margin: 0 }}>{mdd.toFixed(1)}%</p>
+                  <p style={{ fontSize: 10, color: '#9ca3af', margin: '2px 0 0' }}>최대 낙폭</p>
                 </div>
                 <div style={S.metricCard}>
-                  <p style={{ fontSize: 9, color: '#6b7280', marginBottom: 4, margin: '0 0 4px' }}>투자원금</p>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#2563eb', margin: 0 }}>{formatW(summary.totalInvested)}</p>
-                  <div style={{ height: 3, background: '#e5e7eb', borderRadius: 2, marginTop: 5 }}>
+                  <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 4px' }}>투자원금</p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: '#2563eb', margin: 0 }}>{formatW(summary.totalInvested)}</p>
+                  <div style={{ height: 3, background: '#e5e7eb', borderRadius: 2, marginTop: 6 }}>
                     <div style={{ height: '100%', background: '#2563eb', borderRadius: 2, width: `${Math.min(summary.currMonthValue / Math.max(summary.totalInvested * 1.5, 1) * 100, 100)}%` }} />
                   </div>
                 </div>
@@ -401,18 +401,18 @@ export default function MobilePage() {
 
             <div style={S.card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <p style={{ fontSize: 11, color: '#6b7280', margin: 0 }}>ASSET ALLOCATION</p>
+                <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>ASSET ALLOCATION</p>
                 <select value={pieFilter} onChange={e => setPieFilter(e.target.value as PieFilter)}
-                  style={{ fontSize: 10, border: '0.5px solid #e5e7eb', borderRadius: 7, padding: '3px 7px', color: '#374151', background: '#f9fafb', outline: 'none' }}>
+                  style={{ fontSize: 12, border: '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: '#374151', background: '#f9fafb', outline: 'none' }}>
                   {PIE_FILTERS.map(f => <option key={f}>{f}</option>)}
                 </select>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-                <div style={{ width: 160, height: 160, borderRadius: '50%', background: makeConic(pieData), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 80, height: 80, background: 'white', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: 9, color: '#9ca3af' }}>총 자산</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>{formatW(summary.currMonthValue)}</span>
+                <div style={{ width: 170, height: 170, borderRadius: '50%', background: makeConic(pieData), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 85, height: 85, background: 'white', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: 10, color: '#9ca3af' }}>총 자산</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{formatW(summary.currMonthValue)}</span>
                   </div>
                 </div>
               </div>
@@ -420,10 +420,10 @@ export default function MobilePage() {
               <div style={{ background: '#f9fafb', border: '0.5px solid #e5e7eb', borderRadius: 11, overflow: 'hidden' }}>
                 {pieData.map((d, i) => (
                   <div key={i} style={{ ...S.legendRow, borderBottom: i < pieData.length - 1 ? '0.5px solid #e5e7eb' : 'none' }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
-                    <span style={{ fontSize: 11, color: '#374151', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{d.name}</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#111827', flexShrink: 0 }}>{pieTotal > 0 ? ((d.value / pieTotal) * 100).toFixed(1) : 0}%</span>
-                    <span style={{ fontSize: 10, color: '#9ca3af', minWidth: 46, textAlign: 'right', flexShrink: 0 }}>{formatW(d.value)}</span>
+                    <div style={{ width: 9, height: 9, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, color: '#374151', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{d.name}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#111827', flexShrink: 0 }}>{pieTotal > 0 ? ((d.value / pieTotal) * 100).toFixed(1) : 0}%</span>
+                    <span style={{ fontSize: 12, color: '#9ca3af', minWidth: 50, textAlign: 'right', flexShrink: 0 }}>{formatW(d.value)}</span>
                   </div>
                 ))}
               </div>
@@ -435,20 +435,20 @@ export default function MobilePage() {
         {tab === 'settlement' && (
           <>
             <div style={S.card}>
-              <p style={{ fontSize: 11, color: '#6b7280', fontWeight: 500, marginBottom: 10, margin: '0 0 10px' }}>성과 추이</p>
+              <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 500, margin: '0 0 10px' }}>성과 추이</p>
               <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#3b82f6', borderRadius: 1 }} /><span style={{ fontSize: 9, color: '#6b7280' }}>평가액</span></div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#10b981', borderRadius: 1 }} /><span style={{ fontSize: 9, color: '#6b7280' }}>투자원금</span></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#3b82f6', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>평가액</span></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#10b981', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>투자원금</span></div>
               </div>
               {snapshots.length > 0 ? (
-                <svg width="100%" height="120" viewBox="0 0 300 120" preserveAspectRatio="none">
+                <svg width="100%" height="130" viewBox="0 0 300 130" preserveAspectRatio="none">
                   {(() => {
                     const vals = snapshots.map(s => s.total_valuation || 0);
                     const invs = snapshots.map(s => s.total_invested || 0);
                     const maxV = Math.max(...vals, ...invs, 1);
                     const minV = Math.min(...vals, ...invs, 0);
                     const range = maxV - minV || 1;
-                    const toY = (v: number) => 110 - ((v - minV) / range) * 100;
+                    const toY = (v: number) => 120 - ((v - minV) / range) * 110;
                     const toX = (i: number) => (i / (snapshots.length - 1 || 1)) * 280 + 10;
                     const evalPts = snapshots.map((s, i) => `${toX(i)},${toY(s.total_valuation || 0)}`).join(' ');
                     const invPts = snapshots.map((s, i) => `${toX(i)},${toY(s.total_invested || 0)}`).join(' ');
@@ -457,30 +457,30 @@ export default function MobilePage() {
                         <line x1="0" y1="20" x2="300" y2="20" stroke="#f3f4f6" strokeWidth="1" />
                         <line x1="0" y1="65" x2="300" y2="65" stroke="#f3f4f6" strokeWidth="1" />
                         <line x1="0" y1="110" x2="300" y2="110" stroke="#f3f4f6" strokeWidth="1" />
-                        <polyline points={invPts} fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        <polyline points={evalPts} fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <polyline points={invPts} fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <polyline points={evalPts} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </>
                     );
                   })()}
                 </svg>
               ) : (
-                <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 12 }}>데이터 없음</div>
+                <div style={{ height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 14 }}>데이터 없음</div>
               )}
             </div>
 
             <div style={S.card}>
-              <p style={{ fontSize: 11, color: '#6b7280', fontWeight: 500, marginBottom: 10, margin: '0 0 10px' }}>결산 데이터</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '6px 4px', borderBottom: '1px solid #f3f4f6' }}>
-                <span style={{ fontSize: 9, color: '#9ca3af' }}>날짜</span>
-                <span style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right' }}>평가액</span>
-                <span style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right' }}>수익금</span>
+              <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 500, margin: '0 0 10px' }}>결산 데이터</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '7px 4px', borderBottom: '1px solid #f3f4f6' }}>
+                <span style={{ fontSize: 11, color: '#9ca3af' }}>날짜</span>
+                <span style={{ fontSize: 11, color: '#9ca3af', textAlign: 'right' }}>평가액</span>
+                <span style={{ fontSize: 11, color: '#9ca3af', textAlign: 'right' }}>수익금</span>
               </div>
-              <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+              <div style={{ maxHeight: 220, overflowY: 'auto' }}>
                 {[...snapshots].reverse().map((s, i) => (
                   <div key={i} style={S.drow}>
-                    <span style={{ fontSize: 10, color: '#374151' }}>{s.snapshot_date}</span>
-                    <span style={{ fontSize: 10, color: '#374151', textAlign: 'right' }}>{formatW(s.total_valuation || 0)}</span>
-                    <span style={{ fontSize: 10, color: pos(s.total_profit || 0), textAlign: 'right' }}>
+                    <span style={{ fontSize: 12, color: '#374151' }}>{s.snapshot_date}</span>
+                    <span style={{ fontSize: 12, color: '#374151', textAlign: 'right' }}>{formatW(s.total_valuation || 0)}</span>
+                    <span style={{ fontSize: 12, color: pos(s.total_profit || 0), textAlign: 'right' }}>
                       {(s.total_profit || 0) >= 0 ? '+' : ''}{formatW(s.total_profit || 0)}
                     </span>
                   </div>
@@ -501,8 +501,8 @@ export default function MobilePage() {
           { key: 'settlement', icon: '⏱', label: '결산' },
         ] as const).map(t => (
           <button key={t.key} style={S.tabItem} onClick={() => setTab(t.key)}>
-            <div style={{ fontSize: 20 }}>{t.icon}</div>
-            <p style={{ fontSize: 9, marginTop: 2, color: tab === t.key ? '#2563eb' : '#9ca3af', fontWeight: tab === t.key ? 500 : 400, margin: '2px 0 0' }}>{t.label}</p>
+            <div style={{ fontSize: 22 }}>{t.icon}</div>
+            <p style={{ fontSize: 11, color: tab === t.key ? '#2563eb' : '#9ca3af', fontWeight: tab === t.key ? 500 : 400, margin: '2px 0 0' }}>{t.label}</p>
           </button>
         ))}
       </div>
