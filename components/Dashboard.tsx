@@ -834,10 +834,6 @@ export default function Dashboard({
                     <option value="quarterly">분기별</option>
                     <option value="yearly">년도별</option>
                   </select>
-                  <button onClick={onSaveSnapshot}
-                    className="flex items-center gap-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg transition-colors">
-                    오늘 스냅샷 저장
-                  </button>
                 </div>
               </div>
               {(() => {
