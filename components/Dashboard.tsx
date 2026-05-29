@@ -357,7 +357,7 @@ export default function Dashboard({
                         <td className={cn('py-2 px-2', isPos(h.profit) ? 'text-emerald-400' : 'text-red-400')}>{formatCurrency(h.profit)}</td>
                         <td className="py-2 px-2 text-slate-400">{h.weight.toFixed(1)}%</td>
                         <td className="py-2 px-2 text-slate-400">{h.sector}</td>
-                        <td className={cn('py-2 px-2', isPos(h.daily_change) ? 'text-emerald-400' : 'text-red-400')}>{formatPercent(h.daily_change)}</td>
+                        <td className={cn('py-2 px-2', isPos(h.daily_change) ? 'text-emerald-400' : 'text-red-400')}>{formatCurrency(h.daily_change * (h.quantity || 0))}</td>
                       </tr>
                     ))}
 
@@ -435,8 +435,8 @@ export default function Dashboard({
                       </td>
                       <td className="py-2 px-2 text-slate-400 text-xs">100%</td>
                       <td className="py-2 px-2"></td>
-                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+(h.daily_change*h.valuation), 0)/Math.max(displayHoldings.reduce((s,h) => s+h.valuation, 0),1)) ? "text-emerald-400" : "text-red-400")}>
-                        {formatPercent(displayHoldings.reduce((s,h) => s+(h.daily_change*h.valuation), 0)/Math.max(displayHoldings.reduce((s,h) => s+h.valuation, 0),1))}
+                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+(h.daily_change*(h.quantity||0)), 0)) ? "text-emerald-400" : "text-red-400")}>
+                        {formatCurrency(displayHoldings.reduce((s,h) => s+(h.daily_change*(h.quantity||0)), 0))}
                       </td>
                     </tr>
                   </tbody>
