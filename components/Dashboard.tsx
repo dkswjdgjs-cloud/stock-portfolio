@@ -379,9 +379,9 @@ export default function Dashboard({
                     {/* 전체일 때 현금성 자산 합계 행 */}
                     {accountFilter === '전체' && cashBalances.length > 0 && (
                       <tr className="border-b border-gray-200/80 hover:bg-gray-100/80">
-                        <td className="py-2 px-2 text-gray-500">전체</td>
-                        <td className="py-2 px-2 text-gray-400">-</td>
-                        <td className="py-2 px-2 text-gray-700">현금성 자산</td>
+                        <td className="py-4 px-2 text-gray-500">전체</td>
+                        <td className="py-4 px-2 text-gray-400">-</td>
+                        <td className="py-4 px-2 text-gray-700">현금성 자산</td>
                         <td className="py-2 px-2 text-gray-400">-</td>
                         <td className="py-2 px-2 text-gray-400">-</td>
                         <td className="py-2 px-2 text-gray-400">-</td>
@@ -399,9 +399,9 @@ export default function Dashboard({
                     {/* 개별 계좌일 때 현금성 자산 행 */}
                     {accountFilter !== '전체' && (
                       <tr className="border-b border-gray-200/80 hover:bg-gray-100/80">
-                        <td className="py-2 px-2 text-gray-500">{accountFilter}</td>
-                        <td className="py-2 px-2 text-gray-400">-</td>
-                        <td className="py-2 px-2 text-gray-700">현금성 자산</td>
+                        <td className="py-4 px-2 text-gray-500">{accountFilter}</td>
+                        <td className="py-4 px-2 text-gray-400">-</td>
+                        <td className="py-4 px-2 text-gray-700">현금성 자산</td>
                         <td className="py-2 px-2 text-gray-400">-</td>
                         <td className="py-2 px-2 text-gray-400">-</td>
                         <td className="py-2 px-2 text-gray-400">-</td>
