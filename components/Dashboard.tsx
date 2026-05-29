@@ -192,47 +192,47 @@ export default function Dashboard({
     { label: '일일 결산', icon: <Clock className="w-3.5 h-3.5" /> },
   ];
 
-  const inputClass = "w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500";
-  const selectClass = "w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-xs text-slate-200";
+  const inputClass = "w-full bg-gray-200 border border-gray-400 rounded px-2 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500";
+  const selectClass = "w-full bg-gray-200 border border-gray-400 rounded px-2 py-1.5 text-xs text-gray-800";
 
   // 계좌 필터링된 holdings
   const displayHoldings = filteredHoldings;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-mono">
+    <div className="min-h-screen bg-gray-50 text-gray-800 font-mono">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-6 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
             <span className="text-white font-bold text-sm">W</span>
           </div>
           <div className="flex items-center gap-2">
-            <h1 className="text-sm font-bold tracking-widest text-slate-100">WEALTHFLOW</h1>
-            <span className="text-xs text-blue-400 tracking-wider">portfolio analytics</span>
+            <h1 className="text-sm font-bold tracking-widest text-gray-900">WEALTHFLOW</h1>
+            <span className="text-xs text-blue-600 tracking-wider">portfolio analytics</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-full px-3 py-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs text-emerald-400 tracking-wider">LIVE SYNC ACTIVE</span>
+          <div className="flex items-center gap-1.5 bg-gray-100 border border-gray-300 rounded-full px-3 py-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs text-emerald-600 tracking-wider">LIVE SYNC ACTIVE</span>
           </div>
-          <span className="text-xs text-slate-500 ml-2">
+          <span className="text-xs text-gray-400 ml-2">
             {lastUpdated ? lastUpdated.toLocaleTimeString('ko-KR') : '--:--:--'}
           </span>
-          <button onClick={onRefresh} className="ml-1 text-slate-400 hover:text-slate-200 transition-colors">
+          <button onClick={onRefresh} className="ml-1 text-gray-500 hover:text-gray-800 transition-colors">
             <RefreshCw className={cn('w-3.5 h-3.5', isRefreshing && 'animate-spin')} />
           </button>
         </div>
       </div>
 
       {/* 탭 네비게이션 */}
-      <div className="bg-slate-900/50 border-b border-slate-800 px-6">
+      <div className="bg-white/50 border-b border-gray-200 px-6">
         <div className="flex">
           {TABS.map((tab, i) => (
             <button key={i} onClick={() => setActiveTab(i)}
               className={cn(
                 'flex items-center gap-2 px-4 py-3 text-xs font-medium tracking-wide transition-colors border-b-2 -mb-px',
-                activeTab === i ? 'text-blue-400 border-blue-400' : 'text-slate-500 border-transparent hover:text-slate-300'
+                activeTab === i ? 'text-blue-600 border-blue-600' : 'text-gray-400 border-transparent hover:text-gray-700'
               )}>
               {tab.icon}{tab.label}
             </button>
@@ -246,21 +246,21 @@ export default function Dashboard({
         {activeTab === 0 && (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                <p className="text-xs text-slate-500 tracking-wider mb-2">전월 평가액</p>
-                <p className="text-2xl font-bold text-slate-100">{formatCurrency(summary.prevMonthValue)}</p>
+              <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <p className="text-xs text-gray-400 tracking-wider mb-2">전월 평가액</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(summary.prevMonthValue)}</p>
               </div>
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                <p className="text-xs text-slate-500 tracking-wider mb-2">투입금액</p>
-                <p className="text-2xl font-bold text-slate-100">{formatCurrency(summary.totalInvested)}</p>
-                <div className="mt-2 pt-2 border-t border-slate-700">
-                  <p className="text-xs text-slate-500">당월 투입액</p>
-                  <p className="text-sm text-slate-300">{formatCurrency(summary.currMonthInvestment)}</p>
+              <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <p className="text-xs text-gray-400 tracking-wider mb-2">투입금액</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(summary.totalInvested)}</p>
+                <div className="mt-2 pt-2 border-t border-gray-300">
+                  <p className="text-xs text-gray-400">당월 투입액</p>
+                  <p className="text-sm text-gray-700">{formatCurrency(summary.currMonthInvestment)}</p>
                 </div>
               </div>
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                <p className="text-xs text-slate-500 tracking-wider mb-2">현재 평가액</p>
-                <p className="text-2xl font-bold text-slate-100">{formatCurrency(summary.currMonthValue)}</p>
+              <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <p className="text-xs text-gray-400 tracking-wider mb-2">현재 평가액</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(summary.currMonthValue)}</p>
               </div>
             </div>
             <div className="grid grid-cols-4 gap-4">
@@ -270,12 +270,12 @@ export default function Dashboard({
                 { label: '월 수익금', profit: summary.monthlyProfit, rate: summary.monthlyReturn },
                 { label: '일 수익금', profit: summary.dailyProfit, rate: summary.dailyReturn },
               ].map((item, i) => (
-                <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                  <p className="text-xs text-slate-500 tracking-wider mb-2">{item.label}</p>
-                  <p className={cn('text-xl font-bold', isPos(item.profit) ? 'text-emerald-400' : 'text-red-400')}>
+                <div key={i} className="bg-white border border-gray-200 rounded-xl p-5">
+                  <p className="text-xs text-gray-400 tracking-wider mb-2">{item.label}</p>
+                  <p className={cn('text-xl font-bold', isPos(item.profit) ? 'text-emerald-600' : 'text-red-500')}>
                     {formatCurrency(item.profit)}
                   </p>
-                  <p className={cn('text-sm mt-1', isPos(item.rate) ? 'text-emerald-400' : 'text-red-400')}>
+                  <p className={cn('text-sm mt-1', isPos(item.rate) ? 'text-emerald-600' : 'text-red-500')}>
                     {formatPercent(item.rate)}
                   </p>
                 </div>
@@ -284,9 +284,9 @@ export default function Dashboard({
 
             {/* 파이차트 + 상세내역 */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col" style={{height: "450px"}}>
+              <div className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col" style={{height: "450px"}}>
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs text-slate-400 tracking-wider">| ASSET ALLOCATION</p>
+                  <p className="text-xs text-gray-500 tracking-wider">| ASSET ALLOCATION</p>
                   <select value={pieFilter} onChange={e => setPieFilter(e.target.value)} className={selectClass} style={{width: 'auto'}}>
                     {PIE_FILTERS.map(f => <option key={f}>{f}</option>)}
                   </select>
@@ -299,26 +299,26 @@ export default function Dashboard({
                       </Pie>
                     </PieChart>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <p className="text-sm text-slate-500 tracking-wider">MARKET VALUE</p>
-                      <p className="text-2xl font-bold text-slate-100">{formatCurrency(totalValuation)}</p>
+                      <p className="text-sm text-gray-400 tracking-wider">MARKET VALUE</p>
+                      <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalValuation)}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col" style={{height: "450px"}}>
-                <p className="text-xs text-slate-400 tracking-wider mb-4">| ALL HOLDINGS BREAKDOWN</p>
+              <div className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col" style={{height: "450px"}}>
+                <p className="text-xs text-gray-500 tracking-wider mb-4">| ALL HOLDINGS BREAKDOWN</p>
                 <div className="space-y-4 overflow-y-auto flex-1">
                   {pieData.map((d, i) => (
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                        <span className="text-sm text-blue-400 font-medium">{d.ticker || d.name}</span>
-                        <span className="text-sm text-slate-400">{d.ticker ? d.name : ''}</span>
+                        <span className="text-sm text-blue-600 font-medium">{d.ticker || d.name}</span>
+                        <span className="text-sm text-gray-500">{d.ticker ? d.name : ''}</span>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="text-sm text-slate-200">{formatCurrency(d.value)}</span>
-                        <span className="text-sm text-emerald-400 w-14 text-right">
+                        <span className="text-sm text-gray-800">{formatCurrency(d.value)}</span>
+                        <span className="text-sm text-emerald-600 w-14 text-right">
                           {totalValuation > 0 ? ((d.value / totalValuation) * 100).toFixed(2) : '0.00'}%
                         </span>
                       </div>
@@ -334,18 +334,18 @@ export default function Dashboard({
         {activeTab === 1 && (
           <div className="space-y-4">
             {/* 박스1: 계좌 상세 내역 */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xs text-slate-400 tracking-wider">| 계좌 상세 내역</h2>
+                <h2 className="text-xs text-gray-500 tracking-wider">| 계좌 상세 내역</h2>
                 <select value={accountFilter} onChange={e => onAccountFilterChange(e.target.value)}
-                  className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-300">
+                  className="text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1 text-gray-700">
                   {ACCOUNTS.map(a => <option key={a}>{a}</option>)}
                 </select>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="text-slate-500 border-b border-slate-800">
+                    <tr className="text-gray-400 border-b border-gray-200">
                       {['계좌', 'TICKER', '종목명', '평균단가', '수량', '현재단가', '평가액', '수익율', '수익금', '비중', '섹터', '일일등락'].map(h => (
                         <th key={h} className="text-left py-2 px-2 font-medium tracking-wider">{h}</th>
                       ))}
@@ -353,19 +353,19 @@ export default function Dashboard({
                   </thead>
                   <tbody>
                     {displayHoldings.map((h, i) => (
-                      <tr key={i} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                        <td className="py-2 px-2 text-slate-400">{h.account}</td>
-                        <td className="py-2 px-2 text-blue-400">{h.ticker}</td>
+                      <tr key={i} className="border-b border-gray-200/80 hover:bg-gray-100/80 transition-colors">
+                        <td className="py-2 px-2 text-gray-500">{h.account}</td>
+                        <td className="py-2 px-2 text-blue-600">{h.ticker}</td>
                         <td className="py-2 px-2">{h.stock_name}</td>
                         <td className="py-2 px-2">{formatCurrency(h.avg_price, h.currency)}</td>
                         <td className="py-2 px-2">{h.quantity}</td>
                         <td className="py-2 px-2">{formatCurrency(h.curr_price, h.currency)}</td>
                         <td className="py-2 px-2 font-medium">{formatCurrency(h.valuation)}</td>
-                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.return_rate) ? 'text-emerald-400' : 'text-red-400')}>{formatPercent(h.return_rate)}</td>
-                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.profit) ? 'text-emerald-400' : 'text-red-400')}>{formatCurrency(h.profit)}</td>
-                        <td className="py-2 px-2 text-slate-400">{h.weight.toFixed(1)}%</td>
-                        <td className="py-2 px-2 text-slate-400">{h.sector}</td>
-                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.daily_change) ? 'text-emerald-400' : 'text-red-400')}>
+                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.return_rate) ? 'text-emerald-600' : 'text-red-500')}>{formatPercent(h.return_rate)}</td>
+                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.profit) ? 'text-emerald-600' : 'text-red-500')}>{formatCurrency(h.profit)}</td>
+                        <td className="py-2 px-2 text-gray-500">{h.weight.toFixed(1)}%</td>
+                        <td className="py-2 px-2 text-gray-500">{h.sector}</td>
+                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.daily_change) ? 'text-emerald-600' : 'text-red-500')}>
                           <div>{formatCurrency(h.daily_change * (h.quantity || 0))}</div>
                           <div className="text-xs opacity-70">
                             ({h.curr_price > 0 ? ((h.daily_change / (h.curr_price - h.daily_change)) * 100).toFixed(2) : '0.00'}%)
@@ -376,45 +376,45 @@ export default function Dashboard({
 
                     {/* 전체일 때 현금성 자산 합계 행 */}
                     {accountFilter === '전체' && cashBalances.length > 0 && (
-                      <tr className="border-b border-slate-800/50 hover:bg-slate-800/30">
-                        <td className="py-2 px-2 text-slate-400">전체</td>
-                        <td className="py-2 px-2 text-slate-500">-</td>
-                        <td className="py-2 px-2 text-slate-300">현금성 자산</td>
-                        <td className="py-2 px-2 text-slate-500">-</td>
-                        <td className="py-2 px-2 text-slate-500">-</td>
-                        <td className="py-2 px-2 text-slate-500">-</td>
+                      <tr className="border-b border-gray-200/80 hover:bg-gray-100/80">
+                        <td className="py-2 px-2 text-gray-500">전체</td>
+                        <td className="py-2 px-2 text-gray-400">-</td>
+                        <td className="py-2 px-2 text-gray-700">현금성 자산</td>
+                        <td className="py-2 px-2 text-gray-400">-</td>
+                        <td className="py-2 px-2 text-gray-400">-</td>
+                        <td className="py-2 px-2 text-gray-400">-</td>
                         <td className="py-2 px-2">{formatCurrency(cashBalances.reduce((s,b) => s+b.balance, 0))}</td>
-                        <td className="py-2 px-2 text-slate-500">-</td>
-                        <td className="py-2 px-2 text-slate-500">0</td>
-                        <td className="py-2 px-2 text-slate-400">
+                        <td className="py-2 px-2 text-gray-400">-</td>
+                        <td className="py-2 px-2 text-gray-400">0</td>
+                        <td className="py-2 px-2 text-gray-500">
                           {totalValuation > 0 ? ((cashBalances.reduce((s,b) => s+b.balance, 0) / (totalValuation + cashBalances.reduce((s,b) => s+b.balance, 0))) * 100).toFixed(1) : '0.0'}%
                         </td>
-                        <td className="py-2 px-2 text-slate-400">현금</td>
-                        <td className="py-2 px-2 text-slate-500">-</td>
+                        <td className="py-2 px-2 text-gray-500">현금</td>
+                        <td className="py-2 px-2 text-gray-400">-</td>
                       </tr>
                     )}
 
                     {/* 개별 계좌일 때 현금성 자산 행 */}
                     {accountFilter !== '전체' && (
-                      <tr className="border-b border-slate-800/50 hover:bg-slate-800/30">
-                        <td className="py-2 px-2 text-slate-400">{accountFilter}</td>
-                        <td className="py-2 px-2 text-slate-500">-</td>
-                        <td className="py-2 px-2 text-slate-300">현금성 자산</td>
-                        <td className="py-2 px-2 text-slate-500">-</td>
-                        <td className="py-2 px-2 text-slate-500">-</td>
-                        <td className="py-2 px-2 text-slate-500">-</td>
+                      <tr className="border-b border-gray-200/80 hover:bg-gray-100/80">
+                        <td className="py-2 px-2 text-gray-500">{accountFilter}</td>
+                        <td className="py-2 px-2 text-gray-400">-</td>
+                        <td className="py-2 px-2 text-gray-700">현금성 자산</td>
+                        <td className="py-2 px-2 text-gray-400">-</td>
+                        <td className="py-2 px-2 text-gray-400">-</td>
+                        <td className="py-2 px-2 text-gray-400">-</td>
                         <td className="py-2 px-2">
                           {editingCashAccount === accountFilter ? (
                             <div className="flex items-center gap-1">
                               <input type="number" value={cashInput}
                                 onChange={e => setCashInput(e.target.value)}
-                                className="w-28 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500" />
+                                className="w-28 bg-gray-200 border border-gray-400 rounded px-2 py-1 text-xs text-gray-800 focus:outline-none focus:border-blue-500" />
                               <button onClick={async () => {
                                 await onUpdateCashBalance(accountFilter, parseFloat(cashInput) || 0);
                                 setEditingCashAccount(null);
-                              }} className="text-xs text-emerald-400 hover:text-emerald-300">저장</button>
+                              }} className="text-xs text-emerald-600 hover:text-emerald-300">저장</button>
                               <button onClick={() => setEditingCashAccount(null)}
-                                className="text-xs text-slate-500 hover:text-slate-300">취소</button>
+                                className="text-xs text-gray-400 hover:text-gray-700">취소</button>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2">
@@ -422,33 +422,33 @@ export default function Dashboard({
                               <button onClick={() => {
                                 setEditingCashAccount(accountFilter);
                                 setCashInput(getCashBalance(accountFilter).toString());
-                              }} className="text-xs text-slate-500 hover:text-blue-400">수정</button>
+                              }} className="text-xs text-gray-400 hover:text-blue-600">수정</button>
                             </div>
                           )}
                         </td>
-                        <td className="py-2 px-2 text-slate-500">-</td>
-                        <td className="py-2 px-2 text-slate-500">0</td>
-                        <td className="py-2 px-2 text-slate-400">
+                        <td className="py-2 px-2 text-gray-400">-</td>
+                        <td className="py-2 px-2 text-gray-400">0</td>
+                        <td className="py-2 px-2 text-gray-500">
                           {totalValuation > 0 ? ((getCashBalance(accountFilter) / (totalValuation + getCashBalance(accountFilter))) * 100).toFixed(1) : '0.0'}%
                         </td>
-                        <td className="py-2 px-2 text-slate-400">현금</td>
-                        <td className="py-2 px-2 text-slate-500">-</td>
+                        <td className="py-2 px-2 text-gray-500">현금</td>
+                        <td className="py-2 px-2 text-gray-400">-</td>
                       </tr>
                     )}
 
                     {/* SELECTED TOTAL */}
-                    <tr className="border-t-2 border-slate-600 bg-slate-800/50 font-medium">
-                      <td className="py-2 px-2 text-slate-300 text-xs" colSpan={6}>SELECTED TOTAL (선택 합계)</td>
-                      <td className="py-2 px-2 text-slate-100 text-xs">{formatCurrency(displayHoldings.reduce((s,h) => s+h.valuation, 0) + (accountFilter === '전체' ? totalCashBalance : getCashBalance(accountFilter)))}</td>
-                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+(h.return_rate*h.valuation), 0)/Math.max(displayHoldings.reduce((s,h) => s+h.valuation, 0),1)) ? "text-emerald-400" : "text-red-400")}>
+                    <tr className="border-t-2 border-gray-400 bg-gray-50/80 font-medium">
+                      <td className="py-2 px-2 text-gray-700 text-xs" colSpan={6}>SELECTED TOTAL (선택 합계)</td>
+                      <td className="py-2 px-2 text-gray-900 text-xs">{formatCurrency(displayHoldings.reduce((s,h) => s+h.valuation, 0) + (accountFilter === '전체' ? totalCashBalance : getCashBalance(accountFilter)))}</td>
+                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+(h.return_rate*h.valuation), 0)/Math.max(displayHoldings.reduce((s,h) => s+h.valuation, 0),1)) ? "text-emerald-600" : "text-red-500")}>
                         {formatPercent(displayHoldings.reduce((s,h) => s+(h.return_rate*h.valuation), 0)/Math.max(displayHoldings.reduce((s,h) => s+h.valuation, 0),1))}
                       </td>
-                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+h.profit, 0)) ? "text-emerald-400" : "text-red-400")}>
+                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+h.profit, 0)) ? "text-emerald-600" : "text-red-500")}>
                         {formatCurrency(displayHoldings.reduce((s,h) => s+h.profit, 0))}
                       </td>
-                      <td className="py-2 px-2 text-slate-400 text-xs">100%</td>
+                      <td className="py-2 px-2 text-gray-500 text-xs">100%</td>
                       <td className="py-2 px-2"></td>
-                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+(h.daily_change*(h.quantity||0)), 0)) ? "text-emerald-400" : "text-red-400")}>
+                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+(h.daily_change*(h.quantity||0)), 0)) ? "text-emerald-600" : "text-red-500")}>
                         {formatCurrency(displayHoldings.reduce((s,h) => s+(h.daily_change*(h.quantity||0)), 0))}
                       </td>
                     </tr>
@@ -458,14 +458,14 @@ export default function Dashboard({
             </div>
 
             {/* 박스2: 거래 내역 */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex gap-0 border-b border-slate-700">
+                <div className="flex gap-0 border-b border-gray-300">
                   {(['trade', 'income'] as const).map(t => (
                     <button key={t} onClick={() => setViewTab(t)}
                       className={cn(
                         'px-4 py-2 text-xs font-medium tracking-wide transition-colors border-b-2 -mb-px',
-                        viewTab === t ? 'text-blue-400 border-blue-400' : 'text-slate-500 border-transparent hover:text-slate-300'
+                        viewTab === t ? 'text-blue-600 border-blue-600' : 'text-gray-400 border-transparent hover:text-gray-700'
                       )}>
                       {t === 'trade' ? '거래 내역' : `현금 소득 내역 (${cashIncomes.length})`}
                     </button>
@@ -479,13 +479,13 @@ export default function Dashboard({
 
               {/* 입력 폼 */}
               {showForm && (
-                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-4">
+                <div className="bg-gray-50/80 border border-gray-300 rounded-xl p-4 mb-4">
                   {/* 폼 탭 */}
                   <div className="flex gap-2 mb-4">
                     {(['trade', 'income'] as const).map(t => (
                       <button key={t} onClick={() => setFormTab(t)}
                         className={cn('text-xs px-3 py-1.5 rounded-lg transition-colors',
-                          formTab === t ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-400 hover:text-slate-200')}>
+                          formTab === t ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500 hover:text-gray-800')}>
                         {t === 'trade' ? '거래 내역' : '현금 소득'}
                       </button>
                     ))}
@@ -505,7 +505,7 @@ export default function Dashboard({
                         { label: '메모', key: 'memo', type: 'text' },
                       ].map(({ label, key, type }) => (
                         <div key={key}>
-                          <label className="text-xs text-slate-400 mb-1 block">{label}</label>
+                          <label className="text-xs text-gray-500 mb-1 block">{label}</label>
                           <input type={type} value={(form as any)[key]}
                             onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
                             className={inputClass} />
@@ -518,7 +518,7 @@ export default function Dashboard({
                         { label: '통화', key: 'currency', options: ['KRW', 'USD'] },
                       ].map(({ label, key, options }) => (
                         <div key={key}>
-                          <label className="text-xs text-slate-400 mb-1 block">{label}</label>
+                          <label className="text-xs text-gray-500 mb-1 block">{label}</label>
                           <select value={(form as any)[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
                             className={selectClass}>
                             {options.map(o => <option key={o}>{o}</option>)}
@@ -527,7 +527,7 @@ export default function Dashboard({
                       ))}
                       <div className="col-span-2 md:col-span-4 flex gap-2 justify-end mt-2">
                         <button onClick={() => { setShowForm(false); setEditingId(null); editingIdRef.current = null; }}
-                          className="text-xs px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">취소</button>
+                          className="text-xs px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">취소</button>
                         <button onClick={editingIdRef.current ? () => handleUpdate(editingIdRef.current!) : handleSubmit}
                           className="text-xs px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">
                           {editingIdRef.current ? '수정 저장' : '저장'}
@@ -544,7 +544,7 @@ export default function Dashboard({
                         { label: '메모', key: 'memo', type: 'text' },
                       ].map(({ label, key, type }) => (
                         <div key={key}>
-                          <label className="text-xs text-slate-400 mb-1 block">{label}</label>
+                          <label className="text-xs text-gray-500 mb-1 block">{label}</label>
                           <input type={type} value={(incomeForm as any)[key]}
                             onChange={e => setIncomeForm(f => ({ ...f, [key]: e.target.value }))}
                             className={inputClass} />
@@ -555,7 +555,7 @@ export default function Dashboard({
                         { label: '소득 종류', key: 'income_type', options: INCOME_TYPES },
                       ].map(({ label, key, options }) => (
                         <div key={key}>
-                          <label className="text-xs text-slate-400 mb-1 block">{label}</label>
+                          <label className="text-xs text-gray-500 mb-1 block">{label}</label>
                           <select value={(incomeForm as any)[key]} onChange={e => setIncomeForm(f => ({ ...f, [key]: e.target.value }))}
                             className={selectClass}>
                             {options.map(o => <option key={o}>{o}</option>)}
@@ -564,7 +564,7 @@ export default function Dashboard({
                       ))}
                       <div className="col-span-2 md:col-span-4 flex gap-2 justify-end mt-2">
                         <button onClick={() => setShowForm(false)}
-                          className="text-xs px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">취소</button>
+                          className="text-xs px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">취소</button>
                         <button onClick={handleIncomeSubmit}
                           className="text-xs px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">저장</button>
                       </div>
@@ -577,8 +577,8 @@ export default function Dashboard({
               {viewTab === 'trade' && <div className="overflow-x-auto">
                 <div style={{height: '320px', overflowY: 'auto'}}>
                   <table className="w-full text-xs">
-                    <thead className="sticky top-0 bg-slate-900">
-                      <tr className="text-slate-500 border-b border-slate-800">
+                    <thead className="sticky top-0 bg-white">
+                      <tr className="text-gray-400 border-b border-gray-200">
                         {['날짜', '계좌', '티커', '종목명', '입출금', '금액', '매수/매도', '수량', '매수단가', '매도단가', '손익', '수익율', ''].map(h => (
                           <th key={h} className="text-left py-2 px-2 font-medium tracking-wider">{h}</th>
                         ))}
@@ -586,21 +586,21 @@ export default function Dashboard({
                     </thead>
                     <tbody>
                       {transactions.map((t) => (
-                        <tr key={t.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                          <td className="py-2 px-2 text-slate-400">{t.trade_date}</td>
-                          <td className="py-2 px-2 text-slate-400">{t.account}</td>
-                          <td className="py-2 px-2 text-blue-400">{t.ticker || '-'}</td>
+                        <tr key={t.id} className="border-b border-gray-200/80 hover:bg-gray-100/80 transition-colors">
+                          <td className="py-2 px-2 text-gray-500">{t.trade_date}</td>
+                          <td className="py-2 px-2 text-gray-500">{t.account}</td>
+                          <td className="py-2 px-2 text-blue-600">{t.ticker || '-'}</td>
                           <td className="py-2 px-2">{t.stock_name || '-'}</td>
-                          <td className="py-2 px-2 text-slate-400">{t.account_transfer || '-'}</td>
+                          <td className="py-2 px-2 text-gray-500">{t.account_transfer || '-'}</td>
                           <td className="py-2 px-2">{t.transfer_amount ? formatCurrency(t.transfer_amount) : '-'}</td>
                           <td className="py-2 px-2">{t.trade_type || '-'}</td>
                           <td className="py-2 px-2">{t.quantity || '-'}</td>
                           <td className="py-2 px-2">{t.buy_price ? formatCurrency(t.buy_price, t.currency) : '-'}</td>
                           <td className="py-2 px-2">{t.sell_price ? formatCurrency(t.sell_price, t.currency) : '-'}</td>
-                          <td className={cn('py-2 px-2', t.profit_loss && t.profit_loss >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                          <td className={cn('py-2 px-2', t.profit_loss && t.profit_loss >= 0 ? 'text-emerald-600' : 'text-red-500')}>
                             {t.profit_loss ? formatCurrency(t.profit_loss) : '-'}
                           </td>
-                          <td className={cn('py-2 px-2', t.profit_rate && t.profit_rate >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                          <td className={cn('py-2 px-2', t.profit_rate && t.profit_rate >= 0 ? 'text-emerald-600' : 'text-red-500')}>
                             {t.profit_rate ? formatPercent(t.profit_rate) : '-'}
                           </td>
                           <td className="py-2 px-2 flex gap-2">
@@ -621,8 +621,8 @@ export default function Dashboard({
                               editingIdRef.current = eid;
                               setFormTab('trade');
                               setShowForm(true);
-                            }} className="text-slate-500 hover:text-blue-400 transition-colors text-xs">수정</button>
-                            <button onClick={() => onDeleteTransaction(t.id)} className="text-slate-600 hover:text-red-400 transition-colors">✕</button>
+                            }} className="text-gray-400 hover:text-blue-600 transition-colors text-xs">수정</button>
+                            <button onClick={() => onDeleteTransaction(t.id)} className="text-gray-300 hover:text-red-500 transition-colors">✕</button>
                           </td>
                         </tr>
                       ))}
@@ -634,11 +634,11 @@ export default function Dashboard({
               {/* 현금 소득 내역 */}
               {viewTab === 'income' && (
                 <div className="mt-4">
-                  <p className="text-xs text-slate-400 tracking-wider mb-2">| 현금 소득 내역</p>
+                  <p className="text-xs text-gray-500 tracking-wider mb-2">| 현금 소득 내역</p>
                   <div style={{height: '320px', overflowY: 'auto'}}>
                     <table className="w-full text-xs">
-                      <thead className="sticky top-0 bg-slate-900">
-                        <tr className="text-slate-500 border-b border-slate-800">
+                      <thead className="sticky top-0 bg-white">
+                        <tr className="text-gray-400 border-b border-gray-200">
                           {['날짜', '계좌', '종류', '티커', '종목명', '금액', '메모', ''].map(h => (
                             <th key={h} className="text-left py-2 px-2 font-medium">{h}</th>
                           ))}
@@ -646,16 +646,16 @@ export default function Dashboard({
                       </thead>
                       <tbody>
                         {cashIncomes.map(c => (
-                          <tr key={c.id} className="border-b border-slate-800/50 hover:bg-slate-800/30">
-                            <td className="py-2 px-2 text-slate-400">{c.income_date}</td>
-                            <td className="py-2 px-2 text-slate-400">{c.account}</td>
-                            <td className="py-2 px-2 text-emerald-400">{c.income_type}</td>
-                            <td className="py-2 px-2 text-blue-400">{c.ticker || '-'}</td>
+                          <tr key={c.id} className="border-b border-gray-200/80 hover:bg-gray-100/80">
+                            <td className="py-2 px-2 text-gray-500">{c.income_date}</td>
+                            <td className="py-2 px-2 text-gray-500">{c.account}</td>
+                            <td className="py-2 px-2 text-emerald-600">{c.income_type}</td>
+                            <td className="py-2 px-2 text-blue-600">{c.ticker || '-'}</td>
                             <td className="py-2 px-2">{c.stock_name || '-'}</td>
-                            <td className="py-2 px-2 text-emerald-400">{formatCurrency(c.amount)}</td>
-                            <td className="py-2 px-2 text-slate-400">{c.memo || '-'}</td>
+                            <td className="py-2 px-2 text-emerald-600">{formatCurrency(c.amount)}</td>
+                            <td className="py-2 px-2 text-gray-500">{c.memo || '-'}</td>
                             <td className="py-2 px-2">
-                              <button onClick={() => onDeleteCashIncome(c.id)} className="text-slate-600 hover:text-red-400">✕</button>
+                              <button onClick={() => onDeleteCashIncome(c.id)} className="text-gray-300 hover:text-red-500">✕</button>
                             </td>
                           </tr>
                         ))}
@@ -672,9 +672,9 @@ export default function Dashboard({
         {activeTab === 2 && (
           <div className="space-y-4">
             {/* 그래프 */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xs text-slate-400 tracking-wider">| 성과 추이 MATRIX</h2>
+                <h2 className="text-xs text-gray-500 tracking-wider">| 성과 추이 MATRIX</h2>
                 <button onClick={onSaveSnapshot}
                   className="flex items-center gap-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg transition-colors">
                   오늘 스냅샷 저장
@@ -682,7 +682,7 @@ export default function Dashboard({
               </div>
               <ResponsiveContainer width="100%" height={450}>
                 <AreaChart data={snapshots} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <ReferenceLine y={0} stroke="#475569" strokeWidth={1.5} />
                   <XAxis
                     dataKey="snapshot_date"
@@ -695,7 +695,7 @@ export default function Dashboard({
                     tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`}
                     domain={[-10000000, (dataMax: number) => Math.ceil(dataMax * 1.05 / 10000000) * 10000000]}
                   />
-                  <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '11px' }}
+                  <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }}
                     formatter={(v) => formatCurrency(Number(v))} />
                   <Area isAnimationActive={false} type="monotone" dataKey="total_valuation" name="평가액" stroke="#3b82f6" fill="#3b82f620" strokeWidth={2} />
                   <Area isAnimationActive={false} type="monotone" dataKey="total_invested" name="투자금" stroke="#10b981" fill="#10b98120" strokeWidth={2} />
@@ -706,19 +706,19 @@ export default function Dashboard({
 
             <div className="grid grid-cols-2 gap-4">
               {/* CSV 업로드 */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+              <div className="bg-white border border-gray-200 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs text-slate-400 tracking-wider">| CSV 파일 업로드</p>
+                  <p className="text-xs text-gray-500 tracking-wider">| CSV 파일 업로드</p>
                   <button onClick={() => setShowCsvForm(v => !v)}
-                    className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded-lg transition-colors">
+                    className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-lg transition-colors">
                     {showCsvForm ? "닫기" : "열기"}
                   </button>
                 </div>
                 {showCsvForm && <>
-                <p className="text-xs text-slate-500 mb-3">CSV 형식: 날짜,평가액,누적투자금,누적수익금</p>
-                <p className="text-xs text-slate-500 mb-3">첫 번째 행은 헤더로 자동 무시됩니다</p>
+                <p className="text-xs text-gray-400 mb-3">CSV 형식: 날짜,평가액,누적투자금,누적수익금</p>
+                <p className="text-xs text-gray-400 mb-3">첫 번째 행은 헤더로 자동 무시됩니다</p>
                 <div
-                  className="w-full h-32 border-2 border-dashed border-slate-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-colors"
+                  className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-colors"
                   onClick={() => document.getElementById('csv-file-input')?.click()}
                   onDragOver={e => e.preventDefault()}
                   onDrop={e => {
@@ -731,8 +731,8 @@ export default function Dashboard({
                     }
                   }}
                 >
-                  <p className="text-slate-500 text-xs mb-1">📁 클릭하거나 파일을 드래그하세요</p>
-                  <p className="text-slate-600 text-xs">{csvInput ? `✅ 파일 로드됨 (${csvInput.split('\n').filter(l=>l.trim()).length}줄)` : '.csv 파일'}</p>
+                  <p className="text-gray-400 text-xs mb-1">📁 클릭하거나 파일을 드래그하세요</p>
+                  <p className="text-gray-300 text-xs">{csvInput ? `✅ 파일 로드됨 (${csvInput.split('\n').filter(l=>l.trim()).length}줄)` : '.csv 파일'}</p>
                 </div>
                 <input
                   id="csv-file-input"
@@ -759,11 +759,11 @@ export default function Dashboard({
               </div>
 
               {/* 수기 입력 */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+              <div className="bg-white border border-gray-200 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs text-slate-400 tracking-wider">| 수기 입력</p>
+                  <p className="text-xs text-gray-500 tracking-wider">| 수기 입력</p>
                   <button onClick={() => setShowManualForm(v => !v)}
-                    className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded-lg transition-colors">
+                    className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-lg transition-colors">
                     {showManualForm ? "닫기" : "열기"}
                   </button>
                 </div>
@@ -775,10 +775,10 @@ export default function Dashboard({
                     { label: '누적수익금', key: 'cumulativeProfit', type: 'number' },
                   ].map(({ label, key, type }) => (
                     <div key={key}>
-                      <label className="text-xs text-slate-400 mb-1 block">{label}</label>
+                      <label className="text-xs text-gray-500 mb-1 block">{label}</label>
                       <input type={type} value={(snapshotForm as any)[key]}
                         onChange={e => setSnapshotForm(f => ({ ...f, [key]: e.target.value }))}
-                        className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500" />
+                        className="w-full bg-gray-200 border border-gray-400 rounded px-2 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500" />
                     </div>
                   ))}
                   <button onClick={() => onAddSnapshot({
@@ -796,12 +796,12 @@ export default function Dashboard({
             </div>
 
             {/* 저장된 데이터 목록 */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-              <p className="text-xs text-slate-400 tracking-wider mb-4">| 저장된 일일 결산 데이터</p>
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <p className="text-xs text-gray-500 tracking-wider mb-4">| 저장된 일일 결산 데이터</p>
               <div style={{height: '200px', overflowY: 'auto'}}>
                 <table className="w-full text-xs">
-                  <thead className="sticky top-0 bg-slate-900">
-                    <tr className="text-slate-500 border-b border-slate-800">
+                  <thead className="sticky top-0 bg-white">
+                    <tr className="text-gray-400 border-b border-gray-200">
                       {['날짜', '평가액', '누적투자금', '누적수익금', ''].map(h => (
                         <th key={h} className="text-left py-2 px-2 font-medium">{h}</th>
                       ))}
@@ -809,16 +809,16 @@ export default function Dashboard({
                   </thead>
                   <tbody>
                     {snapshots.map((s, i) => (
-                      <tr key={i} className="border-b border-slate-800/50 hover:bg-slate-800/30">
-                        <td className="py-2 px-2 text-slate-400">{s.snapshot_date}</td>
+                      <tr key={i} className="border-b border-gray-200/80 hover:bg-gray-100/80">
+                        <td className="py-2 px-2 text-gray-500">{s.snapshot_date}</td>
                         <td className="py-2 px-2">{formatCurrency(s.total_valuation || 0)}</td>
                         <td className="py-2 px-2">{formatCurrency(s.total_invested || 0)}</td>
-                        <td className={cn('py-2 px-2', (s.total_profit || 0) >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                        <td className={cn('py-2 px-2', (s.total_profit || 0) >= 0 ? 'text-emerald-600' : 'text-red-500')}>
                           {formatCurrency(s.total_profit || 0)}
                         </td>
                         <td className="py-2 px-2">
                           <button onClick={() => onDeleteSnapshot(s.snapshot_date)}
-                            className="text-slate-600 hover:text-red-400">✕</button>
+                            className="text-gray-300 hover:text-red-500">✕</button>
                         </td>
                       </tr>
                     ))}
