@@ -54,7 +54,6 @@ export default function Dashboard({
   const [csvInput, setCsvInput] = useState('');
   const [showCsvForm, setShowCsvForm] = useState(false);
   const [sortKey, setSortKey] = useState('');
-  const [sortKey, setSortKey] = useState('');
   const [sortDir, setSortDir] = useState<1|-1>(1);
   const [graphFilter, setGraphFilter] = useState('daily');
   const [targetValue, setTargetValue] = useState(0);
@@ -250,43 +249,9 @@ export default function Dashboard({
   });
   const displayHoldings = sortedHoldings;
 
-  const handleExportCSV = () => {
-    const headers = ['계좌', 'TICKER', '종목명', '평균단가', '수량', '현재단가', '평가액', '수익율', '수익금', '비중', '섹터', '일일등락'];
-    const rows = displayHoldings.map(h => [
-      h.account, h.ticker, h.stock_name,
-      h.avg_price.toFixed(2), h.quantity,
-      h.curr_price.toFixed(2),
-      h.valuation.toFixed(0),
-      h.return_rate.toFixed(2) + '%',
-      h.profit.toFixed(0),
-      h.weight.toFixed(2) + '%',
-      h.sector,
-      (h.daily_change * h.quantity).toFixed(0),
-    ]);
-    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'holdings_' + new Date().toISOString().slice(0,10) + '.csv';
-    a.click(); URL.revokeObjectURL(url);
-  };
 
-  const handleExportTransCSV = () => {
-    const headers = ['날짜', '계좌', '티커', '종목명', '입출금', '금액', '매수/매도', '수량', '매수단가', '매도단가', '손익', '수익율'];
-    const rows = transactions.map(t => [
-      t.trade_date, t.account, t.ticker || '', t.stock_name || '',
-      t.account_transfer || '', t.transfer_amount || '',
-      t.trade_type || '', t.quantity || '',
-      t.buy_price || '', t.sell_price || '',
-      t.profit_loss || '', t.profit_rate || '',
-    ]);
-    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'transactions_' + new Date().toISOString().slice(0,10) + '.csv';
-    a.click(); URL.revokeObjectURL(url);
-  };
+
+
 
   return (
     <div className="min-h-screen bg-gray-50 text-[#1a1a1a] ">
