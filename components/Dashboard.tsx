@@ -343,17 +343,17 @@ export default function Dashboard({
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[1200px] text-xs" style={{tableLayout:'fixed'}}>
                   <colgroup>
-                    <col style={{width:'7%'}} />
-                    <col style={{width:'7%'}} />
-                    <col style={{width:'12%'}} />
-                    <col style={{width:'9%'}} />
                     <col style={{width:'5%'}} />
-                    <col style={{width:'9%'}} />
-                    <col style={{width:'10%'}} />
-                    <col style={{width:'7%'}} />
-                    <col style={{width:'10%'}} />
-                    <col style={{width:'5%'}} />
+                    <col style={{width:'6%'}} />
+                    <col style={{width:'18%'}} />
                     <col style={{width:'8%'}} />
+                    <col style={{width:'3%'}} />
+                    <col style={{width:'8%'}} />
+                    <col style={{width:'9%'}} />
+                    <col style={{width:'5%'}} />
+                    <col style={{width:'9%'}} />
+                    <col style={{width:'3%'}} />
+                    <col style={{width:'6%'}} />
                     <col style={{width:'11%'}} />
                   </colgroup>
                   <thead>
