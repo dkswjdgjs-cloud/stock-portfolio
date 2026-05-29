@@ -17,26 +17,18 @@ async function getAccessToken() {
   return tokenCache.token;
 }
 
-async function getUSDKRWRate(token: string): Promise<number> {
+async function getUSDKRWRate(_token: string): Promise<number> {
   if (exchangeRateCache && Date.now() < exchangeRateCache.expires) return exchangeRateCache.rate;
   try {
-    const res = await fetch(`${KIS_BASE_URL}/uapi/overseas-price/v1/quotations/price?AUTH=&EXCD=FX&SYMB=USDKRW`, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        appkey: KIS_APP_KEY,
-        appsecret: KIS_APP_SECRET,
-        tr_id: 'HHDFS00000300',
-      },
-    });
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
     const data = await res.json();
-    const rate = parseFloat(data.output?.last || '0');
+    const rate = data.rates?.KRW;
     if (rate > 0) {
       exchangeRateCache = { rate, expires: Date.now() + 60 * 60 * 1000 };
       return rate;
     }
   } catch {}
-  return 1380; // 기본값
+  return 1400;
 }
 
 export async function GET(request: NextRequest) {
