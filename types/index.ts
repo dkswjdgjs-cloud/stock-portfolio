@@ -47,6 +47,10 @@ export interface SummaryData {
   dailyProfit: number;
   dailyReturn: number;
   totalInvested: number;
+  prevYearValuation: number;
+  prevYearInvested: number;
+  prevMonthValuation: number;
+  prevMonthInvested: number;
 }
 
 export interface DailySettlement {

@@ -16,6 +16,7 @@ export default function Home() {
     cumulativeProfit: 0, cumulativeReturn: 0, annualProfit: 0,
     annualReturn: 0, monthlyProfit: 0, monthlyReturn: 0,
     dailyProfit: 0, dailyReturn: 0, totalInvested: 0,
+    prevYearValuation: 0, prevYearInvested: 0, prevMonthValuation: 0, prevMonthInvested: 0,
   });
   const [dailySettlement, setDailySettlement] = useState<DailySettlement[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -84,7 +85,7 @@ export default function Home() {
 
     // 현금 소득을 수익금에 합산
     const cashIncomeTotal = incomeData.reduce((s, c) => s + c.amount, 0);
-    const calcedSummary = calcSummary(transData);
+    const calcedSummary = calcSummary(transData, snapshots);
     calcedSummary.cumulativeProfit += cashIncomeTotal;
 
     // 현재 평가액은 holdings 계산 후 채워짐 (아래에서 설정)
@@ -112,11 +113,38 @@ export default function Home() {
         return t.account_transfer === '입금' ? sum + amount : sum - amount;
       }, 0);
 
-    setSummary(prev => ({
-      ...prev,
-      currMonthValue,
-      totalInvested,
-    }));
+    setSummary(prev => {
+      const prevYearValuation = prev.prevYearValuation || 0;
+      const prevYearInvested = prev.prevYearInvested || 0;
+      const prevMonthValuation = prev.prevMonthValuation || 0;
+      const prevMonthInvested = prev.prevMonthInvested || 0;
+
+      // 누적수익금 = 현재평가액 - 현재투자원금
+      const cumulativeProfit = currMonthValue - totalInvested;
+      const cumulativeReturn = totalInvested > 0 ? (cumulativeProfit / totalInvested) * 100 : 0;
+
+      // 연수익금 = 현재평가액 - 전년도말 평가액 - (현재투자원금 - 전년도말 투자원금)
+      const annualProfit = currMonthValue - prevYearValuation - (totalInvested - prevYearInvested);
+      const annualBase = prevYearValuation + (totalInvested - prevYearInvested);
+      const annualReturn = annualBase > 0 ? (annualProfit / annualBase) * 100 : 0;
+
+      // 월수익금 = 현재평가액 - 전월말 평가액 - (현재투자원금 - 전월말 투자원금)
+      const monthlyProfit = currMonthValue - prevMonthValuation - (totalInvested - prevMonthInvested);
+      const monthlyBase = prevMonthValuation + (totalInvested - prevMonthInvested);
+      const monthlyReturn = monthlyBase > 0 ? (monthlyProfit / monthlyBase) * 100 : 0;
+
+      return {
+        ...prev,
+        currMonthValue,
+        totalInvested,
+        cumulativeProfit,
+        cumulativeReturn,
+        annualProfit,
+        annualReturn,
+        monthlyProfit,
+        monthlyReturn,
+      };
+    });
     setLastUpdated(new Date());
     await loadSnapshots();
   }, [fetchPrices, loadSnapshots]);

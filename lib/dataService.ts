@@ -11,26 +11,18 @@ export async function fetchTransactions(): Promise<Transaction[]> {
   return data || [];
 }
 
-export function calcSummary(transactions: Transaction[]): SummaryData {
+export function calcSummary(transactions: Transaction[], snapshots: any[] = []): SummaryData {
   const now = new Date();
   const thisYear = now.getFullYear();
   const thisMonth = now.getMonth();
-  const prevMonth = thisMonth === 0 ? 11 : thisMonth - 1;
-  const prevMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
 
   const transfers = transactions.filter(t => t.account_transfer);
-  const trades = transactions.filter(t => t.trade_type);
 
-  // 누적 투입금 (입금 - 출금)
+  // 현재 투자원금 (입금 - 출금 누적)
   const totalInvested = transfers.reduce((sum, t) => {
     const amount = t.transfer_amount || 0;
     return t.account_transfer === '입금' ? sum + amount : sum - amount;
   }, 0);
-
-  // 누적 수익금
-  const cumulativeProfit = trades
-    .filter(t => t.trade_type === '매도')
-    .reduce((sum, t) => sum + (t.profit_loss || 0), 0);
 
   // 당월 투입금
   const currMonthInvestment = transfers
@@ -43,41 +35,43 @@ export function calcSummary(transactions: Transaction[]): SummaryData {
       return t.account_transfer === '입금' ? sum + amount : sum - amount;
     }, 0);
 
-  // 연간 수익금
-  const annualProfit = trades
-    .filter(t => {
-      const d = new Date(t.trade_date);
-      return t.trade_type === '매도' && d.getFullYear() === thisYear;
-    })
-    .reduce((sum, t) => sum + (t.profit_loss || 0), 0);
+  // 스냅샷에서 전년도 말일, 전월 말일 데이터 조회
+  const prevYearEnd = `${thisYear - 1}-12-31`;
+  const prevMonthEnd = new Date(thisYear, thisMonth, 0).toISOString().split('T')[0];
 
-  // 월간 수익금
-  const monthlyProfit = trades
-    .filter(t => {
-      const d = new Date(t.trade_date);
-      return t.trade_type === '매도' && d.getFullYear() === thisYear && d.getMonth() === thisMonth;
-    })
-    .reduce((sum, t) => sum + (t.profit_loss || 0), 0);
+  const findSnapshot = (targetDate: string) => {
+    // 해당 날짜 또는 그 이전 가장 가까운 날짜의 스냅샷
+    const sorted = snapshots
+      .filter(s => s.snapshot_date <= targetDate)
+      .sort((a, b) => b.snapshot_date.localeCompare(a.snapshot_date));
+    return sorted[0] || null;
+  };
 
-  // 일간 수익금 (오늘)
-  const today = now.toISOString().split('T')[0];
-  const dailyProfit = trades
-    .filter(t => t.trade_type === '매도' && t.trade_date === today)
-    .reduce((sum, t) => sum + (t.profit_loss || 0), 0);
+  const prevYearSnapshot = findSnapshot(prevYearEnd);
+  const prevMonthSnapshot = findSnapshot(prevMonthEnd);
+
+  const prevYearValuation = prevYearSnapshot?.total_valuation || 0;
+  const prevYearInvested = prevYearSnapshot?.total_invested || 0;
+  const prevMonthValuation = prevMonthSnapshot?.total_valuation || 0;
+  const prevMonthInvested = prevMonthSnapshot?.total_invested || 0;
 
   return {
-    prevMonthValue: 0, // 한투 API 연동 후 계산
+    prevMonthValue: prevMonthValuation,
     currMonthInvestment,
-    currMonthValue: 0, // 한투 API 연동 후 계산
-    cumulativeProfit,
-    cumulativeReturn: totalInvested > 0 ? (cumulativeProfit / totalInvested) * 100 : 0,
-    annualProfit,
-    annualReturn: totalInvested > 0 ? (annualProfit / totalInvested) * 100 : 0,
-    monthlyProfit,
-    monthlyReturn: totalInvested > 0 ? (monthlyProfit / totalInvested) * 100 : 0,
-    dailyProfit,
-    dailyReturn: totalInvested > 0 ? (dailyProfit / totalInvested) * 100 : 0,
+    currMonthValue: 0,
+    cumulativeProfit: 0, // currMonthValue 설정 후 page.tsx에서 계산
+    cumulativeReturn: 0,
+    annualProfit: 0,
+    annualReturn: 0,
+    monthlyProfit: 0,
+    monthlyReturn: 0,
+    dailyProfit: 0,
+    dailyReturn: 0,
     totalInvested,
+    prevYearValuation,
+    prevYearInvested,
+    prevMonthValuation,
+    prevMonthInvested,
   };
 }
 
