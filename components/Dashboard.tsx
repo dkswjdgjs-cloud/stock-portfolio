@@ -201,20 +201,20 @@ export default function Dashboard({
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 ">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-[#1e2433] backdrop-blur-sm border-b border-[#2a3147] px-6 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-10 bg-white backdrop-blur-sm border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
             <span className="text-white font-medium text-sm">W</span>
           </div>
           <div className="flex items-center gap-2">
             <h1 className="text-sm font-medium tracking-widest text-gray-900">WEALTHFLOW</h1>
-            <span className="text-xs text-blue-400 tracking-wider">portfolio analytics</span>
+            <span className="text-xs text-blue-600 tracking-wider">portfolio analytics</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 bg-[#2a3147] border border-[#3d4d6b] rounded-full px-3 py-1">
+          <div className="flex items-center gap-1.5 bg-gray-100 border border-gray-200 rounded-full px-3 py-1">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs text-emerald-400 tracking-wider">LIVE SYNC ACTIVE</span>
+            <span className="text-xs text-emerald-600 tracking-wider">LIVE SYNC ACTIVE</span>
           </div>
           <span className="text-xs text-gray-400 ml-2">
             {lastUpdated ? lastUpdated.toLocaleTimeString('ko-KR') : '--:--:--'}
@@ -246,11 +246,11 @@ export default function Dashboard({
         {activeTab === 0 && (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="bg-white border border-gray-200 rounded-md p-5">
                 <p className="text-xs text-gray-400 tracking-wider mb-2">전월 평가액</p>
                 <p className="text-2xl font-semibold text-gray-900">{formatCurrency(summary.prevMonthValue)}</p>
               </div>
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="bg-white border border-gray-200 rounded-md p-5">
                 <p className="text-xs text-gray-400 tracking-wider mb-2">투입금액</p>
                 <p className="text-2xl font-semibold text-gray-900">{formatCurrency(summary.totalInvested)}</p>
                 <div className="mt-2 pt-2 border-t border-gray-300">
@@ -258,7 +258,7 @@ export default function Dashboard({
                   <p className="text-sm text-gray-700">{formatCurrency(summary.currMonthInvestment)}</p>
                 </div>
               </div>
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="bg-white border border-gray-200 rounded-md p-5">
                 <p className="text-xs text-gray-400 tracking-wider mb-2">현재 평가액</p>
                 <p className="text-2xl font-semibold text-gray-900">{formatCurrency(summary.currMonthValue)}</p>
               </div>
@@ -270,7 +270,7 @@ export default function Dashboard({
                 { label: '월 수익금', profit: summary.monthlyProfit, rate: summary.monthlyReturn },
                 { label: '일 수익금', profit: summary.dailyProfit, rate: summary.dailyReturn },
               ].map((item, i) => (
-                <div key={i} className="bg-white border border-gray-200 rounded-xl p-5">
+                <div key={i} className="bg-white border border-gray-200 rounded-md p-5">
                   <p className="text-xs text-gray-400 tracking-wider mb-2">{item.label}</p>
                   <p className={cn('text-xl font-semibold', isPos(item.profit) ? 'text-emerald-600' : 'text-red-500')}>
                     {formatCurrency(item.profit)}
@@ -284,7 +284,7 @@ export default function Dashboard({
 
             {/* 파이차트 + 상세내역 */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col" style={{height: "450px"}}>
+              <div className="bg-white border border-gray-200 rounded-md p-5 flex flex-col" style={{height: "450px"}}>
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs text-gray-500 tracking-wider">| ASSET ALLOCATION</p>
                   <select value={pieFilter} onChange={e => setPieFilter(e.target.value)} className={selectClass} style={{width: 'auto'}}>
@@ -306,7 +306,7 @@ export default function Dashboard({
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col" style={{height: "450px"}}>
+              <div className="bg-white border border-gray-200 rounded-md p-5 flex flex-col" style={{height: "450px"}}>
                 <p className="text-xs text-gray-500 tracking-wider mb-4">| ALL HOLDINGS BREAKDOWN</p>
                 <div className="space-y-4 overflow-y-auto flex-1">
                   {pieData.map((d, i) => (
@@ -334,7 +334,7 @@ export default function Dashboard({
         {activeTab === 1 && (
           <div className="space-y-4">
             {/* 박스1: 계좌 상세 내역 */}
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <div className="bg-white border border-gray-200 rounded-md p-5">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xs text-gray-500 tracking-wider">| 계좌 상세 내역</h2>
                 <select value={accountFilter} onChange={e => onAccountFilterChange(e.target.value)}
@@ -458,7 +458,7 @@ export default function Dashboard({
             </div>
 
             {/* 박스2: 거래 내역 */}
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <div className="bg-white border border-gray-200 rounded-md p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex gap-0 border-b border-gray-300">
                   {(['trade', 'income'] as const).map(t => (
@@ -479,7 +479,7 @@ export default function Dashboard({
 
               {/* 입력 폼 */}
               {showForm && (
-                <div className="bg-gray-50/80 border border-gray-300 rounded-xl p-4 mb-4">
+                <div className="bg-gray-50/80 border border-gray-300 rounded-md p-4 mb-4">
                   {/* 폼 탭 */}
                   <div className="flex gap-2 mb-4">
                     {(['trade', 'income'] as const).map(t => (
@@ -672,7 +672,7 @@ export default function Dashboard({
         {activeTab === 2 && (
           <div className="space-y-4">
             {/* 그래프 */}
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <div className="bg-white border border-gray-200 rounded-md p-5">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xs text-gray-500 tracking-wider">| 성과 추이 MATRIX</h2>
                 <button onClick={onSaveSnapshot}
@@ -706,7 +706,7 @@ export default function Dashboard({
 
             <div className="grid grid-cols-2 gap-4">
               {/* CSV 업로드 */}
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="bg-white border border-gray-200 rounded-md p-5">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs text-gray-500 tracking-wider">| CSV 파일 업로드</p>
                   <button onClick={() => setShowCsvForm(v => !v)}
@@ -759,7 +759,7 @@ export default function Dashboard({
               </div>
 
               {/* 수기 입력 */}
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="bg-white border border-gray-200 rounded-md p-5">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs text-gray-500 tracking-wider">| 수기 입력</p>
                   <button onClick={() => setShowManualForm(v => !v)}
@@ -796,7 +796,7 @@ export default function Dashboard({
             </div>
 
             {/* 저장된 데이터 목록 */}
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <div className="bg-white border border-gray-200 rounded-md p-5">
               <p className="text-xs text-gray-500 tracking-wider mb-4">| 저장된 일일 결산 데이터</p>
               <div style={{height: '200px', overflowY: 'auto'}}>
                 <table className="w-full text-xs">
