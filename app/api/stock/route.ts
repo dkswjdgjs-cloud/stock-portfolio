@@ -66,9 +66,12 @@ export async function GET(request: NextRequest) {
       ? parseFloat(data.output?.stck_prpr || '0')
       : parseFloat(data.output?.last || '0');
 
-    const dailyChange = isKR
-      ? parseFloat(data.output?.prdy_ctrt || '0')
+    // 등락금액 (prdy_vrss: 전일대비, prdy_vrss_sign: 1=상한,2=상승,3=보합,4=하한,5=하락)
+    const dailyChangeAmt = isKR
+      ? parseFloat(data.output?.prdy_vrss || '0')
       : parseFloat(data.output?.diff || '0');
+    const dailySign = isKR ? data.output?.prdy_vrss_sign : '2';
+    const dailyChange = (dailySign === '4' || dailySign === '5') ? -Math.abs(dailyChangeAmt) : Math.abs(dailyChangeAmt);
 
     return NextResponse.json({ ticker, price, dailyChange, market });
   } catch (error) {
