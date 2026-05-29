@@ -53,6 +53,8 @@ export default function Dashboard({
   const [cashInput, setCashInput] = useState('');
   const [csvInput, setCsvInput] = useState('');
   const [showCsvForm, setShowCsvForm] = useState(false);
+  const [snapshotSearch, setSnapshotSearch] = useState('');
+  const [highlightDate, setHighlightDate] = useState('');
   const [sortKey, setSortKey] = useState('');
   const [sortDir, setSortDir] = useState(1);
   const [graphFilter, setGraphFilter] = useState('daily');
@@ -886,6 +888,7 @@ export default function Dashboard({
                     domain={[-10000000, (dataMax: number) => Math.ceil(dataMax * 1.05 / 10000000) * 10000000]}
                   />
                   <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4 2" />
+                  {highlightDate && <ReferenceLine x={highlightDate} stroke="#3b82f6" strokeWidth={2} label={{ value: highlightDate, position: "top", fontSize: 10, fill: "#3b82f6" }} />}
                   {targetValue > 0 && <ReferenceLine y={targetValue} stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="6 3" label={{ value: `목표 ${(targetValue/1000000).toFixed(0)}M`, position: "right", fontSize: 10, fill: "#3b82f6" }} />}
                   <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }}
                     formatter={(v) => formatCurrency(Number(v))} />
@@ -991,7 +994,16 @@ export default function Dashboard({
 
             {/* 저장된 데이터 목록 */}
             <div className="bg-white border border-gray-200 rounded-md p-5">
-              <p className="text-xs text-[#666666] tracking-wider mb-4">| 저장된 일일 결산 데이터</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs text-[#666666] tracking-wider">| 저장된 일일 결산 데이터</p>
+                <div className="flex items-center gap-2">
+                  <input type="date" value={snapshotSearch}
+                    onChange={e => { setSnapshotSearch(e.target.value); setHighlightDate(e.target.value); }}
+                    className="text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1 text-[#333333] focus:outline-none focus:border-blue-500" />
+                  <button onClick={() => { setSnapshotSearch(''); setHighlightDate(''); }}
+                    className="text-xs text-[#999999] hover:text-[#333333]">초기화</button>
+                </div>
+              </div>
               <div style={{height: '200px', overflowY: 'auto'}}>
                 <table className="w-full text-xs">
                   <thead className="sticky top-0 bg-white">
@@ -1002,9 +1014,11 @@ export default function Dashboard({
                     </tr>
                   </thead>
                   <tbody>
-                    {snapshots.map((s, i) => (
+                    {snapshots.filter(s => !snapshotSearch || s.snapshot_date.includes(snapshotSearch)).map((s, i) => (
                       <tr key={i} className="border-b border-gray-200/80 hover:bg-gray-100/80">
-                        <td className="py-2 px-2 text-[#666666]">{s.snapshot_date}</td>
+                        <td className={`py-2 px-2 ${highlightDate === s.snapshot_date ? 'text-blue-600 font-semibold' : 'text-[#666666]'}`}>
+                          {s.snapshot_date}
+                        </td>
                         <td className="py-2 px-2">{formatCurrency(s.total_valuation || 0)}</td>
                         <td className="py-2 px-2">{formatCurrency(s.total_invested || 0)}</td>
                         <td className={cn('py-2 px-2', (s.total_profit || 0) >= 0 ? 'text-emerald-600' : 'text-red-500')}>
