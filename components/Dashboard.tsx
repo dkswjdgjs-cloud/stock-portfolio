@@ -201,20 +201,20 @@ export default function Dashboard({
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 ">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-10 bg-[#1e2433] backdrop-blur-sm border-b border-[#2a3147] px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
             <span className="text-white font-medium text-sm">W</span>
           </div>
           <div className="flex items-center gap-2">
             <h1 className="text-sm font-medium tracking-widest text-gray-900">WEALTHFLOW</h1>
-            <span className="text-xs text-blue-600 tracking-wider">portfolio analytics</span>
+            <span className="text-xs text-blue-400 tracking-wider">portfolio analytics</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 bg-gray-100 border border-gray-300 rounded-full px-3 py-1">
+          <div className="flex items-center gap-1.5 bg-[#2a3147] border border-[#3d4d6b] rounded-full px-3 py-1">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs text-emerald-600 tracking-wider">LIVE SYNC ACTIVE</span>
+            <span className="text-xs text-emerald-400 tracking-wider">LIVE SYNC ACTIVE</span>
           </div>
           <span className="text-xs text-gray-400 ml-2">
             {lastUpdated ? lastUpdated.toLocaleTimeString('ko-KR') : '--:--:--'}
@@ -226,7 +226,7 @@ export default function Dashboard({
       </div>
 
       {/* 탭 네비게이션 */}
-      <div className="bg-white/50 border-b border-gray-200 px-6">
+      <div className="bg-[#1e2433] border-b border-[#2a3147] px-6">
         <div className="flex">
           {TABS.map((tab, i) => (
             <button key={i} onClick={() => setActiveTab(i)}
