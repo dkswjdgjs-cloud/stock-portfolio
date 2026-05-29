@@ -67,25 +67,28 @@ export default function Home() {
   }, []);
 
   const loadAll = useCallback(async () => {
-    const [transRes, incomeRes, balanceRes] = await Promise.all([
+    const [transRes, incomeRes, balanceRes, snapRes] = await Promise.all([
       fetch('/api/transactions'),
       fetch('/api/cash-income'),
       fetch('/api/cash-balance'),
+      fetch('/api/snapshot'),
     ]);
 
-    const [transData, incomeData, balanceData]: [Transaction[], CashIncome[], CashBalance[]] = await Promise.all([
+    const [transData, incomeData, balanceData, currentSnapshots]: [Transaction[], CashIncome[], CashBalance[], any[]] = await Promise.all([
       transRes.json(),
       incomeRes.json(),
       balanceRes.json(),
+      snapRes.json(),
     ]);
 
     setTransactions(transData);
     setCashIncomes(incomeData);
     setCashBalances(balanceData);
+    setSnapshots(currentSnapshots || []);
 
     // 현금 소득을 수익금에 합산
     const cashIncomeTotal = incomeData.reduce((s, c) => s + c.amount, 0);
-    const calcedSummary = calcSummary(transData, snapshots);
+    const calcedSummary = calcSummary(transData, currentSnapshots || []);
     calcedSummary.cumulativeProfit += cashIncomeTotal;
 
     // 현재 평가액은 holdings 계산 후 채워짐 (아래에서 설정)
