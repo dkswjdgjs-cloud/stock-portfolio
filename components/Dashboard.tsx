@@ -52,6 +52,10 @@ export default function Dashboard({
   const [viewTab, setViewTab] = useState<'trade' | 'income'>('trade');
   const [cashInput, setCashInput] = useState('');
   const [csvInput, setCsvInput] = useState('');
+  const [showCsvForm, setShowCsvForm] = useState(false);
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [showCsvForm, setShowCsvForm] = useState(false);
+  const [showManualForm, setShowManualForm] = useState(false);
   const [snapshotForm, setSnapshotForm] = useState({
     date: new Date().toISOString().split('T')[0],
     valuation: '',
@@ -678,7 +682,7 @@ export default function Dashboard({
                   오늘 스냅샷 저장
                 </button>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={450}>
                 <AreaChart data={snapshots} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                   <ReferenceLine y={0} stroke="#475569" strokeWidth={1.5} />
@@ -705,7 +709,14 @@ export default function Dashboard({
             <div className="grid grid-cols-2 gap-4">
               {/* CSV 업로드 */}
               <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                <p className="text-xs text-slate-400 tracking-wider mb-4">| CSV 파일 업로드</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-slate-400 tracking-wider">| CSV 파일 업로드</p>
+                  <button onClick={() => setShowCsvForm(v => !v)}
+                    className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded-lg transition-colors">
+                    {showCsvForm ? "닫기" : "열기"}
+                  </button>
+                </div>
+                {showCsvForm && <>
                 <p className="text-xs text-slate-500 mb-3">CSV 형식: 날짜,평가액,누적투자금,누적수익금</p>
                 <p className="text-xs text-slate-500 mb-3">첫 번째 행은 헤더로 자동 무시됩니다</p>
                 <div
@@ -745,12 +756,20 @@ export default function Dashboard({
                   className="mt-3 w-full text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white py-2 rounded-lg transition-colors">
                   {csvInput ? `업로드 (${csvInput.split('\n').filter(l=>l.trim()).length}줄)` : 'CSV 파일을 먼저 선택하세요'}
                 </button>
+                </>
+                }
               </div>
 
               {/* 수기 입력 */}
               <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                <p className="text-xs text-slate-400 tracking-wider mb-4">| 수기 입력</p>
-                <div className="space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-slate-400 tracking-wider">| 수기 입력</p>
+                  <button onClick={() => setShowManualForm(v => !v)}
+                    className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded-lg transition-colors">
+                    {showManualForm ? "닫기" : "열기"}
+                  </button>
+                </div>
+                {showManualForm && <div className="space-y-3">
                   {[
                     { label: '날짜', key: 'date', type: 'date' },
                     { label: '평가액', key: 'valuation', type: 'number' },
@@ -774,6 +793,7 @@ export default function Dashboard({
                     저장
                   </button>
                 </div>
+                }
               </div>
             </div>
 
