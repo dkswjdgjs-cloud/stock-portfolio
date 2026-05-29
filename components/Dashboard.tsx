@@ -54,11 +54,8 @@ export default function Dashboard({
   const [csvInput, setCsvInput] = useState('');
   const [showCsvForm, setShowCsvForm] = useState(false);
   const [graphFilter, setGraphFilter] = useState('daily');
-  const [targetValue, setTargetValue] = useState<number>(0);
-  const [targetInput, setTargetInput] = useState<string>('');
-  const [showTargetInput, setShowTargetInput] = useState(false);
-  const [targetValue, setTargetValue] = useState<number>(0);
-  const [targetInput, setTargetInput] = useState<string>('');
+  const [targetValue, setTargetValue] = useState(0);
+  const [targetInput, setTargetInput] = useState('');
   const [showTargetInput, setShowTargetInput] = useState(false);
   const [showTradeTable, setShowTradeTable] = useState(false);
   const [showIncomeTable, setShowIncomeTable] = useState(false);
