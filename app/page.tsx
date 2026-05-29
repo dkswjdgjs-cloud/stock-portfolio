@@ -45,7 +45,10 @@ export default function Home() {
         const market = baseHoldings.find(h => h.ticker === ticker)?.currency === 'USD' ? 'US' : 'KR';
         const res = await fetch(`/api/stock?ticker=${ticker}&market=${market}`);
         const data = await res.json();
-        if (data.price) priceMap.set(ticker, { price: data.price, dailyChange: data.dailyChange });
+        if (data.price) {
+            const rate = (market === 'US' && data.exchangeRate) ? data.exchangeRate : 1;
+            priceMap.set(ticker, { price: data.price * rate, dailyChange: data.dailyChange * rate });
+          }
       } catch {}
     }));
 
