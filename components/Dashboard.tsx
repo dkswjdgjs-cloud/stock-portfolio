@@ -54,7 +54,10 @@ export default function Dashboard({
   const [csvInput, setCsvInput] = useState('');
   const [showCsvForm, setShowCsvForm] = useState(false);
   const [graphFilter, setGraphFilter] = useState('daily');
-  const [targetValue, setTargetValue] = useState(0);
+  const [targetValue, setTargetValue] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    return parseFloat(localStorage.getItem('wealthflow_target') || '0');
+  });
   const [targetInput, setTargetInput] = useState('');
   const [showTargetInput, setShowTargetInput] = useState(false);
   const [showTradeTable, setShowTradeTable] = useState(false);
@@ -346,7 +349,7 @@ export default function Dashboard({
                           onChange={e => setTargetInput(e.target.value)}
                           placeholder="목표 금액 입력"
                           className="flex-1 text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500" />
-                        <button onClick={() => { setTargetValue(parseFloat(targetInput) || 0); setShowTargetInput(false); }}
+                        <button onClick={() => { const v = parseFloat(targetInput) || 0; setTargetValue(v); localStorage.setItem('wealthflow_target', String(v)); setShowTargetInput(false); }}
                           className="text-xs bg-blue-600 text-white px-2 py-1 rounded">확인</button>
                       </div>
                     )}
