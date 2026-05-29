@@ -13,10 +13,12 @@ export function calcHoldings(transactions: Transaction[], accountFilter: string 
   filtered
     .filter(t => t.trade_type && t.ticker)
     .forEach(t => {
-      const key = `${t.account}-${t.ticker}`;
+      // 전체일 때는 ticker만으로 합산, 개별 계좌일 때는 account-ticker로 분리
+      const key = accountFilter === '전체' ? t.ticker! : `${t.account}-${t.ticker}`;
       if (!map.has(key)) {
         map.set(key, {
-          account: t.account, ticker: t.ticker!,
+          account: accountFilter === '전체' ? '전체' : t.account,
+          ticker: t.ticker!,
           stock_name: t.stock_name || '-', sector: t.sector || '-',
           currency: t.currency, totalQuantity: 0, totalCost: 0,
         });

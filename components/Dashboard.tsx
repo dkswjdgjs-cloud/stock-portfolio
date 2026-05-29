@@ -363,7 +363,12 @@ export default function Dashboard({
                         <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.profit) ? 'text-emerald-400' : 'text-red-400')}>{formatCurrency(h.profit)}</td>
                         <td className="py-2 px-2 text-slate-400">{h.weight.toFixed(1)}%</td>
                         <td className="py-2 px-2 text-slate-400">{h.sector}</td>
-                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.daily_change) ? 'text-emerald-400' : 'text-red-400')}>{formatCurrency(h.daily_change * (h.quantity || 0))}</td>
+                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.daily_change) ? 'text-emerald-400' : 'text-red-400')}>
+                          <div>{formatCurrency(h.daily_change * (h.quantity || 0))}</div>
+                          <div className="text-xs opacity-70">
+                            ({h.curr_price > 0 ? ((h.daily_change / (h.curr_price - h.daily_change)) * 100).toFixed(2) : '0.00'}%)
+                          </div>
+                        </td>
                       </tr>
                     ))}
 
@@ -432,7 +437,7 @@ export default function Dashboard({
                     {/* SELECTED TOTAL */}
                     <tr className="border-t-2 border-slate-600 bg-slate-800/50 font-medium">
                       <td className="py-2 px-2 text-slate-300 text-xs" colSpan={6}>SELECTED TOTAL (선택 합계)</td>
-                      <td className="py-2 px-2 text-slate-100 text-xs">{formatCurrency(displayHoldings.reduce((s,h) => s+h.valuation, 0))}</td>
+                      <td className="py-2 px-2 text-slate-100 text-xs">{formatCurrency(displayHoldings.reduce((s,h) => s+h.valuation, 0) + (accountFilter === '전체' ? totalCashBalance : getCashBalance(accountFilter)))}</td>
                       <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+(h.return_rate*h.valuation), 0)/Math.max(displayHoldings.reduce((s,h) => s+h.valuation, 0),1)) ? "text-emerald-400" : "text-red-400")}>
                         {formatPercent(displayHoldings.reduce((s,h) => s+(h.return_rate*h.valuation), 0)/Math.max(displayHoldings.reduce((s,h) => s+h.valuation, 0),1))}
                       </td>
