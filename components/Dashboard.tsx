@@ -702,6 +702,7 @@ export default function Dashboard({
                     tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`}
                     domain={[-10000000, (dataMax: number) => Math.ceil(dataMax * 1.05 / 10000000) * 10000000]}
                   />
+                  <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4 2" />
                   <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }}
                     formatter={(v) => formatCurrency(Number(v))} />
                   <Area isAnimationActive={false} type="monotone" dataKey="total_valuation" name="평가액" stroke="#3b82f6" fill="#3b82f620" strokeWidth={2} />
