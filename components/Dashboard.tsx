@@ -54,8 +54,6 @@ export default function Dashboard({
   const [csvInput, setCsvInput] = useState('');
   const [showCsvForm, setShowCsvForm] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
-  const [showCsvForm, setShowCsvForm] = useState(false);
-  const [showManualForm, setShowManualForm] = useState(false);
   const [snapshotForm, setSnapshotForm] = useState({
     date: new Date().toISOString().split('T')[0],
     valuation: '',
