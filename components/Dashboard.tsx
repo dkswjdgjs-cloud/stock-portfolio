@@ -358,8 +358,8 @@ export default function Dashboard({
                   </colgroup>
                   <thead>
                     <tr className="text-slate-500 border-b border-slate-800">
-                      {['계좌', 'TICKER', '종목명', '평균단가', '수량', '현재단가', '평가액', '수익율', '수익금', '비중', '섹터', '일일등락'].map(h => (
-                        <th key={h} className="text-left py-2 px-2 font-medium tracking-wider">{h}</th>
+                      {[['계좌','left'], ['TICKER','left'], ['종목명','left'], ['평균단가','right'], ['수량','right'], ['현재단가','right'], ['평가액','right'], ['수익율','right'], ['수익금','right'], ['비중','right'], ['섹터','left'], ['일일등락','right']].map(([h, align]) => (
+                        <th key={h} className={`py-2 px-2 font-medium tracking-wider text-${align}`}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -369,13 +369,13 @@ export default function Dashboard({
                         <td className="py-2 px-2 text-slate-400">{h.account}</td>
                         <td className="py-2 px-2 text-blue-400">{h.ticker}</td>
                         <td className="py-2 px-2">{h.stock_name}</td>
-                        <td className="py-2 px-2">{formatCurrency(h.avg_price, h.currency)}</td>
-                        <td className="py-2 px-2">{h.quantity}</td>
-                        <td className="py-2 px-2">{formatCurrency(h.curr_price, h.currency)}</td>
-                        <td className="py-2 px-2 font-medium">{formatCurrency(h.valuation)}</td>
+                        <td className="py-2 px-2 text-right">{formatCurrency(h.avg_price, h.currency)}</td>
+                        <td className="py-2 px-2 text-right">{h.quantity}</td>
+                        <td className="py-2 px-2 text-right">{formatCurrency(h.curr_price, h.currency)}</td>
+                        <td className="py-2 px-2 font-medium text-right">{formatCurrency(h.valuation)}</td>
                         <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.return_rate) ? 'text-emerald-400' : 'text-red-400')}>{formatPercent(h.return_rate)}</td>
                         <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.profit) ? 'text-emerald-400' : 'text-red-400')}>{formatCurrency(h.profit)}</td>
-                        <td className="py-2 px-2 text-slate-400">{h.weight.toFixed(1)}%</td>
+                        <td className="py-2 px-2 text-right text-slate-400">{h.weight.toFixed(1)}%</td>
                         <td className="py-2 px-2 text-slate-400">{h.sector}</td>
                         <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.daily_change) ? 'text-emerald-400' : 'text-red-400')}>
                           <div>{formatCurrency(h.daily_change * (h.quantity || 0))}</div>
