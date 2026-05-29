@@ -53,6 +53,8 @@ export default function Dashboard({
   const [cashInput, setCashInput] = useState('');
   const [csvInput, setCsvInput] = useState('');
   const [showCsvForm, setShowCsvForm] = useState(false);
+  const [graphFilter, setGraphFilter] = useState<'daily'|'monthly'|'quarterly'|'yearly'>('daily');
+  const [graphFilter, setGraphFilter] = useState<'daily'|'monthly'|'quarterly'|'yearly'>('daily');
   const [showTradeTable, setShowTradeTable] = useState(false);
   const [showIncomeTable, setShowIncomeTable] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
@@ -683,19 +685,61 @@ export default function Dashboard({
             <div className="bg-white border border-gray-200 rounded-md p-5">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xs text-[#666666] tracking-wider">| 성과 추이 MATRIX</h2>
-                <button onClick={onSaveSnapshot}
-                  className="flex items-center gap-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg transition-colors">
-                  오늘 스냅샷 저장
-                </button>
+                <div className="flex items-center gap-2">
+                  <select value={graphFilter} onChange={e => setGraphFilter(e.target.value as any)}
+                    className="text-xs bg-white border border-gray-200 rounded px-2 py-1.5 text-[#333333]">
+                    <option value="daily">일별</option>
+                    <option value="monthly">월별</option>
+                    <option value="quarterly">분기별</option>
+                    <option value="yearly">년도별</option>
+                  </select>
+                  <button onClick={onSaveSnapshot}
+                    className="flex items-center gap-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg transition-colors">
+                    오늘 스냅샷 저장
+                  </button>
+                </div>
               </div>
+              {(() => {
+                const filterSnapshots = () => {
+                  if (graphFilter === "daily") return snapshots;
+                  const map = new Map<string, any>();
+                  snapshots.forEach(s => {
+                    const d = new Date(s.snapshot_date);
+                    let key = "";
+                    if (graphFilter === "monthly") {
+                      // 월말: 해당 월의 마지막 데이터
+                      key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+                    } else if (graphFilter === "quarterly") {
+                      // 분기말: Q1=3월, Q2=6월, Q3=9월, Q4=12월
+                      const q = Math.floor(d.getMonth() / 3);
+                      key = `${d.getFullYear()}-Q${q+1}`;
+                    } else if (graphFilter === "yearly") {
+                      // 년말: 해당 년도의 마지막 데이터
+                      key = `${d.getFullYear()}`;
+                    }
+                    // 같은 키에서 가장 늦은 날짜(말일)로 덮어씀
+                    if (!map.has(key) || s.snapshot_date > map.get(key).snapshot_date) {
+                      map.set(key, s);
+                    }
+                  });
+                  return Array.from(map.values()).sort((a,b) => a.snapshot_date.localeCompare(b.snapshot_date));
+                };
+                const filtered = filterSnapshots();
+                const xInterval = graphFilter === "daily" ? 30 : 0;
+                const xFormatter = (v: string) => {
+                  if (graphFilter === "yearly") return v?.slice(0,4);
+                  if (graphFilter === "quarterly") return v?.slice(0,7);
+                  return v?.slice(0,7);
+                };
+                return (
               <ResponsiveContainer width="100%" height={450}>
-                <AreaChart data={snapshots} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                <AreaChart data={filtered} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis
                     dataKey="snapshot_date"
                     tick={{ fill: '#64748b', fontSize: 10 }}
-                    interval={30}
-                    tickFormatter={(v) => v?.slice(0, 7)}
+                    interval={xInterval}
+                    tickFormatter={xFormatter}
                   />
                   <YAxis
                     tick={{ fill: '#64748b', fontSize: 10 }}
@@ -710,6 +754,8 @@ export default function Dashboard({
                   <Area isAnimationActive={false} type="monotone" dataKey="total_profit" name="누적수익금" stroke="#f59e0b" fill="#f59e0b20" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
+                );
+              })()}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
