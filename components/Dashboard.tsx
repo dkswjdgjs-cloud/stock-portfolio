@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { TrendingUp, RefreshCw, Plus, LayoutDashboard, Building2, Clock } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
 import { formatCurrency, formatPercent, cn } from '@/lib/utils';
@@ -57,12 +57,13 @@ export default function Dashboard({
   const [sortKey, setSortKey] = useState('');
   const [sortDir, setSortDir] = useState(1);
   const [graphFilter, setGraphFilter] = useState('daily');
-  const [targetValue, setTargetValue] = useState(() => {
-    if (typeof window === 'undefined') return 0;
-    return parseFloat(localStorage.getItem('wealthflow_target') || '0');
-  });
+  const [targetValue, setTargetValue] = useState(0);
   const [targetInput, setTargetInput] = useState('');
   const [showTargetInput, setShowTargetInput] = useState(false);
+  useEffect(() => {
+    const saved = localStorage.getItem('wealthflow_target');
+    if (saved) setTargetValue(parseFloat(saved) || 0);
+  }, []);
   const [showTradeTable, setShowTradeTable] = useState(false);
   const [showIncomeTable, setShowIncomeTable] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
