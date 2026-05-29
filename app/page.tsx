@@ -21,10 +21,6 @@ export default function Home() {
   const [dailySettlement, setDailySettlement] = useState<DailySettlement[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [snapshots, setSnapshots] = useState<any[]>([]);
-  const [snapshotForm, setSnapshotForm] = useState({
-    date: new Date().toISOString().split('T')[0],
-    valuation: '', totalInvested: '', cumulativeProfit: '',
-  });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -47,27 +43,23 @@ export default function Home() {
     const uniqueTickers = [...new Set(baseHoldings.map(h => h.ticker))];
     const now = Date.now();
     const CACHE_TTL = 60 * 1000;
-
     await Promise.all(uniqueTickers.map(async ticker => {
       const cached = priceCache.current.get(ticker);
       if (!forceRefresh && cached && now - cached.ts < CACHE_TTL) return;
       try {
         const market = baseHoldings.find(h => h.ticker === ticker)?.currency === 'USD' ? 'US' : 'KR';
-        const res = await fetch(\`/api/stock?ticker=\${ticker}&market=\${market}\`);
+        const res = await fetch(`/api/stock?ticker=${ticker}&market=${market}`);
         const data = await res.json();
         if (data.price) {
           const rate = (market === 'US' && data.exchangeRate) ? data.exchangeRate : 1;
           priceCache.current.set(ticker, {
-            price: data.price * rate,
-            priceOriginal: data.price,
+            price: data.price * rate, priceOriginal: data.price,
             dailyChange: (data.dailyChange || 0) * rate,
-            exchangeRate: rate,
-            ts: now,
+            exchangeRate: rate, ts: now,
           });
         }
       } catch {}
     }));
-
     return baseHoldings.map(h => {
       const priceData = priceCache.current.get(h.ticker);
       if (!priceData) return h;
@@ -93,15 +85,12 @@ export default function Home() {
     isLoadingRef.current = true;
     try {
       const [transRes, incomeRes, balanceRes, snapRes] = await Promise.all([
-        fetch('/api/transactions'),
-        fetch('/api/cash-income'),
-        fetch('/api/cash-balance'),
-        fetch('/api/snapshot'),
+        fetch('/api/transactions'), fetch('/api/cash-income'),
+        fetch('/api/cash-balance'), fetch('/api/snapshot'),
       ]);
       const [transData, incomeData, balanceData, currentSnapshots]: [Transaction[], CashIncome[], CashBalance[], any[]] = await Promise.all([
         transRes.json(), incomeRes.json(), balanceRes.json(), snapRes.json(),
       ]);
-
       setTransactions(transData);
       setCashIncomes(incomeData);
       setCashBalances(balanceData);
@@ -177,7 +166,7 @@ export default function Home() {
     await loadAll(true);
   };
   const handleDeleteTransaction = async (id: string) => {
-    await fetch(\`/api/transactions?id=\${id}\`, { method: 'DELETE' });
+    await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' });
     await loadAll(true);
   };
   const handleAddCashIncome = async (c: Omit<CashIncome, 'id' | 'created_at'>) => {
@@ -185,7 +174,7 @@ export default function Home() {
     await loadAll(true);
   };
   const handleDeleteCashIncome = async (id: string) => {
-    await fetch(\`/api/cash-income?id=\${id}\`, { method: 'DELETE' });
+    await fetch(`/api/cash-income?id=${id}`, { method: 'DELETE' });
     await loadAll(true);
   };
   const handleUpdateCashBalance = async (account: string, balance: number) => {
@@ -215,10 +204,10 @@ export default function Home() {
     }).filter(r => r.date && r.date.length === 10);
     await fetch('/api/snapshot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rows) });
     await loadSnapshots();
-    alert(\`\${rows.length}개 데이터 업로드 완료!\`);
+    alert(`${rows.length}개 데이터 업로드 완료!`);
   };
   const handleDeleteSnapshot = async (date: string) => {
-    await fetch(\`/api/snapshot?date=\${date}\`, { method: 'DELETE' });
+    await fetch(`/api/snapshot?date=${date}`, { method: 'DELETE' });
     await loadSnapshots();
   };
   const handleAccountFilterChange = (filter: string) => {

@@ -10,7 +10,7 @@ const exchangeCache = new Map<string, string>();
 
 async function getAccessToken() {
   if (tokenCache && Date.now() < tokenCache.expires) return tokenCache.token;
-  const res = await fetch(\`\${KIS_BASE_URL}/oauth2/tokenP\`, {
+  const res = await fetch(`${KIS_BASE_URL}/oauth2/tokenP`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ grant_type: 'client_credentials', appkey: KIS_APP_KEY, appsecret: KIS_APP_SECRET }),
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     const isKR = market === 'KR';
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      Authorization: \`Bearer \${token}\`,
+      Authorization: `Bearer ${token}`,
       appkey: KIS_APP_KEY,
       appsecret: KIS_APP_SECRET,
       tr_id: isKR ? 'FHKST01010100' : 'HHDFS00000300',
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     let exchangeRate = 1;
 
     if (isKR) {
-      const url = \`\${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=\${ticker}\`;
+      const url = `${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}`;
       const response = await fetch(url, { headers });
       const data = await response.json();
       price = parseFloat(data.output?.stck_prpr || '0');
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         ? [cachedExcd, ...['NAS', 'AMS', 'NYS', 'TSE', 'HKS'].filter(e => e !== cachedExcd)]
         : ['NAS', 'AMS', 'NYS', 'TSE', 'HKS'];
       for (const excd of exchanges) {
-        const url = \`\${KIS_BASE_URL}/uapi/overseas-price/v1/quotations/price?AUTH=&EXCD=\${excd}&SYMB=\${ticker}\`;
+        const url = `${KIS_BASE_URL}/uapi/overseas-price/v1/quotations/price?AUTH=&EXCD=${excd}&SYMB=${ticker}`;
         const response = await fetch(url, { headers });
         const data = await response.json();
         const p = parseFloat(data.output?.last || '0');

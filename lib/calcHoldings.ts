@@ -13,16 +13,12 @@ export function calcHoldings(transactions: Transaction[], accountFilter: string 
   filtered
     .filter(t => t.trade_type && t.ticker)
     .forEach(t => {
-      const key = \`\${t.account}-\${t.ticker}\`;
+      const key = `${t.account}-${t.ticker}`;
       if (!map.has(key)) {
         map.set(key, {
-          account: t.account,
-          ticker: t.ticker!,
-          stock_name: t.stock_name || '-',
-          sector: t.sector || '-',
-          currency: t.currency,
-          totalQuantity: 0,
-          totalCost: 0,
+          account: t.account, ticker: t.ticker!,
+          stock_name: t.stock_name || '-', sector: t.sector || '-',
+          currency: t.currency, totalQuantity: 0, totalCost: 0,
         });
       }
       const h = map.get(key)!;
