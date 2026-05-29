@@ -304,11 +304,14 @@ export default function Dashboard({
               // MDD 계산
               let mdd = 0;
               let peak = 0;
+              let peakDate = "";
+              let mddDate = "";
+              let mddPeakDate = "";
               snapshots.forEach(s => {
                 const val = s.total_valuation || 0;
-                if (val > peak) peak = val;
+                if (val > peak) { peak = val; peakDate = s.snapshot_date; }
                 const drawdown = peak > 0 ? (val - peak) / peak * 100 : 0;
-                if (drawdown < mdd) mdd = drawdown;
+                if (drawdown < mdd) { mdd = drawdown; mddDate = s.snapshot_date; mddPeakDate = peakDate; }
               });
               // 목표 달성률
               const targetAchievement = targetValue > 0 ? (summary.currMonthValue / targetValue) * 100 : 0;
@@ -327,6 +330,9 @@ export default function Dashboard({
                     <p className="text-xs text-[#999999] tracking-wider mb-2">MDD (최대낙폭)</p>
                     <p className="text-xl font-semibold text-red-500">{mdd.toFixed(2)}%</p>
                     <p className="text-xs text-[#999999] mt-1">고점 대비 최대 하락폭</p>
+                    {mddPeakDate && mddDate && (
+                      <p className="text-xs text-[#999999] mt-1">{mddPeakDate} → {mddDate}</p>
+                    )}
                   </div>
                   <div className="bg-white border border-gray-200 rounded-md p-5">
                     <div className="flex items-center justify-between mb-2">
