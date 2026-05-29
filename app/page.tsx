@@ -110,7 +110,17 @@ export default function Home() {
       const cashTotal = balanceData.reduce((s, b) => s + b.balance, 0);
       const currMonthValue = totalValAll + cashTotal;
 
-      setHoldings(applyFilter(holdingsAllWithPrices, accountFilterRef.current));
+      if (accountFilterRef.current === '전체') {
+        setHoldings(applyFilter(holdingsAllWithPrices, '전체'));
+      } else {
+        const baseH = calcHoldings(transData, accountFilterRef.current);
+        const holdingsFiltered = await fetchPrices(baseH, forceRefresh);
+        const totalVal = holdingsFiltered.reduce((s, h) => s + h.valuation, 0);
+        setHoldings(holdingsFiltered.map(h => ({
+          ...h,
+          weight: totalVal > 0 ? (h.valuation / totalVal) * 100 : 0,
+        })));
+      }
 
       const totalInvested = transData
         .filter((t: any) => t.account_transfer)
@@ -210,11 +220,23 @@ export default function Home() {
     await fetch(`/api/snapshot?date=${date}`, { method: 'DELETE' });
     await loadSnapshots();
   };
-  const handleAccountFilterChange = (filter: string) => {
+  const handleAccountFilterChange = async (filter: string) => {
     setAccountFilter(filter);
     accountFilterRef.current = filter;
     if (allHoldingsRef.current.length === 0) return;
-    setHoldings(applyFilter(allHoldingsRef.current, filter));
+    if (filter === '전체') {
+      // 전체: allHoldingsRef 그대로 사용 (ticker 기준 합산)
+      setHoldings(applyFilter(allHoldingsRef.current, '전체'));
+    } else {
+      // 개별 계좌: transactions에서 해당 계좌만 재계산 후 가격 적용
+      const baseHoldings = calcHoldings(transactions, filter);
+      const holdingsWithPrices = await fetchPrices(baseHoldings); // 캐시 사용
+      const totalVal = holdingsWithPrices.reduce((s, h) => s + h.valuation, 0);
+      setHoldings(holdingsWithPrices.map(h => ({
+        ...h,
+        weight: totalVal > 0 ? (h.valuation / totalVal) * 100 : 0,
+      })));
+    }
   };
 
   if (!mounted) return null;
