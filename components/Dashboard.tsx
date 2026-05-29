@@ -199,15 +199,15 @@ export default function Dashboard({
   const displayHoldings = filteredHoldings;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-mono">
+    <div className="min-h-screen bg-gray-50 text-gray-800 ">
       {/* 헤더 */}
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-            <span className="text-white font-bold text-sm">W</span>
+            <span className="text-white font-medium text-sm">W</span>
           </div>
           <div className="flex items-center gap-2">
-            <h1 className="text-sm font-bold tracking-widest text-gray-900">WEALTHFLOW</h1>
+            <h1 className="text-sm font-medium tracking-widest text-gray-900">WEALTHFLOW</h1>
             <span className="text-xs text-blue-600 tracking-wider">portfolio analytics</span>
           </div>
         </div>
@@ -248,11 +248,11 @@ export default function Dashboard({
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-white border border-gray-200 rounded-xl p-5">
                 <p className="text-xs text-gray-400 tracking-wider mb-2">전월 평가액</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(summary.prevMonthValue)}</p>
+                <p className="text-2xl font-semibold text-gray-900">{formatCurrency(summary.prevMonthValue)}</p>
               </div>
               <div className="bg-white border border-gray-200 rounded-xl p-5">
                 <p className="text-xs text-gray-400 tracking-wider mb-2">투입금액</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(summary.totalInvested)}</p>
+                <p className="text-2xl font-semibold text-gray-900">{formatCurrency(summary.totalInvested)}</p>
                 <div className="mt-2 pt-2 border-t border-gray-300">
                   <p className="text-xs text-gray-400">당월 투입액</p>
                   <p className="text-sm text-gray-700">{formatCurrency(summary.currMonthInvestment)}</p>
@@ -260,7 +260,7 @@ export default function Dashboard({
               </div>
               <div className="bg-white border border-gray-200 rounded-xl p-5">
                 <p className="text-xs text-gray-400 tracking-wider mb-2">현재 평가액</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(summary.currMonthValue)}</p>
+                <p className="text-2xl font-semibold text-gray-900">{formatCurrency(summary.currMonthValue)}</p>
               </div>
             </div>
             <div className="grid grid-cols-4 gap-4">
@@ -272,7 +272,7 @@ export default function Dashboard({
               ].map((item, i) => (
                 <div key={i} className="bg-white border border-gray-200 rounded-xl p-5">
                   <p className="text-xs text-gray-400 tracking-wider mb-2">{item.label}</p>
-                  <p className={cn('text-xl font-bold', isPos(item.profit) ? 'text-emerald-600' : 'text-red-500')}>
+                  <p className={cn('text-xl font-semibold', isPos(item.profit) ? 'text-emerald-600' : 'text-red-500')}>
                     {formatCurrency(item.profit)}
                   </p>
                   <p className={cn('text-sm mt-1', isPos(item.rate) ? 'text-emerald-600' : 'text-red-500')}>
@@ -300,7 +300,7 @@ export default function Dashboard({
                     </PieChart>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <p className="text-sm text-gray-400 tracking-wider">MARKET VALUE</p>
-                      <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalValuation)}</p>
+                      <p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalValuation)}</p>
                     </div>
                   </div>
                 </div>
