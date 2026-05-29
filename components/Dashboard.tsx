@@ -353,11 +353,11 @@ export default function Dashboard({
                         <td className="py-2 px-2">{h.quantity}</td>
                         <td className="py-2 px-2">{formatCurrency(h.curr_price, h.currency)}</td>
                         <td className="py-2 px-2 font-medium">{formatCurrency(h.valuation)}</td>
-                        <td className={cn('py-2 px-2', isPos(h.return_rate) ? 'text-emerald-400' : 'text-red-400')}>{formatPercent(h.return_rate)}</td>
-                        <td className={cn('py-2 px-2', isPos(h.profit) ? 'text-emerald-400' : 'text-red-400')}>{formatCurrency(h.profit)}</td>
+                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.return_rate) ? 'text-emerald-400' : 'text-red-400')}>{formatPercent(h.return_rate)}</td>
+                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.profit) ? 'text-emerald-400' : 'text-red-400')}>{formatCurrency(h.profit)}</td>
                         <td className="py-2 px-2 text-slate-400">{h.weight.toFixed(1)}%</td>
                         <td className="py-2 px-2 text-slate-400">{h.sector}</td>
-                        <td className={cn('py-2 px-2', isPos(h.daily_change) ? 'text-emerald-400' : 'text-red-400')}>{formatCurrency(h.daily_change * (h.quantity || 0))}</td>
+                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.daily_change) ? 'text-emerald-400' : 'text-red-400')}>{formatCurrency(h.daily_change * (h.quantity || 0))}</td>
                       </tr>
                     ))}
 
@@ -684,9 +684,9 @@ export default function Dashboard({
                   />
                   <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '11px' }}
                     formatter={(v) => formatCurrency(Number(v))} />
-                  <Area type="monotone" dataKey="total_valuation" name="평가액" stroke="#3b82f6" fill="#3b82f620" strokeWidth={2} />
-                  <Area type="monotone" dataKey="total_invested" name="투자금" stroke="#10b981" fill="#10b98120" strokeWidth={2} />
-                  <Area type="monotone" dataKey="total_profit" name="누적수익금" stroke="#f59e0b" fill="#f59e0b20" strokeWidth={2} />
+                  <Area isAnimationActive={false} type="monotone" dataKey="total_valuation" name="평가액" stroke="#3b82f6" fill="#3b82f620" strokeWidth={2} />
+                  <Area isAnimationActive={false} type="monotone" dataKey="total_invested" name="투자금" stroke="#10b981" fill="#10b98120" strokeWidth={2} />
+                  <Area isAnimationActive={false} type="monotone" dataKey="total_profit" name="누적수익금" stroke="#f59e0b" fill="#f59e0b20" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

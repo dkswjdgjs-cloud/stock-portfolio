@@ -10,6 +10,7 @@ export default function Home() {
   const [cashIncomes, setCashIncomes] = useState<CashIncome[]>([]);
   const [cashBalances, setCashBalances] = useState<CashBalance[]>([]);
   const [holdings, setHoldings] = useState<AccountHolding[]>([]);
+  const [prevHoldings, setPrevHoldings] = useState<AccountHolding[]>([]);
   const [accountFilter, setAccountFilter] = useState('전체');
   const [summary, setSummary] = useState<SummaryData>({
     prevMonthValue: 0, currMonthInvestment: 0, currMonthValue: 0,
@@ -101,7 +102,7 @@ export default function Home() {
     setSummary(calcedSummary);
     setDailySettlement(calcDailySettlement(transData));
 
-    const baseHoldings = calcHoldings(transData, '전체');
+    const baseHoldings = calcHoldings(transData, accountFilter);
     const holdingsWithPrices = await fetchPrices(baseHoldings);
     const totalVal = holdingsWithPrices.reduce((s, h) => s + h.valuation, 0);
     const cashTotal = balanceData.reduce((s, b) => s + b.balance, 0);
@@ -109,6 +110,7 @@ export default function Home() {
       ...h,
       weight: totalVal > 0 ? (h.valuation / totalVal) * 100 : 0,
     }));
+    setPrevHoldings(finalHoldings);
     setHoldings(finalHoldings);
 
     // 현재 평가액 = 보유종목 평가액 합계 + 현금성 자산
@@ -164,7 +166,7 @@ export default function Home() {
     });
     setLastUpdated(new Date());
     await loadSnapshots();
-  }, [fetchPrices, loadSnapshots]);
+  }, [fetchPrices, loadSnapshots, accountFilter]);
 
   useEffect(() => {
     if (mounted) {
