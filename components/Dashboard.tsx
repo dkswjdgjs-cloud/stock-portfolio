@@ -691,7 +691,6 @@ export default function Dashboard({
               <ResponsiveContainer width="100%" height={450}>
                 <AreaChart data={snapshots} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <ReferenceLine y={0} stroke="#475569" strokeWidth={1.5} />
                   <XAxis
                     dataKey="snapshot_date"
                     tick={{ fill: '#64748b', fontSize: 10 }}
