@@ -55,11 +55,14 @@ export default function Home() {
     return baseHoldings.map(h => {
       const priceData = priceMap.get(h.ticker);
       if (!priceData) return h;
-      const curr_price = priceData.price;
-      const valuation = curr_price * h.quantity;
-      const profit = (curr_price - h.avg_price) * h.quantity;
-      const return_rate = h.avg_price > 0 ? ((curr_price - h.avg_price) / h.avg_price) * 100 : 0;
-      return { ...h, curr_price, valuation, profit, return_rate, daily_change: priceData.dailyChange };
+      const isUSD = h.currency === 'USD';
+      const rate = priceData.exchangeRate || 1;
+      const curr_price = priceData.priceOriginal || priceData.price; // 표시용: 달러 그대로
+      const valuationKRW = priceData.price * h.quantity; // 원화 평가액
+      const avgPriceKRW = isUSD ? h.avg_price * rate : h.avg_price;
+      const profit = (priceData.price - avgPriceKRW) * h.quantity;
+      const return_rate = avgPriceKRW > 0 ? ((priceData.price - avgPriceKRW) / avgPriceKRW) * 100 : 0;
+      return { ...h, curr_price, valuation: valuationKRW, profit, return_rate, daily_change: priceData.dailyChange };
     });
   }, []);
 
