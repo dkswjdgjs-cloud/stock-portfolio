@@ -341,7 +341,7 @@ export default function Dashboard({
                 </select>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full min-w-[1000px] text-xs">
                   <thead>
                     <tr className="text-slate-500 border-b border-slate-800">
                       {['계좌', 'TICKER', '종목명', '평균단가', '수량', '현재단가', '평가액', '수익율', '수익금', '비중', '섹터', '일일등락'].map(h => (
@@ -634,7 +634,7 @@ export default function Dashboard({
                 <div className="mt-4">
                   <p className="text-xs text-slate-400 tracking-wider mb-2">| 현금 소득 내역</p>
                   <div style={{height: '320px', overflowY: 'auto'}}>
-                    <table className="w-full text-xs">
+                    <table className="w-full min-w-[1000px] text-xs">
                       <thead className="sticky top-0 bg-slate-900">
                         <tr className="text-slate-500 border-b border-slate-800">
                           {['날짜', '계좌', '종류', '티커', '종목명', '금액', '메모', ''].map(h => (
