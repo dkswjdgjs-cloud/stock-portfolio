@@ -505,7 +505,16 @@ export default function MobilePage() {
     }
     if (pieFilter === '계좌별') {
       const map = new Map<string, number>();
-      allHoldings.forEach(h => map.set(h.account, (map.get(h.account) || 0) + h.valuation));
+      ACCOUNTS.filter(a => a !== '전체').forEach(a => {
+        const base = calcHoldings(transactions, a);
+        const val = base.reduce((s, h) => {
+          const pd = priceCache.current.get(h.ticker);
+          if (!pd) return s;
+          return s + pd.price * h.quantity;
+        }, 0);
+        const cash = cashBalances.find(b => b.account === a)?.balance || 0;
+        if (val + cash > 0) map.set(a, val + cash);
+      });
       return Array.from(map.entries()).map(([name, value]) => ({ name, ticker: '', value }));
     }
     if (pieFilter === '국가별') {
