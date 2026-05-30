@@ -22,7 +22,7 @@ function pct(v: number) {
   return `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
 }
 function pos(v: number) {
-  return v >= 0 ? '#10b981' : '#ef4444';
+  return v >= 0 ? '#ef4444' : '#3b82f6';
 }
 
 
@@ -182,7 +182,7 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
         <>
           <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#3b82f6', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>평가액</span></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#10b981', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>투자원금</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#94a3b8', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>투자원금</span></div>
           </div>
           <div style={{ display: 'flex', gap: 2 }}>
             <div style={{ width: Y_LABEL_W, flexShrink: 0, position: 'relative', height: GRAPH_H }}>
@@ -201,7 +201,7 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
                 <line x1="0" y1={toY(maxV)} x2={GRAPH_W} y2={toY(maxV)} stroke="#f3f4f6" strokeWidth="0.8" />
                 <line x1="0" y1={toY((maxV + minV) / 2)} x2={GRAPH_W} y2={toY((maxV + minV) / 2)} stroke="#f3f4f6" strokeWidth="0.8" />
                 <line x1="0" y1={toY(minV)} x2={GRAPH_W} y2={toY(minV)} stroke="#f3f4f6" strokeWidth="0.8" />
-                <polyline points={invPts} fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <polyline points={invPts} fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 <polyline points={evalPts} fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
 
               </svg>
@@ -223,8 +223,8 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
     return (
       <>
         <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 12, height: 12, background: '#10b981', borderRadius: 2 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>수익</span></div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 12, height: 12, background: '#ef4444', borderRadius: 2 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>손실</span></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 12, height: 12, background: '#ef4444', borderRadius: 2 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>수익</span></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 12, height: 12, background: '#3b82f6', borderRadius: 2 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>손실</span></div>
         </div>
         <div style={{ display: 'flex', gap: 2 }}>
           <div style={{ width: Y_LABEL_W, flexShrink: 0, position: 'relative', height: GRAPH_H }}>
@@ -246,7 +246,7 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
               {data.map((d: any, i: number) => {
                 const x = (i / (data.length || 1)) * GRAPH_W;
                 const barH = Math.abs(d.profit) / maxAbs * 80;
-                const color = d.profit >= 0 ? '#10b981' : '#ef4444';
+                const color = d.profit >= 0 ? '#ef4444' : '#3b82f6';
                 const y = d.profit >= 0 ? midY - barH : midY;
                 return <rect key={i} x={x - barW / 2} y={y} width={barW} height={Math.max(barH, 1)} fill={color} rx="1" />;
               })}
