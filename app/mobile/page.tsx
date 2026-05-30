@@ -248,7 +248,19 @@ export default function MobilePage() {
   }
 
   const S: Record<string, React.CSSProperties> = {
-    wrap: { height: '100dvh', display: 'flex', flexDirection: 'column', background: '#f3f4f6', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', },
+    wrap: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: '#f3f4f6',
+      fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+      overflow: 'hidden'
+    },
     header: { background: 'white', padding: '12px 18px 0', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', flexShrink: 0 },
     liveBox: { display: 'flex', alignItems: 'center', gap: 4, background: '#f3f4f6', borderRadius: 20, padding: '3px 8px' },
     scroll: { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' },
