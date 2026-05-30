@@ -750,8 +750,8 @@ export default function MobilePage() {
                   <div key={i} style={{ ...S.legendRow, borderBottom: i < pieData.length - 1 ? '0.5px solid #e5e7eb' : 'none' }}>
                     <div style={{ width: 9, height: 9, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
                     <span style={{ fontSize: 13, color: '#374151', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{d.name}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#111827', flexShrink: 0 }}>{pieTotal > 0 ? ((d.value / pieTotal) * 100).toFixed(1) : 0}%</span>
-                    <span style={{ fontSize: 12, color: '#9ca3af', minWidth: 50, textAlign: 'right', flexShrink: 0 }}>{formatW(d.value)}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#111827', flexShrink: 0, minWidth: 42, textAlign: 'right' }}>{pieTotal > 0 ? ((d.value / pieTotal) * 100).toFixed(1) : 0}%</span>
+                    <span style={{ fontSize: 12, color: '#9ca3af', minWidth: 70, textAlign: 'right', flexShrink: 0 }}>{formatWFull(d.value)}</span>
                   </div>
                 ))}
               </div>
