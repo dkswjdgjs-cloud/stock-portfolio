@@ -395,7 +395,7 @@ export default function MobilePage() {
         const data = await res.json();
         if (data.price) {
           const rate = market === 'US' && data.exchangeRate ? data.exchangeRate : 1;
-          priceCache.current.set(ticker, { price: data.price * rate, priceOriginal: data.price, dailyChange: (data.dailyChange || 0) * rate, exchangeRate: rate, ts: now });
+          priceCache.current.set(ticker, { price: data.price * rate, priceOriginal: data.price, dailyChange: data.dailyChange || 0, exchangeRate: rate, ts: now });
         }
       } catch {}
     }));
@@ -407,7 +407,7 @@ export default function MobilePage() {
       const valuation = pd.price * h.quantity;
       const profit = (pd.price - avgKRW) * h.quantity;
       const return_rate = avgKRW > 0 ? ((pd.price - avgKRW) / avgKRW) * 100 : 0;
-      return { ...h, curr_price: pd.priceOriginal, valuation, profit, return_rate, daily_change: pd.dailyChange };
+      return { ...h, curr_price: pd.priceOriginal, valuation, profit, return_rate, daily_change: pd.dailyChange, exchangeRate: pd.exchangeRate };
     });
   }, []);
 
@@ -450,7 +450,7 @@ export default function MobilePage() {
         const monthlyProfit = currMonthValue - prevMonthValuation - (totalInvested - prevMonthInvested);
         const monthlyBase = prevMonthValuation + (totalInvested - prevMonthInvested);
         const monthlyReturn = monthlyBase > 0 ? (monthlyProfit / monthlyBase) * 100 : 0;
-        const dailyProfit = allWithPrices.reduce((s, h) => s + (h.daily_change || 0) * (h.quantity || 0), 0);
+        const dailyProfit = allWithPrices.reduce((s, h) => s + (h.daily_change || 0) * (h.quantity || 0) * (h.exchangeRate || 1), 0);
         const dailyReturn = currMonthValue > 0 ? (dailyProfit / (currMonthValue - dailyProfit)) * 100 : 0;
         return { ...calcedWithSnap, currMonthValue, totalInvested, cumulativeProfit, cumulativeReturn, annualProfit, annualReturn, monthlyProfit, monthlyReturn, dailyProfit, dailyReturn };
       });
@@ -667,7 +667,7 @@ export default function MobilePage() {
                     {viewMode === '시세' ? (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: 0 }}>
-                          {h.curr_price.toLocaleString('ko-KR', { maximumFractionDigits: 0 })}
+                          {h.currency === 'USD' ? h.curr_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '$' : h.curr_price.toLocaleString('ko-KR', { maximumFractionDigits: 0 })}
                         </p>
                         <p style={{ fontSize: 13, color: pos(h.daily_change), marginTop: 3, margin: '3px 0 0' }}>
                           {h.curr_price > 0 ? pct((h.daily_change / (h.curr_price - h.daily_change || 1)) * 100) : '-'}
