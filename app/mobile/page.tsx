@@ -271,9 +271,9 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
             {[...sorted].reverse().map((s, i) => (
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: '0.5px solid #f9fafb' }}>
                 <span style={{ fontSize: 12, color: '#374151' }}>{s.snapshot_date}</span>
-                <span style={{ fontSize: 12, color: '#374151', textAlign: 'right' }}>{formatW(s.total_valuation || 0)}</span>
+                <span style={{ fontSize: 12, color: '#374151', textAlign: 'right' }}>{formatWFull(s.total_valuation || 0)}</span>
                 <span style={{ fontSize: 12, color: pos(s.total_profit || 0), textAlign: 'right' }}>
-                  {(s.total_profit || 0) >= 0 ? '+' : ''}{formatW(s.total_profit || 0)}
+                  {(s.total_profit || 0) >= 0 ? '+' : ''}{formatWFull(s.total_profit || 0)}
                 </span>
               </div>
             ))}
@@ -292,7 +292,7 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '9px 4px', borderBottom: '0.5px solid #f9fafb' }}>
               <span style={{ fontSize: 12, color: '#374151' }}>{d.label}</span>
               <span style={{ fontSize: 12, color: pos(d.profit), textAlign: 'right' }}>
-                {d.profit >= 0 ? '+' : ''}{formatW(d.profit)}
+                {d.profit >= 0 ? '+' : ''}{formatWFull(d.profit)}
               </span>
             </div>
           ))}
@@ -592,7 +592,7 @@ export default function MobilePage() {
               <span style={{ fontSize: 12, fontWeight: 600, color: pos(currentProfit.rate) }}>{pct(currentProfit.rate)}</span>
             </div>
             <p style={{ fontSize: 15, fontWeight: 600, color: pos(currentProfit.amt), margin: 0 }}>
-              {currentProfit.amt >= 0 ? '+' : ''}{formatW(currentProfit.amt)}
+              {currentProfit.amt >= 0 ? '+' : ''}{formatWFull(currentProfit.amt)}
             </p>
           </div>
         </div>
