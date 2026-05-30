@@ -34,7 +34,7 @@ export default function MobileLayout({
         <meta name="theme-color" content="white" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body style={{ margin: 0, padding: 0, background: '#1e2433' }}>
+      <body style={{ margin: 0, padding: 0, background: 'white' }}>
         {children}
       </body>
     </html>
