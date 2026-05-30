@@ -326,6 +326,22 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
 
 export default function MobilePage() {
   const [tab, setTab] = useState<'account' | 'summary' | 'settlement'>('account');
+  const tabSwipeRef = useRef<{ startX: number; startY: number } | null>(null);
+  const TABS: ('account' | 'summary' | 'settlement')[] = ['account', 'summary', 'settlement'];
+  const handleTabSwipeStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) tabSwipeRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY };
+  };
+  const handleTabSwipeEnd = (e: React.TouchEvent) => {
+    if (!tabSwipeRef.current) return;
+    const dx = e.changedTouches[0].clientX - tabSwipeRef.current.startX;
+    const dy = e.changedTouches[0].clientY - tabSwipeRef.current.startY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      const idx = TABS.indexOf(tab);
+      if (dx < 0 && idx < TABS.length - 1) setTab(TABS[idx + 1]);
+      if (dx > 0 && idx > 0) setTab(TABS[idx - 1]);
+    }
+    tabSwipeRef.current = null;
+  };
   const [viewMode, setViewMode] = useState<'시세' | '평가'>('시세');
   const [accountFilter, setAccountFilter] = useState('전체');
   const [pieFilter, setPieFilter] = useState<PieFilter>('종목별');
@@ -567,7 +583,7 @@ export default function MobilePage() {
       <div style={S.header}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <span style={{ color: '#9ca3af', fontSize: 11, letterSpacing: '0.08em' }}>
-            WEALTHFLOW · {tab === 'account' ? '계좌 내역' : tab === 'summary' ? '종합 내역' : '일일 결산'}
+            WEALTHFLOW
           </span>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={S.liveBox}>
@@ -599,7 +615,7 @@ export default function MobilePage() {
       </div>
 
       {/* 스크롤 영역 */}
-      <div style={S.scroll}>
+      <div style={S.scroll} onTouchStart={handleTabSwipeStart} onTouchEnd={handleTabSwipeEnd}>
 
         {/* 탭1: 계좌 내역 */}
         {tab === 'account' && (
@@ -723,17 +739,10 @@ export default function MobilePage() {
         <div style={{ height: 8 }} />
       </div>
 
-      {/* 탭바 */}
-      <div style={S.tabBar}>
-        {([
-          { key: 'account', icon: '🏦', label: '계좌' },
-          { key: 'summary', icon: '⊞', label: '종합' },
-          { key: 'settlement', icon: '⏱', label: '결산' },
-        ] as const).map(t => (
-          <button key={t.key} style={S.tabItem} onClick={() => setTab(t.key)}>
-            <div style={{ fontSize: 22 }}>{t.icon}</div>
-            <p style={{ fontSize: 11, color: tab === t.key ? '#2563eb' : '#9ca3af', fontWeight: tab === t.key ? 500 : 400, margin: '2px 0 0' }}>{t.label}</p>
-          </button>
+      {/* 페이지 인디케이터 */}
+      <div style={{ background: 'white', borderTop: '0.5px solid #e5e7eb', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, padding: '8px 0', paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)', flexShrink: 0 }}>
+        {(['account', 'summary', 'settlement'] as const).map(t => (
+          <div key={t} onClick={() => setTab(t)} style={{ width: tab === t ? 18 : 6, height: 6, borderRadius: 3, background: tab === t ? '#111827' : '#d1d5db', transition: 'all 0.2s', cursor: 'pointer' }} />
         ))}
       </div>
 
