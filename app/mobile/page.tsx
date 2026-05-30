@@ -327,9 +327,10 @@ function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: bo
 
 export default function MobilePage() {
   const [tab, setTab] = useState<'account' | 'summary' | 'settlement'>('account');
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => { try { return localStorage.getItem('darkMode') === 'true'; } catch { return false; } });
   useEffect(() => {
     document.body.style.background = darkMode ? '#000000' : '#ffffff';
+    try { localStorage.setItem('darkMode', String(darkMode)); } catch {}
     let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement;
     if (!meta) { meta = document.createElement('meta') as HTMLMetaElement; meta.name = 'theme-color'; document.head.appendChild(meta); }
     meta.content = darkMode ? '#000000' : '#ffffff';
