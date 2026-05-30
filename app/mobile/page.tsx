@@ -25,6 +25,190 @@ function pos(v: number) {
   return v >= 0 ? '#10b981' : '#ef4444';
 }
 
+
+type SettlementMode = '누적' | '년도별' | '월별' | '일별';
+
+function calcSettlementData(snapshots: any[], mode: SettlementMode) {
+  if (!snapshots.length) return [];
+  const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+
+  if (mode === '누적') return sorted;
+
+  if (mode === '년도별') {
+    const years = [...new Set(sorted.map(s => s.snapshot_date.slice(0, 4)))];
+    return years.map((year, yi) => {
+      const yearSnaps = sorted.filter(s => s.snapshot_date.startsWith(year));
+      const last = yearSnaps[yearSnaps.length - 1];
+      const prevYearSnaps = yi === 0 ? [] : sorted.filter(s => s.snapshot_date.startsWith(years[yi - 1]));
+      const prevLast = prevYearSnaps.length ? prevYearSnaps[prevYearSnaps.length - 1] : null;
+      const prevVal = prevLast ? prevLast.total_valuation || 0 : 0;
+      const prevInv = prevLast ? prevLast.total_invested || 0 : 0;
+      const currVal = last.total_valuation || 0;
+      const currInv = last.total_invested || 0;
+      const profit = currVal - prevVal - (currInv - prevInv);
+      return { label: `${year}년`, profit, valuation: currVal };
+    });
+  }
+
+  if (mode === '월별') {
+    const months = [...new Set(sorted.map(s => s.snapshot_date.slice(0, 7)))];
+    return months.map((month, mi) => {
+      const monthSnaps = sorted.filter(s => s.snapshot_date.startsWith(month));
+      const last = monthSnaps[monthSnaps.length - 1];
+      const prevMonthSnaps = mi === 0 ? [] : sorted.filter(s => s.snapshot_date.startsWith(months[mi - 1]));
+      const prevLast = prevMonthSnaps.length ? prevMonthSnaps[prevMonthSnaps.length - 1] : null;
+      const prevVal = prevLast ? prevLast.total_valuation || 0 : 0;
+      const prevInv = prevLast ? prevLast.total_invested || 0 : 0;
+      const currVal = last.total_valuation || 0;
+      const currInv = last.total_invested || 0;
+      const profit = currVal - prevVal - (currInv - prevInv);
+      return { label: month, profit, valuation: currVal };
+    });
+  }
+
+  if (mode === '일별') {
+    return sorted.map((s, i) => {
+      const prev = i === 0 ? null : sorted[i - 1];
+      const prevVal = prev ? prev.total_valuation || 0 : 0;
+      const prevInv = prev ? prev.total_invested || 0 : 0;
+      const currVal = s.total_valuation || 0;
+      const currInv = s.total_invested || 0;
+      const profit = currVal - prevVal - (currInv - prevInv);
+      return { label: s.snapshot_date, profit, valuation: currVal };
+    });
+  }
+
+  return [];
+}
+
+function SettlementTab({ snapshots }: { snapshots: any[] }) {
+  const [mode, setMode] = useState<SettlementMode>('누적');
+  const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+  const data = calcSettlementData(snapshots, mode);
+  const reversed = [...data].reverse();
+
+  const renderGraph = () => {
+    if (!data.length) return <div style={{ height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 14 }}>데이터 없음</div>;
+
+    if (mode === '누적') {
+      const vals = sorted.map(s => s.total_valuation || 0);
+      const invs = sorted.map(s => s.total_invested || 0);
+      const maxV = Math.max(...vals, ...invs, 1);
+      const minV = Math.min(...vals, ...invs, 0);
+      const range = maxV - minV || 1;
+      const toY = (v: number) => 120 - ((v - minV) / range) * 110;
+      const toX = (i: number) => (i / (sorted.length - 1 || 1)) * 280 + 10;
+      const evalPts = sorted.map((s, i) => `${toX(i)},${toY(s.total_valuation || 0)}`).join(' ');
+      const invPts = sorted.map((s, i) => `${toX(i)},${toY(s.total_invested || 0)}`).join(' ');
+      return (
+        <>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#3b82f6', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>평가액</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#10b981', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>투자원금</span></div>
+          </div>
+          <svg width="100%" height="130" viewBox="0 0 300 130" preserveAspectRatio="none">
+            <line x1="0" y1="20" x2="300" y2="20" stroke="#f3f4f6" strokeWidth="1" />
+            <line x1="0" y1="65" x2="300" y2="65" stroke="#f3f4f6" strokeWidth="1" />
+            <line x1="0" y1="110" x2="300" y2="110" stroke="#f3f4f6" strokeWidth="1" />
+            <polyline points={invPts} fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline points={evalPts} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </>
+      );
+    }
+
+    // 막대 그래프 (년/월/일)
+    const profits = data.map(d => d.profit);
+    const maxAbs = Math.max(...profits.map(Math.abs), 1);
+    const barW = Math.max(2, Math.floor(260 / data.length) - 2);
+    const midY = 65;
+    return (
+      <>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 12, height: 12, background: '#10b981', borderRadius: 2 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>수익</span></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 12, height: 12, background: '#ef4444', borderRadius: 2 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>손실</span></div>
+        </div>
+        <svg width="100%" height="130" viewBox="0 0 300 130" preserveAspectRatio="none">
+          <line x1="0" y1={midY} x2="300" y2={midY} stroke="#e5e7eb" strokeWidth="1" />
+          <line x1="0" y1="20" x2="300" y2="20" stroke="#f3f4f6" strokeWidth="0.5" />
+          <line x1="0" y1="110" x2="300" y2="110" stroke="#f3f4f6" strokeWidth="0.5" />
+          {data.map((d, i) => {
+            const x = 20 + (i / (data.length || 1)) * 260;
+            const barH = Math.abs(d.profit) / maxAbs * 50;
+            const color = d.profit >= 0 ? '#10b981' : '#ef4444';
+            const y = d.profit >= 0 ? midY - barH : midY;
+            return <rect key={i} x={x - barW / 2} y={y} width={barW} height={barH} fill={color} rx="1" />;
+          })}
+        </svg>
+      </>
+    );
+  };
+
+  const renderTable = () => {
+    if (mode === '누적') {
+      return (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '7px 4px', borderBottom: '1px solid #f3f4f6' }}>
+            <span style={{ fontSize: 11, color: '#9ca3af' }}>날짜</span>
+            <span style={{ fontSize: 11, color: '#9ca3af', textAlign: 'right' }}>평가액</span>
+            <span style={{ fontSize: 11, color: '#9ca3af', textAlign: 'right' }}>수익금</span>
+          </div>
+          <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+            {[...sorted].reverse().map((s, i) => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: '0.5px solid #f9fafb' }}>
+                <span style={{ fontSize: 12, color: '#374151' }}>{s.snapshot_date}</span>
+                <span style={{ fontSize: 12, color: '#374151', textAlign: 'right' }}>{formatW(s.total_valuation || 0)}</span>
+                <span style={{ fontSize: 12, color: pos(s.total_profit || 0), textAlign: 'right' }}>
+                  {(s.total_profit || 0) >= 0 ? '+' : ''}{formatW(s.total_profit || 0)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      );
+    }
+    return (
+      <>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '7px 4px', borderBottom: '1px solid #f3f4f6' }}>
+          <span style={{ fontSize: 11, color: '#9ca3af' }}>기간</span>
+          <span style={{ fontSize: 11, color: '#9ca3af', textAlign: 'right' }}>수익금</span>
+        </div>
+        <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+          {reversed.map((d, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '9px 4px', borderBottom: '0.5px solid #f9fafb' }}>
+              <span style={{ fontSize: 12, color: '#374151' }}>{d.label}</span>
+              <span style={{ fontSize: 12, color: pos(d.profit), textAlign: 'right' }}>
+                {d.profit >= 0 ? '+' : ''}{formatW(d.profit)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <>
+      <div style={S.card}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 500, margin: 0 }}>성과 추이</p>
+        </div>
+        {renderGraph()}
+      </div>
+      <div style={S.card}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 500, margin: 0 }}>결산 데이터</p>
+          <select value={mode} onChange={e => setMode(e.target.value as SettlementMode)}
+            style={{ fontSize: 12, border: '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: '#374151', background: '#f9fafb', outline: 'none' }}>
+            {(['누적', '년도별', '월별', '일별'] as SettlementMode[]).map(m => <option key={m}>{m}</option>)}
+          </select>
+        </div>
+        {renderTable()}
+      </div>
+    </>
+  );
+}
+
 export default function MobilePage() {
   const [tab, setTab] = useState<'account' | 'summary' | 'settlement'>('account');
   const [viewMode, setViewMode] = useState<'시세' | '평가'>('시세');
@@ -413,61 +597,7 @@ export default function MobilePage() {
 
         {/* 탭3: 일일 결산 */}
         {tab === 'settlement' && (
-          <>
-            <div style={S.card}>
-              <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 500, margin: '0 0 10px' }}>성과 추이</p>
-              <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#3b82f6', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>평가액</span></div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#10b981', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>투자원금</span></div>
-              </div>
-              {snapshots.length > 0 ? (
-                <svg width="100%" height="130" viewBox="0 0 300 130" preserveAspectRatio="none">
-                  {(() => {
-                    const vals = snapshots.map(s => s.total_valuation || 0);
-                    const invs = snapshots.map(s => s.total_invested || 0);
-                    const maxV = Math.max(...vals, ...invs, 1);
-                    const minV = Math.min(...vals, ...invs, 0);
-                    const range = maxV - minV || 1;
-                    const toY = (v: number) => 120 - ((v - minV) / range) * 110;
-                    const toX = (i: number) => (i / (snapshots.length - 1 || 1)) * 280 + 10;
-                    const evalPts = snapshots.map((s, i) => `${toX(i)},${toY(s.total_valuation || 0)}`).join(' ');
-                    const invPts = snapshots.map((s, i) => `${toX(i)},${toY(s.total_invested || 0)}`).join(' ');
-                    return (
-                      <>
-                        <line x1="0" y1="20" x2="300" y2="20" stroke="#f3f4f6" strokeWidth="1" />
-                        <line x1="0" y1="65" x2="300" y2="65" stroke="#f3f4f6" strokeWidth="1" />
-                        <line x1="0" y1="110" x2="300" y2="110" stroke="#f3f4f6" strokeWidth="1" />
-                        <polyline points={invPts} fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <polyline points={evalPts} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </>
-                    );
-                  })()}
-                </svg>
-              ) : (
-                <div style={{ height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 14 }}>데이터 없음</div>
-              )}
-            </div>
-
-            <div style={S.card}>
-              <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 500, margin: '0 0 10px' }}>결산 데이터</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '7px 4px', borderBottom: '1px solid #f3f4f6' }}>
-                <span style={{ fontSize: 11, color: '#9ca3af' }}>날짜</span>
-                <span style={{ fontSize: 11, color: '#9ca3af', textAlign: 'right' }}>평가액</span>
-                <span style={{ fontSize: 11, color: '#9ca3af', textAlign: 'right' }}>수익금</span>
-              </div>
-              <div style={{ maxHeight: 220, overflowY: 'auto' }}>
-                {[...snapshots].reverse().map((s, i) => (
-                  <div key={i} style={S.drow}>
-                    <span style={{ fontSize: 12, color: '#374151' }}>{s.snapshot_date}</span>
-                    <span style={{ fontSize: 12, color: '#374151', textAlign: 'right' }}>{formatW(s.total_valuation || 0)}</span>
-                    <span style={{ fontSize: 12, color: pos(s.total_profit || 0), textAlign: 'right' }}>
-                      {(s.total_profit || 0) >= 0 ? '+' : ''}{formatW(s.total_profit || 0)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
+          <SettlementTab snapshots={snapshots} />
         )}
 
         <div style={{ height: 8 }} />
