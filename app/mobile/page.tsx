@@ -687,7 +687,7 @@ export default function MobilePage() {
                       </div>
                     ) : (
                       <div style={{ textAlign: 'right', flexShrink: 0, maxWidth: '55%' }}>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(h.valuation)}</p>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: D ? '#f1f5f9' : '#111827', margin: 0 }}>{formatWFull(h.valuation)}</p>
                         <p style={{ fontSize: 12, color: pos(h.profit), marginTop: 3, margin: '3px 0 0' }}>
                           {h.profit >= 0 ? '+' : ''}{formatWFull(h.profit)}({pct(h.return_rate)})
                         </p>
@@ -705,7 +705,7 @@ export default function MobilePage() {
                   <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 3, margin: '3px 0 0' }}>{accountFilter === '전체' ? '전체 계좌' : accountFilter}</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(accountCash)}</p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: D ? '#f1f5f9' : '#111827', margin: 0 }}>{formatWFull(accountCash)}</p>
                   <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 3, margin: '3px 0 0' }}>-</p>
                 </div>
               </div>
@@ -776,7 +776,7 @@ export default function MobilePage() {
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         select { -webkit-appearance: none; appearance: none; }
-        html, body { overscroll-behavior: none; overflow: hidden; height: 100%; }
+        html, body { overscroll-behavior: none; overflow: hidden; height: 100%; background: ${darkMode ? '#000000' : 'white'}; }
       `}</style>
     </div>
   );
