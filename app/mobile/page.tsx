@@ -776,8 +776,9 @@ export default function MobilePage() {
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         select { -webkit-appearance: none; appearance: none; }
-        html, body { overscroll-behavior: none; overflow: hidden; height: 100%; background: ${darkMode ? '#000000' : 'white'}; }
+        html, body { overscroll-behavior: none; overflow: hidden; height: 100%; }
       `}</style>
+      <style>{`html, body { background: ${darkMode ? '#000000' : 'white'}; }`}</style>
     </div>
   );
 }
