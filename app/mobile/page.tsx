@@ -637,7 +637,8 @@ export default function MobilePage() {
         {/* 탭1: 계좌 내역 */}
         {tab === 'account' && (
           <>
-            <div style={{ background: 'white', padding: '11px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '0.5px solid #f3f4f6' }}>
+            <div style={{ margin: '8px 12px', borderRadius: 12, border: '0.5px solid #e5e7eb', overflow: 'hidden', background: 'white' }}>
+            <div style={{ padding: '11px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '0.5px solid #f3f4f6' }}>
               <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 20, padding: 3, gap: 2 }}>
                 {(['시세', '평가'] as const).map(m => (
                   <button key={m} onClick={() => setViewMode(m)} style={{ fontSize: 13, padding: '5px 16px', borderRadius: 18, border: 'none', cursor: 'pointer', background: viewMode === m ? '#111827' : 'transparent', color: viewMode === m ? 'white' : '#9ca3af', fontWeight: viewMode === m ? 600 : 500 }}>{m}</button>
@@ -697,6 +698,7 @@ export default function MobilePage() {
                 </div>
               </div>
             </div>
+            </div>{/* 카드 닫기 */}
 
             {/* 합계 */}
             <div style={{ background: 'white', padding: '13px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f3f4f6', marginBottom: 8 }}>
