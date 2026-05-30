@@ -249,12 +249,7 @@ export default function MobilePage() {
 
   const S: Record<string, React.CSSProperties> = {
     wrap: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      height: '100vh',
+      height: '100svh',
       display: 'flex',
       flexDirection: 'column',
       background: '#f3f4f6',
