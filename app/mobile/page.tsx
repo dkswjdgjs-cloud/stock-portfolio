@@ -6,7 +6,6 @@ import { calcHoldings } from '@/lib/calcHoldings';
 
 const ACCOUNTS = ['전체', 'ISA', 'IRP', '연금저축', 'DC형 연금', '일반직투1', '일반직투2'];
 const COLORS = ['#6366f1', '#a78bfa', '#3b82f6', '#2dd4bf', '#22d3ee', '#818cf8', '#67e8f9'];
-
 const PIE_FILTERS = ['종목별', '계좌별', '국가별', '섹터별'] as const;
 type PieFilter = typeof PIE_FILTERS[number];
 
@@ -31,7 +30,6 @@ export default function MobilePage() {
   const [accountFilter, setAccountFilter] = useState('전체');
   const [pieFilter, setPieFilter] = useState<PieFilter>('종목별');
   const [profitIdx, setProfitIdx] = useState(0);
-
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [cashBalances, setCashBalances] = useState<CashBalance[]>([]);
   const [cashIncomes, setCashIncomes] = useState<CashIncome[]>([]);
@@ -47,7 +45,6 @@ export default function MobilePage() {
   });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
-
   const priceCache = useRef<Map<string, { price: number; priceOriginal: number; dailyChange: number; exchangeRate: number; ts: number }>>(new Map());
 
   const fetchPrices = useCallback(async (baseH: AccountHolding[], force = false): Promise<AccountHolding[]> => {
@@ -92,21 +89,17 @@ export default function MobilePage() {
       setCashIncomes(incomeData);
       setCashBalances(balanceData);
       setSnapshots(snapData || []);
-
       const cashIncomeTotal = incomeData.reduce((s: number, c: CashIncome) => s + c.amount, 0);
-
       const baseAll = calcHoldings(transData, '전체');
       const allWithPrices = await fetchPrices(baseAll);
       setAllHoldings(allWithPrices);
       setHoldings(allWithPrices);
-
       const totalVal = allWithPrices.reduce((s, h) => s + h.valuation, 0);
       const cashTotal = balanceData.reduce((s: number, b: CashBalance) => s + b.balance, 0);
       const currMonthValue = totalVal + cashTotal;
       const totalInvested = transData.filter((t: any) => t.account_transfer).reduce((sum: number, t: any) => {
         return t.account_transfer === '입금' ? sum + (t.transfer_amount || 0) : sum - (t.transfer_amount || 0);
       }, 0);
-
       setSummary(() => {
         const calcedWithSnap = calcSummary(transData, snapData || []);
         const { prevYearValuation = 0, prevYearInvested = 0, prevMonthValuation = 0, prevMonthInvested = 0 } = calcedWithSnap;
@@ -202,7 +195,7 @@ export default function MobilePage() {
       cum += p;
       return `${COLORS[i % COLORS.length]} ${from.toFixed(1)}% ${cum.toFixed(1)}%`;
     });
-    return `conic-gradient(${parts.join(',')})` ;
+    return `conic-gradient(${parts.join(',')})`;
   };
 
   const cagr = (() => {
@@ -247,13 +240,19 @@ export default function MobilePage() {
     );
   }
 
+  const TABS = [
+    { key: 'account' as const, icon: '🏦', label: '계좌' },
+    { key: 'summary' as const, icon: '⊞', label: '종합' },
+    { key: 'settlement' as const, icon: '⏱', label: '결산' },
+  ];
+
   const S: Record<string, React.CSSProperties> = {
-    wrap: { height: '100dvh', display: 'flex', flexDirection: 'column', background: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', },
-    header: { background: '#1e2433', padding: '12px 18px 0', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', flexShrink: 0 },
+    wrap: { height: '100dvh', display: 'flex', flexDirection: 'column', background: '#f3f4f6', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' },
+    header: { background: '#1e2433', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', padding: '12px 18px 0', flexShrink: 0 },
     liveBox: { display: 'flex', alignItems: 'center', gap: 4, background: '#2a3147', borderRadius: 20, padding: '3px 8px' },
     scroll: { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' },
-    tabBar: { background: 'white', borderTop: '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' }, tabBarWrap: { background: 'white', flexShrink: 0 },
-    tabItem: { flex: 1, textAlign: 'center', padding: '8px 0', cursor: 'pointer', border: 'none', background: 'transparent' },
+    tabBar: { background: 'white', borderBottom: '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0 },
+    tabItem: { flex: 1, textAlign: 'center', padding: '10px 0 8px', cursor: 'pointer', border: 'none', background: 'transparent', position: 'relative' },
     card: { background: 'white', margin: '8px 12px', borderRadius: 12, border: '0.5px solid #e5e7eb', padding: 14 },
     srow: { display: 'flex', alignItems: 'center', padding: '13px 16px', borderBottom: '0.5px solid #f3f4f6' },
     sicon: { width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0, marginRight: 12 },
@@ -264,34 +263,44 @@ export default function MobilePage() {
 
   return (
     <div style={S.wrap}>
-      {/* 헤더 — 글씨 크기 유지 */}
+      {/* 헤더 */}
       <div style={S.header}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ color: '#9ca3af', fontSize: 11, letterSpacing: '0.08em' }}>
-            WEALTHFLOW · {tab === 'account' ? '계좌 내역' : tab === 'summary' ? '종합 내역' : '일일 결산'}
-          </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <span style={{ color: '#9ca3af', fontSize: 11, letterSpacing: '0.08em' }}>WEALTHFLOW · {TABS.find(t => t.key === tab)?.label} 내역</span>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={S.liveBox}>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981' }} />
               <span style={{ color: '#10b981', fontSize: 9 }}>LIVE</span>
             </div>
-            <span style={{ color: '#6b7280', fontSize: 10 }}>
-              {lastUpdated?.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) ?? '--:--'}
-            </span>
+            <span style={{ color: '#6b7280', fontSize: 10 }}>{lastUpdated?.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) ?? '--:--'}</span>
           </div>
         </div>
-        <p style={{ color: '#9ca3af', fontSize: 11, marginBottom: 2 }}>현재 평가액</p>
-        <p style={{ color: 'white', fontSize: 28, fontWeight: 600, letterSpacing: -1, marginBottom: 10 }}>{formatWFull(summary.currMonthValue)}</p>
-        <div style={{ paddingTop: 10, borderTop: '1px solid #2a3147', paddingBottom: 14, cursor: 'pointer', userSelect: 'none' }}
-          onClick={() => setProfitIdx(i => (i + 1) % 4)}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-            <span style={{ color: '#9ca3af', fontSize: 11 }}>{currentProfit.label} <span style={{ color: '#4b5563', fontSize: 9 }}>↻ 탭</span></span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: pos(currentProfit.rate) }}>{pct(currentProfit.rate)}</span>
+
+        {/* 평가액 + 수익금 한 줄 */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14 }}>
+          <div>
+            <p style={{ color: '#9ca3af', fontSize: 11, margin: '0 0 2px' }}>현재 평가액</p>
+            <p style={{ color: 'white', fontSize: 26, fontWeight: 600, letterSpacing: -1, margin: 0 }}>{formatWFull(summary.currMonthValue)}</p>
           </div>
-          <p style={{ fontSize: 20, fontWeight: 600, color: pos(currentProfit.amt), margin: 0 }}>
-            {currentProfit.amt >= 0 ? '+' : ''}{formatWFull(currentProfit.amt)}
-          </p>
+          <div style={{ textAlign: 'right', cursor: 'pointer', userSelect: 'none' }} onClick={() => setProfitIdx(i => (i + 1) % 4)}>
+            <p style={{ color: '#9ca3af', fontSize: 11, margin: '0 0 2px' }}>{currentProfit.label} <span style={{ color: '#4b5563', fontSize: 9 }}>↻ 탭</span></p>
+            <p style={{ color: pos(currentProfit.rate), fontSize: 13, fontWeight: 600, margin: '0 0 2px' }}>{pct(currentProfit.rate)}</p>
+            <p style={{ color: pos(currentProfit.amt), fontSize: 18, fontWeight: 600, margin: 0 }}>{currentProfit.amt >= 0 ? '+' : ''}{formatWFull(currentProfit.amt)}</p>
+          </div>
         </div>
+      </div>
+
+      {/* 탭바 — 헤더 바로 아래 흰색 */}
+      <div style={S.tabBar}>
+        {TABS.map(t => (
+          <button key={t.key} style={S.tabItem} onClick={() => setTab(t.key)}>
+            <div style={{ fontSize: 20 }}>{t.icon}</div>
+            <p style={{ fontSize: 11, margin: '2px 0 0', color: tab === t.key ? '#374151' : '#9ca3af', fontWeight: tab === t.key ? 500 : 400 }}>{t.label}</p>
+            {tab === t.key && (
+              <div style={{ position: 'absolute', bottom: 0, left: '10%', right: '10%', height: 2, background: '#d1d5db', borderRadius: 1 }} />
+            )}
+          </button>
+        ))}
       </div>
 
       {/* 스크롤 영역 */}
@@ -320,55 +329,42 @@ export default function MobilePage() {
                     <div style={{ ...S.sicon, background: ic.bg, color: ic.color }}>{ic.label}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 15, fontWeight: 500, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{h.stock_name}</p>
-                      <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 3, margin: '3px 0 0' }}>
-                        {viewMode === '시세'
-                          ? `${h.curr_price.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${h.currency === 'KRW' ? '원' : '$'}`
-                          : `${h.quantity.toLocaleString()}주`}
+                      <p style={{ fontSize: 13, color: '#9ca3af', margin: '3px 0 0' }}>
+                        {viewMode === '시세' ? `${h.curr_price.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${h.currency === 'KRW' ? '원' : '$'}` : `${h.quantity.toLocaleString()}주`}
                       </p>
                     </div>
                     {viewMode === '시세' ? (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: 0 }}>
-                          {h.curr_price.toLocaleString('ko-KR', { maximumFractionDigits: 0 })}
-                        </p>
-                        <p style={{ fontSize: 13, color: pos(h.daily_change), marginTop: 3, margin: '3px 0 0' }}>
-                          {h.curr_price > 0 ? pct((h.daily_change / (h.curr_price - h.daily_change || 1)) * 100) : '-'}
-                        </p>
+                        <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: 0 }}>{h.curr_price.toLocaleString('ko-KR', { maximumFractionDigits: 0 })}</p>
+                        <p style={{ fontSize: 13, color: pos(h.daily_change), margin: '3px 0 0' }}>{h.curr_price > 0 ? pct((h.daily_change / (h.curr_price - h.daily_change || 1)) * 100) : '-'}</p>
                       </div>
                     ) : (
                       <div style={{ textAlign: 'right', flexShrink: 0, maxWidth: '55%' }}>
                         <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(h.valuation)}</p>
-                        <p style={{ fontSize: 12, color: pos(h.profit), marginTop: 3, margin: '3px 0 0' }}>
-                          {h.profit >= 0 ? '+' : ''}{formatWFull(h.profit)}({pct(h.return_rate)})
-                        </p>
+                        <p style={{ fontSize: 12, color: pos(h.profit), margin: '3px 0 0' }}>{h.profit >= 0 ? '+' : ''}{formatWFull(h.profit)}({pct(h.return_rate)})</p>
                       </div>
                     )}
                   </div>
                 );
               })}
-
-              {/* 현금성 자산 */}
               <div style={{ ...S.srow, background: '#f9fafb' }}>
                 <div style={{ ...S.sicon, background: '#e0f2fe', color: '#0369a1', fontSize: 18 }}>💰</div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 15, fontWeight: 500, color: '#374151', margin: 0 }}>현금성 자산</p>
-                  <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 3, margin: '3px 0 0' }}>{accountFilter === '전체' ? '전체 계좌' : accountFilter}</p>
+                  <p style={{ fontSize: 13, color: '#9ca3af', margin: '3px 0 0' }}>{accountFilter === '전체' ? '전체 계좌' : accountFilter}</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(accountCash)}</p>
-                  <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 3, margin: '3px 0 0' }}>-</p>
+                  <p style={{ fontSize: 13, color: '#9ca3af', margin: '3px 0 0' }}>-</p>
                 </div>
               </div>
             </div>
 
-            {/* 합계 */}
             <div style={{ background: 'white', padding: '13px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f3f4f6', marginBottom: 8 }}>
               <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>선택 합계 · {holdings.length}종목 + 현금</p>
               <div style={{ textAlign: 'right' }}>
                 <p style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: 0 }}>{formatWFull(totalEval)}</p>
-                <p style={{ fontSize: 13, color: pos(totalProfit), marginTop: 2, margin: '2px 0 0' }}>
-                  {totalProfit >= 0 ? '+' : ''}{formatWFull(totalProfit)}
-                </p>
+                <p style={{ fontSize: 13, color: pos(totalProfit), margin: '2px 0 0' }}>{totalProfit >= 0 ? '+' : ''}{formatWFull(totalProfit)}</p>
               </div>
             </div>
           </>
@@ -398,7 +394,6 @@ export default function MobilePage() {
                 </div>
               </div>
             </div>
-
             <div style={S.card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>ASSET ALLOCATION</p>
@@ -407,7 +402,6 @@ export default function MobilePage() {
                   {PIE_FILTERS.map(f => <option key={f}>{f}</option>)}
                 </select>
               </div>
-
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
                 <div style={{ width: 170, height: 170, borderRadius: '50%', background: makeConic(pieData), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <div style={{ width: 85, height: 85, background: 'white', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -416,7 +410,6 @@ export default function MobilePage() {
                   </div>
                 </div>
               </div>
-
               <div style={{ background: '#f9fafb', border: '0.5px solid #e5e7eb', borderRadius: 11, overflow: 'hidden' }}>
                 {pieData.map((d, i) => (
                   <div key={i} style={{ ...S.legendRow, borderBottom: i < pieData.length - 1 ? '0.5px solid #e5e7eb' : 'none' }}>
@@ -467,7 +460,6 @@ export default function MobilePage() {
                 <div style={{ height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 14 }}>데이터 없음</div>
               )}
             </div>
-
             <div style={S.card}>
               <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 500, margin: '0 0 10px' }}>결산 데이터</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '7px 4px', borderBottom: '1px solid #f3f4f6' }}>
@@ -480,32 +472,15 @@ export default function MobilePage() {
                   <div key={i} style={S.drow}>
                     <span style={{ fontSize: 12, color: '#374151' }}>{s.snapshot_date}</span>
                     <span style={{ fontSize: 12, color: '#374151', textAlign: 'right' }}>{formatW(s.total_valuation || 0)}</span>
-                    <span style={{ fontSize: 12, color: pos(s.total_profit || 0), textAlign: 'right' }}>
-                      {(s.total_profit || 0) >= 0 ? '+' : ''}{formatW(s.total_profit || 0)}
-                    </span>
+                    <span style={{ fontSize: 12, color: pos(s.total_profit || 0), textAlign: 'right' }}>{(s.total_profit || 0) >= 0 ? '+' : ''}{formatW(s.total_profit || 0)}</span>
                   </div>
                 ))}
               </div>
             </div>
           </>
         )}
-
-        <div style={{ height: 8 }} />
+        <div style={{ height: 8, paddingBottom: 'env(safe-area-inset-bottom)' }} />
       </div>
-
-      {/* 탭바 */}
-      <div style={S.tabBarWrap}><div style={S.tabBar}>
-        {([
-          { key: 'account', icon: '🏦', label: '계좌' },
-          { key: 'summary', icon: '⊞', label: '종합' },
-          { key: 'settlement', icon: '⏱', label: '결산' },
-        ] as const).map(t => (
-          <button key={t.key} style={S.tabItem} onClick={() => setTab(t.key)}>
-            <div style={{ fontSize: 22 }}>{t.icon}</div>
-            <p style={{ fontSize: 11, color: tab === t.key ? '#2563eb' : '#9ca3af', fontWeight: tab === t.key ? 500 : 400, margin: '2px 0 0' }}>{t.label}</p>
-          </button>
-        ))}
-      </div></div>
 
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
