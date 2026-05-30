@@ -377,27 +377,7 @@ export default function MobilePage() {
         {/* 탭2: 종합 내역 */}
         {tab === 'summary' && (
           <>
-            <div style={{ padding: '8px 12px 0' }}>
-              <div style={{ display: 'flex', gap: 7 }}>
-                <div style={S.metricCard}>
-                  <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 4px' }}>CAGR</p>
-                  <p style={{ fontSize: 19, fontWeight: 600, color: pos(cagr), margin: 0 }}>{cagr.toFixed(1)}%</p>
-                  <p style={{ fontSize: 10, color: '#9ca3af', margin: '2px 0 0' }}>연평균 수익률</p>
-                </div>
-                <div style={S.metricCard}>
-                  <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 4px' }}>MDD</p>
-                  <p style={{ fontSize: 19, fontWeight: 600, color: '#ef4444', margin: 0 }}>{mdd.toFixed(1)}%</p>
-                  <p style={{ fontSize: 10, color: '#9ca3af', margin: '2px 0 0' }}>최대 낙폭</p>
-                </div>
-                <div style={S.metricCard}>
-                  <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 4px' }}>투자원금</p>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: '#2563eb', margin: 0 }}>{formatW(summary.totalInvested)}</p>
-                  <div style={{ height: 3, background: '#e5e7eb', borderRadius: 2, marginTop: 6 }}>
-                    <div style={{ height: '100%', background: '#2563eb', borderRadius: 2, width: `${Math.min(summary.currMonthValue / Math.max(summary.totalInvested * 1.5, 1) * 100, 100)}%` }} />
-                  </div>
-                </div>
-              </div>
-            </div>
+
 
             <div style={S.card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
@@ -409,8 +389,8 @@ export default function MobilePage() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-                <div style={{ width: 170, height: 170, borderRadius: '50%', background: makeConic(pieData), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 85, height: 85, background: 'white', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 230, height: 230, borderRadius: '50%', background: makeConic(pieData), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 115, height: 115, background: 'white', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ fontSize: 10, color: '#9ca3af' }}>총 자산</span>
                     <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{formatW(summary.currMonthValue)}</span>
                   </div>
