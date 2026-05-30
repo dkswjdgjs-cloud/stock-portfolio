@@ -465,17 +465,22 @@ export default function MobilePage() {
             </span>
           </div>
         </div>
-        <p style={{ color: '#9ca3af', fontSize: 11, marginBottom: 2 }}>현재 평가액</p>
-        <p style={{ color: '#111827', fontSize: 28, fontWeight: 600, letterSpacing: -1, marginBottom: 10 }}>{formatWFull(summary.currMonthValue)}</p>
-        <div style={{ paddingTop: 10, borderTop: '1px solid #e5e7eb', paddingBottom: 14, cursor: 'pointer', userSelect: 'none' }}
-          onClick={() => setProfitIdx(i => (i + 1) % 4)}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-            <span style={{ color: '#9ca3af', fontSize: 11 }}>{currentProfit.label} <span style={{ color: '#4b5563', fontSize: 9 }}>↻ 탭</span></span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: pos(currentProfit.rate) }}>{pct(currentProfit.rate)}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: 12 }}>
+          <div>
+            <p style={{ color: '#9ca3af', fontSize: 11, marginBottom: 2 }}>현재 평가액</p>
+            <p style={{ color: '#111827', fontSize: 28, fontWeight: 600, letterSpacing: -1, margin: 0 }}>{formatWFull(summary.currMonthValue)}</p>
           </div>
-          <p style={{ fontSize: 20, fontWeight: 600, color: pos(currentProfit.amt), margin: 0 }}>
-            {currentProfit.amt >= 0 ? '+' : ''}{formatWFull(currentProfit.amt)}
-          </p>
+          <div style={{ textAlign: 'right', cursor: 'pointer', userSelect: 'none', background: '#f9fafb', border: '0.5px solid #e5e7eb', borderRadius: 10, padding: '6px 12px' }}
+            onClick={() => setProfitIdx(i => (i + 1) % 4)}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', marginBottom: 2 }}>
+              <span style={{ color: '#9ca3af', fontSize: 10 }}>{currentProfit.label}</span>
+              <span style={{ color: '#4b5563', fontSize: 9 }}>↻</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: pos(currentProfit.rate) }}>{pct(currentProfit.rate)}</span>
+            </div>
+            <p style={{ fontSize: 15, fontWeight: 600, color: pos(currentProfit.amt), margin: 0 }}>
+              {currentProfit.amt >= 0 ? '+' : ''}{formatW(currentProfit.amt)}
+            </p>
+          </div>
         </div>
       </div>
 
