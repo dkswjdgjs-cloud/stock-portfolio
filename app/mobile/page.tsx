@@ -203,15 +203,7 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
                 <line x1="0" y1={toY(minV)} x2={GRAPH_W} y2={toY(minV)} stroke="#f3f4f6" strokeWidth="0.8" />
                 <polyline points={invPts} fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 <polyline points={evalPts} fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                {/* X축 날짜 */}
-                {sorted.map((s, i) => {
-                  if (i % labelEvery !== 0) return null;
-                  const x = toX(i);
-                  if (x < offset - 10 || x > offset + visibleW + 10) return null;
-                  return (
-                    <text key={i} x={x} y={GRAPH_H + 12} fontSize="7" fill="#9ca3af" textAnchor="middle">{s.snapshot_date.slice(5)}</text>
-                  );
-                })}
+
               </svg>
             </div>
           </div>
@@ -258,15 +250,7 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
                 const y = d.profit >= 0 ? midY - barH : midY;
                 return <rect key={i} x={x - barW / 2} y={y} width={barW} height={Math.max(barH, 1)} fill={color} rx="1" />;
               })}
-              {/* X축 날짜 */}
-              {data.map((d: any, i: number) => {
-                if (i % labelEvery !== 0) return null;
-                const x = (i / (data.length || 1)) * GRAPH_W;
-                if (x < offset - 10 || x > offset + visibleW + 10) return null;
-                return (
-                  <text key={i} x={x} y={GRAPH_H + 12} fontSize="7" fill="#9ca3af" textAnchor="middle">{d.label}</text>
-                );
-              })}
+
             </svg>
           </div>
         </div>
