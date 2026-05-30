@@ -252,7 +252,7 @@ export default function MobilePage() {
     header: { background: '#1e2433', padding: '12px 18px 0', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', flexShrink: 0 },
     liveBox: { display: 'flex', alignItems: 'center', gap: 4, background: '#2a3147', borderRadius: 20, padding: '3px 8px' },
     scroll: { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' },
-    tabBar: { background: 'white', borderTop: '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' },
+    tabBar: { background: 'white', borderTop: '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0 },
     tabItem: { flex: 1, textAlign: 'center', padding: '8px 0', cursor: 'pointer', border: 'none', background: 'transparent' },
     card: { background: 'white', margin: '8px 12px', borderRadius: 12, border: '0.5px solid #e5e7eb', padding: 14 },
     srow: { display: 'flex', alignItems: 'center', padding: '13px 16px', borderBottom: '0.5px solid #f3f4f6' },
