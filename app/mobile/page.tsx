@@ -106,13 +106,20 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#3b82f6', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>평가액</span></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#10b981', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>투자원금</span></div>
           </div>
-          <svg width="100%" height="180" viewBox="0 0 300 180" preserveAspectRatio="none">
-            <line x1="0" y1="20" x2="300" y2="20" stroke="#f3f4f6" strokeWidth="1" />
-            <line x1="0" y1="90" x2="300" y2="90" stroke="#f3f4f6" strokeWidth="1" />
-            <line x1="0" y1="160" x2="300" y2="160" stroke="#f3f4f6" strokeWidth="1" />
-            <polyline points={invPts} fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <polyline points={evalPts} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingBottom: 2, paddingTop: 2 }}>
+              <span style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right' }}>{formatW(maxV)}</span>
+              <span style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right' }}>{formatW((maxV + minV) / 2)}</span>
+              <span style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right' }}>{formatW(minV)}</span>
+            </div>
+            <svg width="100%" height="180" viewBox="0 0 300 180" preserveAspectRatio="none" style={{ flex: 1 }}>
+              <line x1="0" y1="20" x2="300" y2="20" stroke="#f3f4f6" strokeWidth="1" />
+              <line x1="0" y1="90" x2="300" y2="90" stroke="#f3f4f6" strokeWidth="1" />
+              <line x1="0" y1="160" x2="300" y2="160" stroke="#f3f4f6" strokeWidth="1" />
+              <polyline points={invPts} fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <polyline points={evalPts} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
         </>
       );
     }
