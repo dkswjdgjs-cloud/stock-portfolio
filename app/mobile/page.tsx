@@ -83,12 +83,86 @@ function calcSettlementData(snapshots: any[], mode: SettlementMode) {
 
 function SettlementTab({ snapshots }: { snapshots: any[] }) {
   const [mode, setMode] = useState<SettlementMode>('누적');
+  const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState(0);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ active: boolean; startX: number; startOffset: number }>({ active: false, startX: 0, startOffset: 0 });
+  const pinchRef = useRef<{ active: boolean; startDist: number; startZoom: number }>({ active: false, startDist: 0, startZoom: 1 });
+
   const sorted = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
   const data = calcSettlementData(snapshots, mode);
   const reversed = [...data].reverse();
 
+  const GRAPH_W = 300;
+  const GRAPH_H = 180;
+  const Y_LABEL_W = 36;
+  const X_AXIS_H = 16;
+  const maxZoom = Math.max(1, Math.floor(data.length / 5));
+
+  const clampOffset = (off: number, z: number) => {
+    const visibleW = GRAPH_W / z;
+    const maxOff = Math.max(0, GRAPH_W - visibleW);
+    return Math.max(0, Math.min(off, maxOff));
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const newZoom = Math.max(1, Math.min(maxZoom, zoom * (e.deltaY < 0 ? 1.15 : 0.87)));
+    setZoom(newZoom);
+    setOffset(o => clampOffset(o, newZoom));
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    dragRef.current = { active: true, startX: e.clientX, startOffset: offset };
+  };
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragRef.current.active) return;
+    const dx = (e.clientX - dragRef.current.startX) / zoom;
+    setOffset(clampOffset(dragRef.current.startOffset - dx, zoom));
+  };
+  const handleMouseUp = () => { dragRef.current.active = false; };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchRef.current = { active: true, startDist: Math.hypot(dx, dy), startZoom: zoom };
+      dragRef.current.active = false;
+    } else if (e.touches.length === 1) {
+      dragRef.current = { active: true, startX: e.touches[0].clientX, startOffset: offset };
+      pinchRef.current.active = false;
+    }
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinchRef.current.active) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const newZoom = Math.max(1, Math.min(maxZoom, pinchRef.current.startZoom * (dist / pinchRef.current.startDist)));
+      setZoom(newZoom);
+      setOffset(o => clampOffset(o, newZoom));
+    } else if (e.touches.length === 1 && dragRef.current.active) {
+      const dx = (e.touches[0].clientX - dragRef.current.startX) / zoom;
+      setOffset(clampOffset(dragRef.current.startOffset - dx, zoom));
+    }
+  };
+  const handleTouchEnd = () => {
+    dragRef.current.active = false;
+    pinchRef.current.active = false;
+  };
+
   const renderGraph = () => {
     if (!data.length) return <div style={{ height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 14 }}>데이터 없음</div>;
+
+    const visibleW = GRAPH_W / zoom;
+    const viewBox = `${offset} 0 ${visibleW} ${GRAPH_H}`;
+
+    // X축 날짜 레이블 표시 간격 계산
+    const minLabelSpacing = 40;
+    const totalPoints = mode === '누적' ? sorted.length : data.length;
+    const pointSpacing = GRAPH_W / Math.max(totalPoints - 1, 1) * zoom;
+    const labelEvery = Math.max(1, Math.ceil(minLabelSpacing / pointSpacing));
 
     if (mode === '누적') {
       const vals = sorted.map(s => s.total_valuation || 0);
@@ -96,57 +170,106 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
       const maxV = Math.max(...vals, ...invs, 1);
       const minV = Math.min(...vals, ...invs, 0);
       const range = maxV - minV || 1;
-      const toY = (v: number) => 170 - ((v - minV) / range) * 150;
-      const toX = (i: number) => (i / (sorted.length - 1 || 1)) * 280 + 10;
+      const toY = (v: number) => 160 - ((v - minV) / range) * 140;
+      const toX = (i: number) => (i / (sorted.length - 1 || 1)) * GRAPH_W;
       const evalPts = sorted.map((s, i) => `${toX(i)},${toY(s.total_valuation || 0)}`).join(' ');
       const invPts = sorted.map((s, i) => `${toX(i)},${toY(s.total_invested || 0)}`).join(' ');
+
+      const yLabels = [maxV, (maxV + minV) / 2, minV];
+      const yPositions = [toY(maxV), toY((maxV + minV) / 2), toY(minV)];
+
       return (
         <>
           <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#3b82f6', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>평가액</span></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#10b981', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>투자원금</span></div>
           </div>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingBottom: 2, paddingTop: 2 }}>
-              <span style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right' }}>{formatW(maxV)}</span>
-              <span style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right' }}>{formatW((maxV + minV) / 2)}</span>
-              <span style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right' }}>{formatW(minV)}</span>
+          <div style={{ display: 'flex', gap: 2 }}>
+            <div style={{ width: Y_LABEL_W, flexShrink: 0, position: 'relative', height: GRAPH_H }}>
+              {yLabels.map((v, i) => (
+                <span key={i} style={{ position: 'absolute', right: 2, fontSize: 8, color: '#9ca3af', transform: 'translateY(-50%)', top: yPositions[i] }}>{formatW(v)}</span>
+              ))}
             </div>
-            <svg width="100%" height="180" viewBox="0 0 300 180" preserveAspectRatio="none" style={{ flex: 1 }}>
-              <line x1="0" y1="20" x2="300" y2="20" stroke="#f3f4f6" strokeWidth="1" />
-              <line x1="0" y1="90" x2="300" y2="90" stroke="#f3f4f6" strokeWidth="1" />
-              <line x1="0" y1="160" x2="300" y2="160" stroke="#f3f4f6" strokeWidth="1" />
-              <polyline points={invPts} fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <polyline points={evalPts} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <div style={{ flex: 1, overflow: 'hidden', cursor: 'grab' }}
+              onWheel={handleWheel}
+              onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+              <svg ref={svgRef} width="100%" height={GRAPH_H + X_AXIS_H} viewBox={`${offset} 0 ${visibleW} ${GRAPH_H + X_AXIS_H}`} preserveAspectRatio="none" style={{ display: 'block' }}>
+                {/* Y축 세로줄 */}
+                <line x1="0" y1="0" x2="0" y2={GRAPH_H} stroke="#d1d5db" strokeWidth="0.5" />
+                {/* 가로 보조선 */}
+                <line x1="0" y1={toY(maxV)} x2={GRAPH_W} y2={toY(maxV)} stroke="#f3f4f6" strokeWidth="0.8" />
+                <line x1="0" y1={toY((maxV + minV) / 2)} x2={GRAPH_W} y2={toY((maxV + minV) / 2)} stroke="#f3f4f6" strokeWidth="0.8" />
+                <line x1="0" y1={toY(minV)} x2={GRAPH_W} y2={toY(minV)} stroke="#f3f4f6" strokeWidth="0.8" />
+                <polyline points={invPts} fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <polyline points={evalPts} fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                {/* X축 날짜 */}
+                {sorted.map((s, i) => {
+                  if (i % labelEvery !== 0) return null;
+                  const x = toX(i);
+                  if (x < offset - 10 || x > offset + visibleW + 10) return null;
+                  return (
+                    <text key={i} x={x} y={GRAPH_H + 12} fontSize="7" fill="#9ca3af" textAnchor="middle">{s.snapshot_date.slice(5)}</text>
+                  );
+                })}
+              </svg>
+            </div>
           </div>
         </>
       );
     }
 
     // 막대 그래프 (년/월/일)
-    const profits = data.map(d => d.profit);
+    const profits = data.map((d: any) => d.profit);
     const maxAbs = Math.max(...profits.map(Math.abs), 1);
-    const barW = Math.max(2, Math.floor(260 / data.length) - 2);
-    const midY = 65;
+    const midY = 90;
+    const barW = Math.max(2, (GRAPH_W / data.length) * zoom * 0.6);
+
+    const yLabels = [maxAbs, 0, -maxAbs];
+    const toBarY = (v: number) => midY - (v / maxAbs) * 80;
+
     return (
       <>
         <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 12, height: 12, background: '#10b981', borderRadius: 2 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>수익</span></div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 12, height: 12, background: '#ef4444', borderRadius: 2 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>손실</span></div>
         </div>
-        <svg width="100%" height="130" viewBox="0 0 300 130" preserveAspectRatio="none">
-          <line x1="0" y1={midY} x2="300" y2={midY} stroke="#e5e7eb" strokeWidth="1" />
-          <line x1="0" y1="20" x2="300" y2="20" stroke="#f3f4f6" strokeWidth="0.5" />
-          <line x1="0" y1="110" x2="300" y2="110" stroke="#f3f4f6" strokeWidth="0.5" />
-          {data.map((d, i) => {
-            const x = 20 + (i / (data.length || 1)) * 260;
-            const barH = Math.abs(d.profit) / maxAbs * 50;
-            const color = d.profit >= 0 ? '#10b981' : '#ef4444';
-            const y = d.profit >= 0 ? midY - barH : midY;
-            return <rect key={i} x={x - barW / 2} y={y} width={barW} height={barH} fill={color} rx="1" />;
-          })}
-        </svg>
+        <div style={{ display: 'flex', gap: 2 }}>
+          <div style={{ width: Y_LABEL_W, flexShrink: 0, position: 'relative', height: GRAPH_H }}>
+            {yLabels.map((v, i) => (
+              <span key={i} style={{ position: 'absolute', right: 2, fontSize: 8, color: '#9ca3af', transform: 'translateY(-50%)', top: toBarY(v) }}>{formatW(v)}</span>
+            ))}
+          </div>
+          <div style={{ flex: 1, overflow: 'hidden', cursor: 'grab' }}
+            onWheel={handleWheel}
+            onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+            <svg width="100%" height={GRAPH_H + X_AXIS_H} viewBox={`${offset} 0 ${visibleW} ${GRAPH_H + X_AXIS_H}`} preserveAspectRatio="none" style={{ display: 'block' }}>
+              {/* Y축 세로줄 */}
+              <line x1="0" y1="0" x2="0" y2={GRAPH_H} stroke="#d1d5db" strokeWidth="0.5" />
+              {/* 가로 보조선 */}
+              <line x1="0" y1={midY} x2={GRAPH_W} y2={midY} stroke="#e5e7eb" strokeWidth="0.8" />
+              <line x1="0" y1={toBarY(maxAbs)} x2={GRAPH_W} y2={toBarY(maxAbs)} stroke="#f3f4f6" strokeWidth="0.5" />
+              <line x1="0" y1={toBarY(-maxAbs)} x2={GRAPH_W} y2={toBarY(-maxAbs)} stroke="#f3f4f6" strokeWidth="0.5" />
+              {data.map((d: any, i: number) => {
+                const x = (i / (data.length || 1)) * GRAPH_W;
+                const barH = Math.abs(d.profit) / maxAbs * 80;
+                const color = d.profit >= 0 ? '#10b981' : '#ef4444';
+                const y = d.profit >= 0 ? midY - barH : midY;
+                return <rect key={i} x={x - barW / 2} y={y} width={barW} height={Math.max(barH, 1)} fill={color} rx="1" />;
+              })}
+              {/* X축 날짜 */}
+              {data.map((d: any, i: number) => {
+                if (i % labelEvery !== 0) return null;
+                const x = (i / (data.length || 1)) * GRAPH_W;
+                if (x < offset - 10 || x > offset + visibleW + 10) return null;
+                return (
+                  <text key={i} x={x} y={GRAPH_H + 12} fontSize="7" fill="#9ca3af" textAnchor="middle">{d.label}</text>
+                );
+              })}
+            </svg>
+          </div>
+        </div>
       </>
     );
   };
