@@ -248,42 +248,12 @@ export default function MobilePage() {
   }
 
   const S: Record<string, React.CSSProperties> = {
-    wrap: { 
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      display: 'flex', 
-      flexDirection: 'column', 
-      background: '#f3f4f6', 
-      fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-      overflow: 'hidden'
-    },
+    wrap: { height: '100dvh', display: 'flex', flexDirection: 'column', background: '#f3f4f6', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', },
     header: { background: 'white', padding: '12px 18px 0', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', flexShrink: 0 },
     liveBox: { display: 'flex', alignItems: 'center', gap: 4, background: '#f3f4f6', borderRadius: 20, padding: '3px 8px' },
     scroll: { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' },
-    tabBar: { 
-      background: 'white', 
-      borderTop: '0.5px solid #e5e7eb', 
-      display: 'flex', 
-      flexShrink: 0, 
-      height: 'auto',
-      minHeight: 'calc(env(safe-area-inset-bottom) + 56px)',
-      paddingBottom: 'env(safe-area-inset-bottom)',
-      boxSizing: 'border-box'
-    },
-    tabItem: { 
-      flex: 1, 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      padding: '6px 0', 
-      cursor: 'pointer', 
-      border: 'none', 
-      background: 'transparent' 
-    },
+    tabBar: { background: 'white', borderTop: '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' },
+    tabItem: { flex: 1, textAlign: 'center', padding: '8px 0', cursor: 'pointer', border: 'none', background: 'transparent' },
     card: { background: 'white', margin: '8px 12px', borderRadius: 12, border: '0.5px solid #e5e7eb', padding: 14 },
     srow: { display: 'flex', alignItems: 'center', padding: '13px 16px', borderBottom: '0.5px solid #f3f4f6' },
     sicon: { width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0, marginRight: 12 },
