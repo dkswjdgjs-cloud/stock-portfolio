@@ -252,7 +252,7 @@ export default function MobilePage() {
     header: { background: '#1e2433', padding: '12px 18px 0', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', flexShrink: 0 },
     liveBox: { display: 'flex', alignItems: 'center', gap: 4, background: '#2a3147', borderRadius: 20, padding: '3px 8px' },
     scroll: { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' },
-    tabBar: { background: 'white', borderTop: '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' },
+    tabBar: { background: 'white', borderTop: '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' }, tabBarWrap: { background: 'white', flexShrink: 0 },
     tabItem: { flex: 1, textAlign: 'center', padding: '8px 0', cursor: 'pointer', border: 'none', background: 'transparent' },
     card: { background: 'white', margin: '8px 12px', borderRadius: 12, border: '0.5px solid #e5e7eb', padding: 14 },
     srow: { display: 'flex', alignItems: 'center', padding: '13px 16px', borderBottom: '0.5px solid #f3f4f6' },
@@ -494,7 +494,7 @@ export default function MobilePage() {
       </div>
 
       {/* 탭바 */}
-      <div style={S.tabBar}>
+      <div style={S.tabBarWrap}><div style={S.tabBar}>
         {([
           { key: 'account', icon: '🏦', label: '계좌' },
           { key: 'summary', icon: '⊞', label: '종합' },
@@ -505,7 +505,7 @@ export default function MobilePage() {
             <p style={{ fontSize: 11, color: tab === t.key ? '#2563eb' : '#9ca3af', fontWeight: tab === t.key ? 500 : 400, margin: '2px 0 0' }}>{t.label}</p>
           </button>
         ))}
-      </div>
+      </div></div>
 
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
