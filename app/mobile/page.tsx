@@ -506,6 +506,7 @@ export default function MobilePage() {
           </button>
         ))}
       </div>
+      <div style={{ background: 'white', height: 'env(safe-area-inset-bottom)', flexShrink: 0 }} />
 
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
