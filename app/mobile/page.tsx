@@ -270,8 +270,8 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
           <div style={{ maxHeight: 220, overflowY: 'auto' }}>
             {[...sorted].reverse().map((s, i) => (
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: '0.5px solid #f9fafb' }}>
-                <span style={{ fontSize: 12, color: '#374151' }}>{s.snapshot_date}</span>
-                <span style={{ fontSize: 12, color: '#374151', textAlign: 'right' }}>{formatWFull(s.total_valuation || 0)}</span>
+                <span style={{ fontSize: 12, color: D ? '#cbd5e1' : '#374151' }}>{s.snapshot_date}</span>
+                <span style={{ fontSize: 12, color: D ? '#cbd5e1' : '#374151', textAlign: 'right' }}>{formatWFull(s.total_valuation || 0)}</span>
                 <span style={{ fontSize: 12, color: pos(s.total_profit || 0), textAlign: 'right' }}>
                   {(s.total_profit || 0) >= 0 ? '+' : ''}{formatWFull(s.total_profit || 0)}
                 </span>
@@ -326,6 +326,7 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
 
 export default function MobilePage() {
   const [tab, setTab] = useState<'account' | 'summary' | 'settlement'>('account');
+  const [darkMode, setDarkMode] = useState(false);
   const tabSwipeRef = useRef<{ startX: number; startY: number; locked: 'x' | 'y' | null }>({ startX: 0, startY: 0, locked: null });
   const TABS: ('account' | 'summary' | 'settlement')[] = ['account', 'summary', 'settlement'];
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -588,19 +589,20 @@ export default function MobilePage() {
     );
   }
 
+  const D = darkMode;
   const S: Record<string, React.CSSProperties> = {
-    wrap: { height: '100dvh', display: 'flex', flexDirection: 'column', background: '#f3f4f6', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', overscrollBehavior: 'none', overflow: 'hidden' },
-    header: { background: 'white', padding: '12px 18px 0', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', flexShrink: 0 },
-    liveBox: { display: 'flex', alignItems: 'center', gap: 4, background: '#f3f4f6', borderRadius: 20, padding: '3px 8px' },
+    wrap: { height: '100dvh', display: 'flex', flexDirection: 'column', background: D ? '#0f172a' : '#f3f4f6', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', overscrollBehavior: 'none', overflow: 'hidden' },
+    header: { background: D ? '#1e293b' : 'white', padding: '12px 18px 0', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', flexShrink: 0, borderBottom: D ? '0.5px solid #334155' : 'none' },
+    liveBox: { display: 'flex', alignItems: 'center', gap: 4, background: D ? '#0f172a' : '#f3f4f6', borderRadius: 20, padding: '3px 8px' },
     scroll: { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' },
-    tabBar: { background: 'white', borderTop: '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' },
+    tabBar: { background: D ? '#1e293b' : 'white', borderTop: D ? '0.5px solid #334155' : '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' },
     tabItem: { flex: 1, textAlign: 'center', padding: '8px 0', cursor: 'pointer', border: 'none', background: 'transparent' },
-    card: { background: 'white', margin: '8px 12px', borderRadius: 12, border: '0.5px solid #e5e7eb', padding: 14 },
-    srow: { display: 'flex', alignItems: 'center', padding: '13px 16px', borderBottom: '0.5px solid #f3f4f6' },
+    card: { background: D ? '#1e293b' : 'white', margin: '8px 12px', borderRadius: 12, border: D ? '0.5px solid #334155' : '0.5px solid #e5e7eb', padding: 14 },
+    srow: { display: 'flex', alignItems: 'center', padding: '13px 16px', borderBottom: D ? '0.5px solid #1e293b' : '0.5px solid #f3f4f6' },
     sicon: { width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0, marginRight: 12 },
-    metricCard: { background: '#f9fafb', border: '0.5px solid #e5e7eb', borderRadius: 11, padding: 12, flex: 1 },
+    metricCard: { background: D ? '#0f172a' : '#f9fafb', border: D ? '0.5px solid #334155' : '0.5px solid #e5e7eb', borderRadius: 11, padding: 12, flex: 1 },
     legendRow: { display: 'flex', alignItems: 'center', gap: 9, padding: '11px 13px' },
-    drow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: '0.5px solid #f9fafb' },
+    drow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: D ? '0.5px solid #1e293b' : '0.5px solid #f9fafb' },
   };
 
   return (
@@ -608,7 +610,7 @@ export default function MobilePage() {
       {/* 헤더 — 글씨 크기 유지 */}
       <div style={S.header}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ color: '#9ca3af', fontSize: 11, letterSpacing: '0.08em' }}>
+          <span style={{ color: D ? '#64748b' : '#9ca3af', fontSize: 11, letterSpacing: '0.08em' }}>
             WEALTHFLOW
           </span>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -616,20 +618,20 @@ export default function MobilePage() {
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981' }} />
               <span style={{ color: '#10b981', fontSize: 9 }}>LIVE</span>
             </div>
-            <span style={{ color: '#6b7280', fontSize: 10 }}>
-              {lastUpdated?.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) ?? '--:--'}
-            </span>
+            <button onClick={() => setDarkMode(d => !d)} style={{ background: D ? '#334155' : '#f3f4f6', border: 'none', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontSize: 14 }}>
+              {D ? '☀️' : '🌙'}
+            </button>
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: 12 }}>
           <div>
-            <p style={{ color: '#9ca3af', fontSize: 11, marginBottom: 2 }}>현재 평가액</p>
-            <p style={{ color: '#111827', fontSize: 28, fontWeight: 600, letterSpacing: -1, margin: 0 }}>{formatWFull(summary.currMonthValue)}</p>
+            <p style={{ color: D ? '#64748b' : '#9ca3af', fontSize: 11, marginBottom: 2 }}>현재 평가액</p>
+            <p style={{ color: D ? '#f1f5f9' : '#111827', fontSize: 28, fontWeight: 600, letterSpacing: -1, margin: 0 }}>{formatWFull(summary.currMonthValue)}</p>
           </div>
           <div style={{ textAlign: 'right', cursor: 'pointer', userSelect: 'none' }}
             onClick={() => setProfitIdx(i => (i + 1) % 4)}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', marginBottom: 2 }}>
-              <span style={{ color: '#9ca3af', fontSize: 10 }}>{currentProfit.label}</span>
+              <span style={{ color: D ? '#64748b' : '#9ca3af', fontSize: 10 }}>{currentProfit.label}</span>
               <span style={{ color: '#4b5563', fontSize: 9 }}>↻</span>
               <span style={{ fontSize: 12, fontWeight: 600, color: pos(currentProfit.rate) }}>{pct(currentProfit.rate)}</span>
             </div>
@@ -666,7 +668,7 @@ export default function MobilePage() {
                   <div key={i} style={S.srow}>
                     <div style={{ ...S.sicon, background: ic.bg, color: ic.color }}>{ic.label}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 15, fontWeight: 500, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{h.stock_name}</p>
+                      <p style={{ fontSize: 15, fontWeight: 500, color: D ? '#f1f5f9' : '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{h.stock_name}</p>
                       <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 3, margin: '3px 0 0' }}>
                         {viewMode === '시세'
                           ? `평균 ${h.avg_price.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${h.currency === 'KRW' ? '원' : '$'}`
@@ -711,9 +713,9 @@ export default function MobilePage() {
 
             {/* 합계 */}
             <div style={{ background: 'white', padding: '13px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f3f4f6', marginBottom: 8 }}>
-              <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>선택 합계 · {holdings.length}종목 + 현금</p>
+              <p style={{ fontSize: 13, color: D ? '#475569' : '#9ca3af', margin: 0 }}>선택 합계 · {holdings.length}종목 + 현금</p>
               <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: 0 }}>{formatWFull(totalEval)}</p>
+                <p style={{ fontSize: 17, fontWeight: 700, color: D ? '#f1f5f9' : '#111827', margin: 0 }}>{formatWFull(totalEval)}</p>
                 <p style={{ fontSize: 13, color: pos(totalProfit), marginTop: 2, margin: '2px 0 0' }}>
                   {totalProfit >= 0 ? '+' : ''}{formatWFull(totalProfit)}
                 </p>
@@ -729,7 +731,7 @@ export default function MobilePage() {
 
             <div style={S.card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>ASSET ALLOCATION</p>
+                <p style={{ fontSize: 13, color: D ? '#64748b' : '#6b7280', margin: 0 }}>ASSET ALLOCATION</p>
                 <select value={pieFilter} onChange={e => setPieFilter(e.target.value as PieFilter)}
                   style={{ fontSize: 12, border: '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: '#374151', background: '#f9fafb', outline: 'none' }}>
                   {PIE_FILTERS.map(f => <option key={f}>{f}</option>)}
@@ -739,8 +741,8 @@ export default function MobilePage() {
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
                 <div style={{ width: 230, height: 230, borderRadius: '50%', background: makeConic(pieData), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <div style={{ width: 115, height: 115, background: 'white', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: 10, color: '#9ca3af' }}>총 자산</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{formatW(summary.currMonthValue)}</span>
+                    <span style={{ fontSize: 10, color: D ? '#64748b' : '#9ca3af' }}>총 자산</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: D ? '#f1f5f9' : '#111827' }}>{formatW(summary.currMonthValue)}</span>
                   </div>
                 </div>
               </div>
@@ -749,8 +751,8 @@ export default function MobilePage() {
                 {pieData.map((d, i) => (
                   <div key={i} style={{ ...S.legendRow, borderBottom: i < pieData.length - 1 ? '0.5px solid #e5e7eb' : 'none' }}>
                     <div style={{ width: 9, height: 9, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, color: '#374151', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{d.name}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#111827', flexShrink: 0, minWidth: 42, textAlign: 'right', marginRight: 16 }}>{pieTotal > 0 ? ((d.value / pieTotal) * 100).toFixed(1) : 0}%</span>
+                    <span style={{ fontSize: 13, color: D ? '#cbd5e1' : '#374151', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{d.name}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: D ? '#f1f5f9' : '#111827', flexShrink: 0, minWidth: 42, textAlign: 'right', marginRight: 16 }}>{pieTotal > 0 ? ((d.value / pieTotal) * 100).toFixed(1) : 0}%</span>
                     <span style={{ fontSize: 12, color: '#9ca3af', minWidth: 70, textAlign: 'right', flexShrink: 0 }}>{formatWFull(d.value)}</span>
                   </div>
                 ))}
