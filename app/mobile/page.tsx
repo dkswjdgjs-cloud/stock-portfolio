@@ -81,7 +81,8 @@ function calcSettlementData(snapshots: any[], mode: SettlementMode) {
   return [];
 }
 
-function SettlementTab({ snapshots }: { snapshots: any[] }) {
+function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: boolean }) {
+  const D = darkMode;
   const [mode, setMode] = useState<SettlementMode>('누적');
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState(0);
@@ -301,7 +302,7 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
     );
   };
 
-  const cardStyle: React.CSSProperties = { background: 'white', margin: '8px 12px', borderRadius: 12, border: '0.5px solid #e5e7eb', padding: 14 };
+  const cardStyle: React.CSSProperties = { background: D ? '#1e293b' : 'white', margin: '8px 12px', borderRadius: 12, border: D ? '0.5px solid #334155' : '0.5px solid #e5e7eb', padding: 14 };
   return (
     <>
       <div style={cardStyle}>
@@ -763,7 +764,7 @@ export default function MobilePage() {
 
         {/* 탭3: 일일 결산 */}
         {tab === 'settlement' && (
-          <SettlementTab snapshots={snapshots} />
+          <SettlementTab snapshots={snapshots} darkMode={darkMode} />
         )}
 
         <div style={{ height: 8 }} />
