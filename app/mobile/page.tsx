@@ -649,7 +649,7 @@ export default function MobilePage() {
               </select>
             </div>
 
-            <div style={{ background: 'white' }}>
+            <div>
               {holdings.map((h, i) => {
                 const ic = getIcon(h.ticker, h.stock_name);
                 return (
