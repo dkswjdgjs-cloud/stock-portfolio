@@ -580,7 +580,7 @@ export default function MobilePage() {
   }
 
   const S: Record<string, React.CSSProperties> = {
-    wrap: { height: '100dvh', display: 'flex', flexDirection: 'column', background: '#f3f4f6', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', },
+    wrap: { height: '100dvh', display: 'flex', flexDirection: 'column', background: '#f3f4f6', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', overscrollBehavior: 'none', overflow: 'hidden' },
     header: { background: 'white', padding: '12px 18px 0', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', flexShrink: 0 },
     liveBox: { display: 'flex', alignItems: 'center', gap: 4, background: '#f3f4f6', borderRadius: 20, padding: '3px 8px' },
     scroll: { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' },
@@ -762,6 +762,7 @@ export default function MobilePage() {
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         select { -webkit-appearance: none; appearance: none; }
+        html, body { overscroll-behavior: none; overflow: hidden; height: 100%; }
       `}</style>
     </div>
   );
