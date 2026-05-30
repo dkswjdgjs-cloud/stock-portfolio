@@ -187,15 +187,16 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
     );
   };
 
+  const cardStyle: React.CSSProperties = { background: 'white', margin: '8px 12px', borderRadius: 12, border: '0.5px solid #e5e7eb', padding: 14 };
   return (
     <>
-      <div style={S.card}>
+      <div style={cardStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 500, margin: 0 }}>성과 추이</p>
         </div>
         {renderGraph()}
       </div>
-      <div style={S.card}>
+      <div style={cardStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 500, margin: 0 }}>결산 데이터</p>
           <select value={mode} onChange={e => setMode(e.target.value as SettlementMode)}
