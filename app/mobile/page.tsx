@@ -284,13 +284,13 @@ function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: bo
     }
     return (
       <>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '7px 4px', borderBottom: '1px solid #f3f4f6' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '7px 4px', borderBottom: D ? 'none' : '1px solid #f3f4f6' }}>
           <span style={{ fontSize: 11, color: '#9ca3af' }}>기간</span>
           <span style={{ fontSize: 11, color: D ? '#475569' : '#9ca3af', textAlign: 'right' }}>수익금</span>
         </div>
         <div style={{ maxHeight: 220, overflowY: 'auto' }}>
           {reversed.map((d, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '9px 4px', borderBottom: '0.5px solid #f9fafb' }}>
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '9px 4px', borderBottom: D ? 'none' : '0.5px solid #f9fafb' }}>
               <span style={{ fontSize: 12, color: '#374151' }}>{d.label}</span>
               <span style={{ fontSize: 12, color: pos(d.profit), textAlign: 'right' }}>
                 {d.profit >= 0 ? '+' : ''}{formatWFull(d.profit)}
@@ -649,7 +649,7 @@ export default function MobilePage() {
         {/* 탭1: 계좌 내역 */}
         {tab === 'account' && (
           <>
-            <div style={{ margin: '8px 12px', borderRadius: 12, border: '0.5px solid #e5e7eb', overflow: 'hidden', background: 'white' }}>
+            <div style={{ margin: '8px 12px', borderRadius: 12, border: D ? 'none' : '0.5px solid #e5e7eb', overflow: 'hidden', background: D ? '#000000' : 'white' }}>
             <div style={{ padding: '11px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: D ? 'none' : '0.5px solid #f3f4f6', background: D ? '#000000' : 'white' }}>
               <div style={{ display: 'flex', background: D ? '#000000' : '#f3f4f6', borderRadius: 20, padding: 3, gap: 2 }}>
                 {(['시세', '평가'] as const).map(m => (
@@ -713,7 +713,7 @@ export default function MobilePage() {
             </div>{/* 카드 닫기 */}
 
             {/* 합계 */}
-            <div style={{ background: 'white', padding: '13px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f3f4f6', marginBottom: 8 }}>
+            <div style={{ background: D ? '#000000' : 'white', padding: '13px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: D ? 'none' : '1px solid #f3f4f6', marginBottom: 8 }}>
               <p style={{ fontSize: 13, color: D ? '#475569' : '#9ca3af', margin: 0 }}>선택 합계 · {holdings.length}종목 + 현금</p>
               <div style={{ textAlign: 'right' }}>
                 <p style={{ fontSize: 17, fontWeight: 700, color: D ? '#f1f5f9' : '#111827', margin: 0 }}>{formatWFull(totalEval)}</p>
