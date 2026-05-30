@@ -263,14 +263,14 @@ function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: bo
     if (mode === '누적') {
       return (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '7px 4px', borderBottom: D ? '1px solid #334155' : '1px solid #f3f4f6' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '7px 4px', borderBottom: D ? '1px solid #374151' : '1px solid #f3f4f6' }}>
             <span style={{ fontSize: 11, color: D ? '#475569' : '#9ca3af' }}>날짜</span>
             <span style={{ fontSize: 11, color: D ? '#475569' : '#9ca3af', textAlign: 'right' }}>평가액</span>
             <span style={{ fontSize: 11, color: D ? '#475569' : '#9ca3af', textAlign: 'right' }}>수익금</span>
           </div>
           <div style={{ maxHeight: 220, overflowY: 'auto' }}>
             {[...sorted].reverse().map((s, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: D ? '0.5px solid #334155' : '0.5px solid #f9fafb' }}>
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: D ? '0.5px solid #374151' : '0.5px solid #f9fafb' }}>
                 <span style={{ fontSize: 12, color: D ? '#cbd5e1' : '#374151' }}>{s.snapshot_date}</span>
                 <span style={{ fontSize: 12, color: D ? '#cbd5e1' : '#374151', textAlign: 'right' }}>{formatWFull(s.total_valuation || 0)}</span>
                 <span style={{ fontSize: 12, color: pos(s.total_profit || 0), textAlign: 'right' }}>
@@ -302,7 +302,7 @@ function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: bo
     );
   };
 
-  const cardStyle: React.CSSProperties = { background: D ? '#1e293b' : 'white', margin: '8px 12px', borderRadius: 12, border: D ? '0.5px solid #334155' : '0.5px solid #e5e7eb', padding: 14 };
+  const cardStyle: React.CSSProperties = { background: D ? '#111827' : 'white', margin: '8px 12px', borderRadius: 12, border: D ? '0.5px solid #374151' : '0.5px solid #e5e7eb', padding: 14 };
   return (
     <>
       <div style={cardStyle}>
@@ -315,7 +315,7 @@ function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: bo
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 500, margin: 0 }}>결산 데이터</p>
           <select value={mode} onChange={e => setMode(e.target.value as SettlementMode)}
-            style={{ fontSize: 12, border: D ? '0.5px solid #334155' : '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: D ? '#f1f5f9' : '#374151', background: D ? '#0f172a' : '#f9fafb', outline: 'none' }}>
+            style={{ fontSize: 12, border: D ? '0.5px solid #374151' : '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: D ? '#f1f5f9' : '#374151', background: D ? '#111827' : '#f9fafb', outline: 'none' }}>
             {(['누적', '년도별', '월별', '일별'] as SettlementMode[]).map(m => <option key={m}>{m}</option>)}
           </select>
         </div>
@@ -592,16 +592,16 @@ export default function MobilePage() {
 
   const D = darkMode;
   const S: Record<string, React.CSSProperties> = {
-    wrap: { height: '100dvh', display: 'flex', flexDirection: 'column', background: D ? '#0f172a' : '#f3f4f6', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', overscrollBehavior: 'none', overflow: 'hidden' },
-    header: { background: D ? '#1e293b' : 'white', padding: '12px 18px 0', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', flexShrink: 0, borderBottom: D ? '0.5px solid #334155' : 'none' },
-    liveBox: { display: 'flex', alignItems: 'center', gap: 4, background: D ? '#0f172a' : '#f3f4f6', borderRadius: 20, padding: '3px 8px' },
+    wrap: { height: '100dvh', display: 'flex', flexDirection: 'column', background: D ? '#111827' : '#f3f4f6', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', overscrollBehavior: 'none', overflow: 'hidden' },
+    header: { background: D ? '#111827' : 'white', padding: '12px 18px 0', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', flexShrink: 0, borderBottom: D ? '0.5px solid #374151' : 'none' },
+    liveBox: { display: 'flex', alignItems: 'center', gap: 4, background: D ? '#111827' : '#f3f4f6', borderRadius: 20, padding: '3px 8px' },
     scroll: { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' },
-    tabBar: { background: D ? '#1e293b' : 'white', borderTop: D ? '0.5px solid #334155' : '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' },
+    tabBar: { background: D ? '#111827' : 'white', borderTop: D ? '0.5px solid #374151' : '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' },
     tabItem: { flex: 1, textAlign: 'center', padding: '8px 0', cursor: 'pointer', border: 'none', background: 'transparent' },
-    card: { background: D ? '#1e293b' : 'white', margin: '8px 12px', borderRadius: 12, border: D ? '0.5px solid #334155' : '0.5px solid #e5e7eb', padding: 14 },
-    srow: { display: 'flex', alignItems: 'center', padding: '13px 16px', borderBottom: D ? '0.5px solid #334155' : '0.5px solid #f3f4f6' },
+    card: { background: D ? '#111827' : 'white', margin: '8px 12px', borderRadius: 12, border: D ? '0.5px solid #374151' : '0.5px solid #e5e7eb', padding: 14 },
+    srow: { display: 'flex', alignItems: 'center', padding: '13px 16px', borderBottom: D ? '0.5px solid #374151' : '0.5px solid #f3f4f6' },
     sicon: { width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0, marginRight: 12 },
-    metricCard: { background: D ? '#0f172a' : '#f9fafb', border: D ? '0.5px solid #334155' : '0.5px solid #e5e7eb', borderRadius: 11, padding: 12, flex: 1 },
+    metricCard: { background: D ? '#111827' : '#f9fafb', border: D ? '0.5px solid #374151' : '0.5px solid #e5e7eb', borderRadius: 11, padding: 12, flex: 1 },
     legendRow: { display: 'flex', alignItems: 'center', gap: 9, padding: '11px 13px' },
     drow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: D ? '0.5px solid #1e293b' : '0.5px solid #f9fafb' },
   };
@@ -651,13 +651,13 @@ export default function MobilePage() {
           <>
             <div style={{ margin: '8px 12px', borderRadius: 12, border: '0.5px solid #e5e7eb', overflow: 'hidden', background: 'white' }}>
             <div style={{ padding: '11px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '0.5px solid #f3f4f6' }}>
-              <div style={{ display: 'flex', background: D ? '#0f172a' : '#f3f4f6', borderRadius: 20, padding: 3, gap: 2 }}>
+              <div style={{ display: 'flex', background: D ? '#111827' : '#f3f4f6', borderRadius: 20, padding: 3, gap: 2 }}>
                 {(['시세', '평가'] as const).map(m => (
                   <button key={m} onClick={() => setViewMode(m)} style={{ fontSize: 13, padding: '5px 16px', borderRadius: 18, border: 'none', cursor: 'pointer', background: viewMode === m ? (D ? '#3b82f6' : '#111827') : 'transparent', color: viewMode === m ? 'white' : (D ? '#475569' : '#9ca3af'), fontWeight: viewMode === m ? 600 : 500 }}>{m}</button>
                 ))}
               </div>
               <select value={accountFilter} onChange={e => handleAccountFilter(e.target.value)}
-                style={{ fontSize: 14, border: D ? '0.5px solid #334155' : '0.5px solid #e5e7eb', borderRadius: 20, padding: '6px 14px', color: D ? '#f1f5f9' : '#111827', background: D ? '#0f172a' : 'white', outline: 'none', textAlign: 'center' }}>
+                style={{ fontSize: 14, border: D ? '0.5px solid #374151' : '0.5px solid #e5e7eb', borderRadius: 20, padding: '6px 14px', color: D ? '#f1f5f9' : '#111827', background: D ? '#111827' : 'white', outline: 'none', textAlign: 'center' }}>
                 {ACCOUNTS.map(a => <option key={a}>{a}</option>)}
               </select>
             </div>
@@ -698,7 +698,7 @@ export default function MobilePage() {
               })}
 
               {/* 현금성 자산 */}
-              <div style={{ ...S.srow, background: D ? '#0f172a' : '#f9fafb' }}>
+              <div style={{ ...S.srow, background: D ? '#111827' : '#f9fafb' }}>
                 <div style={{ ...S.sicon, background: '#e0f2fe', color: '#0369a1', fontSize: 18 }}>💰</div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 15, fontWeight: 500, color: D ? '#cbd5e1' : '#374151', margin: 0 }}>현금성 자산</p>
@@ -734,21 +734,21 @@ export default function MobilePage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <p style={{ fontSize: 13, color: D ? '#64748b' : '#6b7280', margin: 0 }}>ASSET ALLOCATION</p>
                 <select value={pieFilter} onChange={e => setPieFilter(e.target.value as PieFilter)}
-                  style={{ fontSize: 12, border: D ? '0.5px solid #334155' : '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: D ? '#f1f5f9' : '#374151', background: D ? '#0f172a' : '#f9fafb', outline: 'none' }}>
+                  style={{ fontSize: 12, border: D ? '0.5px solid #374151' : '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: D ? '#f1f5f9' : '#374151', background: D ? '#111827' : '#f9fafb', outline: 'none' }}>
                   {PIE_FILTERS.map(f => <option key={f}>{f}</option>)}
                 </select>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
                 <div style={{ width: 230, height: 230, borderRadius: '50%', background: makeConic(pieData), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 115, height: 115, background: D ? '#1e293b' : 'white', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 115, height: 115, background: D ? '#111827' : 'white', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ fontSize: 10, color: D ? '#64748b' : '#9ca3af' }}>총 자산</span>
                     <span style={{ fontSize: 13, fontWeight: 600, color: D ? '#f1f5f9' : '#111827' }}>{formatW(summary.currMonthValue)}</span>
                   </div>
                 </div>
               </div>
 
-              <div style={{ background: D ? '#0f172a' : '#f9fafb', border: D ? '0.5px solid #334155' : '0.5px solid #e5e7eb', borderRadius: 11, overflow: 'hidden' }}>
+              <div style={{ background: D ? '#111827' : '#f9fafb', border: D ? '0.5px solid #374151' : '0.5px solid #e5e7eb', borderRadius: 11, overflow: 'hidden' }}>
                 {pieData.map((d, i) => (
                   <div key={i} style={{ ...S.legendRow, borderBottom: i < pieData.length - 1 ? (D ? '0.5px solid #1e293b' : '0.5px solid #e5e7eb') : 'none' }}>
                     <div style={{ width: 9, height: 9, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
