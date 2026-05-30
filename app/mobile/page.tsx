@@ -326,45 +326,38 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
 
 export default function MobilePage() {
   const [tab, setTab] = useState<'account' | 'summary' | 'settlement'>('account');
-  const [slideDir, setSlideDir] = useState<'left' | 'right' | null>(null);
-  const tabSwipeRef = useRef<{ startX: number; startY: number; locked: boolean } | null>(null);
+  const tabSwipeRef = useRef<{ startX: number; startY: number; locked: 'x' | 'y' | null }>({ startX: 0, startY: 0, locked: null });
   const TABS: ('account' | 'summary' | 'settlement')[] = ['account', 'summary', 'settlement'];
-
-  const changeTab = (next: 'account' | 'summary' | 'settlement', dir: 'left' | 'right') => {
-    setSlideDir(dir);
-    setTimeout(() => {
-      setTab(next);
-      setSlideDir(null);
-    }, 250);
-  };
+  const wrapRef = useRef<HTMLDivElement>(null);
 
   const handleTabSwipeStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) tabSwipeRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, locked: false };
+    if (e.touches.length !== 1) return;
+    tabSwipeRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, locked: null };
   };
   const handleTabSwipeMove = (e: React.TouchEvent) => {
-    if (!tabSwipeRef.current) return;
-    const dx = e.touches[0].clientX - tabSwipeRef.current.startX;
-    const dy = e.touches[0].clientY - tabSwipeRef.current.startY;
-    if (!tabSwipeRef.current.locked) {
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
-        tabSwipeRef.current.locked = true;
-        e.preventDefault();
-      } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) {
-        tabSwipeRef.current = null;
+    const ref = tabSwipeRef.current;
+    if (!ref) return;
+    const dx = e.touches[0].clientX - ref.startX;
+    const dy = e.touches[0].clientY - ref.startY;
+    if (!ref.locked) {
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        ref.locked = 'x';
+      } else if (Math.abs(dy) > 8) {
+        ref.locked = 'y';
       }
-    } else {
-      e.preventDefault();
     }
+    if (ref.locked === 'x') e.preventDefault();
   };
   const handleTabSwipeEnd = (e: React.TouchEvent) => {
-    if (!tabSwipeRef.current?.locked) { tabSwipeRef.current = null; return; }
-    const dx = e.changedTouches[0].clientX - tabSwipeRef.current.startX;
+    const ref = tabSwipeRef.current;
+    if (!ref || ref.locked !== 'x') { tabSwipeRef.current = { startX: 0, startY: 0, locked: null }; return; }
+    const dx = e.changedTouches[0].clientX - ref.startX;
     if (Math.abs(dx) > 50) {
       const idx = TABS.indexOf(tab);
-      if (dx < 0 && idx < TABS.length - 1) changeTab(TABS[idx + 1], 'left');
-      if (dx > 0 && idx > 0) changeTab(TABS[idx - 1], 'right');
+      if (dx < 0 && idx < TABS.length - 1) setTab(TABS[idx + 1]);
+      if (dx > 0 && idx > 0) setTab(TABS[idx - 1]);
     }
-    tabSwipeRef.current = null;
+    tabSwipeRef.current = { startX: 0, startY: 0, locked: null };
   };
   const [viewMode, setViewMode] = useState<'시세' | '평가'>('시세');
   const [accountFilter, setAccountFilter] = useState('전체');
@@ -602,7 +595,7 @@ export default function MobilePage() {
   };
 
   return (
-    <div style={S.wrap}>
+    <div ref={wrapRef} style={S.wrap} onTouchStart={handleTabSwipeStart} onTouchMove={handleTabSwipeMove} onTouchEnd={handleTabSwipeEnd}>
       {/* 헤더 — 글씨 크기 유지 */}
       <div style={S.header}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -639,15 +632,7 @@ export default function MobilePage() {
       </div>
 
       {/* 스크롤 영역 */}
-      <div style={{
-          ...S.scroll,
-          transform: slideDir === 'left' ? 'translateX(-30px)' : slideDir === 'right' ? 'translateX(30px)' : 'translateX(0)',
-          opacity: slideDir ? 0 : 1,
-          transition: slideDir ? 'transform 0.25s ease, opacity 0.25s ease' : 'none',
-        }}
-        onTouchStart={handleTabSwipeStart}
-        onTouchMove={handleTabSwipeMove}
-        onTouchEnd={handleTabSwipeEnd}>
+      <div style={S.scroll}>
 
         {/* 탭1: 계좌 내역 */}
         {tab === 'account' && (
