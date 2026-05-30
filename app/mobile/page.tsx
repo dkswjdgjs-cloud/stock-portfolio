@@ -678,7 +678,7 @@ export default function MobilePage() {
                     </div>
                     {viewMode === '시세' ? (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: 0 }}>
+                        <p style={{ fontSize: 15, fontWeight: 600, color: D ? '#f1f5f9' : '#111827', margin: 0 }}>
                           {h.currency === 'USD' ? h.curr_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '$' : h.curr_price.toLocaleString('ko-KR', { maximumFractionDigits: 0 })}
                         </p>
                         <p style={{ fontSize: 13, color: pos(h.daily_change), marginTop: 3, margin: '3px 0 0' }}>
