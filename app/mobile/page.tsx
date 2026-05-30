@@ -197,11 +197,11 @@ function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: bo
               onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
               <svg ref={svgRef} width="100%" height={GRAPH_H + X_AXIS_H} viewBox={`${offset} 0 ${visibleW} ${GRAPH_H + X_AXIS_H}`} preserveAspectRatio="none" style={{ display: 'block' }}>
                 {/* Y축 세로줄 */}
-                <line x1="0" y1="0" x2="0" y2={GRAPH_H} stroke="#d1d5db" strokeWidth="0.5" />
+                <line x1="0" y1="0" x2="0" y2={GRAPH_H} stroke={D ? "#333333" : "#d1d5db"} strokeWidth="0.5" />
                 {/* 가로 보조선 */}
-                <line x1="0" y1={toY(maxV)} x2={GRAPH_W} y2={toY(maxV)} stroke="#f3f4f6" strokeWidth="0.8" />
-                <line x1="0" y1={toY((maxV + minV) / 2)} x2={GRAPH_W} y2={toY((maxV + minV) / 2)} stroke="#f3f4f6" strokeWidth="0.8" />
-                <line x1="0" y1={toY(minV)} x2={GRAPH_W} y2={toY(minV)} stroke="#f3f4f6" strokeWidth="0.8" />
+                <line x1="0" y1={toY(maxV)} x2={GRAPH_W} y2={toY(maxV)} stroke={D ? "#333333" : "#f3f4f6"} strokeWidth="0.8" />
+                <line x1="0" y1={toY((maxV + minV) / 2)} x2={GRAPH_W} y2={toY((maxV + minV) / 2)} stroke={D ? "#333333" : "#f3f4f6"} strokeWidth="0.8" />
+                <line x1="0" y1={toY(minV)} x2={GRAPH_W} y2={toY(minV)} stroke={D ? "#333333" : "#f3f4f6"} strokeWidth="0.8" />
                 <polyline points={invPts} fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 <polyline points={evalPts} fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
 
@@ -239,11 +239,11 @@ function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: bo
             onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
             <svg width="100%" height={GRAPH_H + X_AXIS_H} viewBox={`${offset} 0 ${visibleW} ${GRAPH_H + X_AXIS_H}`} preserveAspectRatio="none" style={{ display: 'block' }}>
               {/* Y축 세로줄 */}
-              <line x1="0" y1="0" x2="0" y2={GRAPH_H} stroke="#d1d5db" strokeWidth="0.5" />
+              <line x1="0" y1="0" x2="0" y2={GRAPH_H} stroke={D ? "#333333" : "#d1d5db"} strokeWidth="0.5" />
               {/* 가로 보조선 */}
-              <line x1="0" y1={midY} x2={GRAPH_W} y2={midY} stroke="#e5e7eb" strokeWidth="0.8" />
-              <line x1="0" y1={toBarY(maxAbs)} x2={GRAPH_W} y2={toBarY(maxAbs)} stroke="#f3f4f6" strokeWidth="0.5" />
-              <line x1="0" y1={toBarY(-maxAbs)} x2={GRAPH_W} y2={toBarY(-maxAbs)} stroke="#f3f4f6" strokeWidth="0.5" />
+              <line x1="0" y1={midY} x2={GRAPH_W} y2={midY} stroke={D ? "#333333" : "#e5e7eb"} strokeWidth="0.8" />
+              <line x1="0" y1={toBarY(maxAbs)} x2={GRAPH_W} y2={toBarY(maxAbs)} stroke={D ? "#333333" : "#f3f4f6"} strokeWidth="0.5" />
+              <line x1="0" y1={toBarY(-maxAbs)} x2={GRAPH_W} y2={toBarY(-maxAbs)} stroke={D ? "#333333" : "#f3f4f6"} strokeWidth="0.5" />
               {data.map((d: any, i: number) => {
                 const x = (i / (data.length || 1)) * GRAPH_W;
                 const barH = Math.abs(d.profit) / maxAbs * 80;
@@ -263,14 +263,14 @@ function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: bo
     if (mode === '누적') {
       return (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '7px 4px', borderBottom: D ? '1px solid #000000' : '1px solid #f3f4f6' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '7px 4px', borderBottom: D ? '0.5px solid #222222' : '1px solid #f3f4f6' }}>
             <span style={{ fontSize: 11, color: D ? '#475569' : '#9ca3af' }}>날짜</span>
             <span style={{ fontSize: 11, color: D ? '#475569' : '#9ca3af', textAlign: 'right' }}>평가액</span>
             <span style={{ fontSize: 11, color: D ? '#475569' : '#9ca3af', textAlign: 'right' }}>수익금</span>
           </div>
           <div style={{ maxHeight: 220, overflowY: 'auto' }}>
             {[...sorted].reverse().map((s, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: D ? '0.5px solid #000000' : '0.5px solid #f9fafb' }}>
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: D ? 'none' : '0.5px solid #f9fafb' }}>
                 <span style={{ fontSize: 12, color: D ? '#cbd5e1' : '#374151' }}>{s.snapshot_date}</span>
                 <span style={{ fontSize: 12, color: D ? '#cbd5e1' : '#374151', textAlign: 'right' }}>{formatWFull(s.total_valuation || 0)}</span>
                 <span style={{ fontSize: 12, color: pos(s.total_profit || 0), textAlign: 'right' }}>
@@ -302,7 +302,7 @@ function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: bo
     );
   };
 
-  const cardStyle: React.CSSProperties = { background: D ? '#000000' : 'white', margin: '8px 12px', borderRadius: 12, border: D ? '0.5px solid #000000' : '0.5px solid #e5e7eb', padding: 14 };
+  const cardStyle: React.CSSProperties = { background: D ? '#000000' : 'white', margin: '8px 12px', borderRadius: 12, border: 'none', padding: 14 };
   return (
     <>
       <div style={cardStyle}>
@@ -315,7 +315,7 @@ function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: bo
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 500, margin: 0 }}>결산 데이터</p>
           <select value={mode} onChange={e => setMode(e.target.value as SettlementMode)}
-            style={{ fontSize: 12, border: D ? '0.5px solid #000000' : '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: D ? '#f1f5f9' : '#374151', background: D ? '#000000' : '#f9fafb', outline: 'none' }}>
+            style={{ fontSize: 12, border: D ? '0.5px solid #000000' : '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: D ? '#f1f5f9' : '#374151', background: D ? '#000000' : '#f9fafb', outline: 'none', border: D ? 'none' : '0.5px solid #e5e7eb' }}>
             {(['누적', '년도별', '월별', '일별'] as SettlementMode[]).map(m => <option key={m}>{m}</option>)}
           </select>
         </div>
@@ -598,12 +598,12 @@ export default function MobilePage() {
     scroll: { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' },
     tabBar: { background: D ? '#000000' : 'white', borderTop: D ? '0.5px solid #000000' : '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' },
     tabItem: { flex: 1, textAlign: 'center', padding: '8px 0', cursor: 'pointer', border: 'none', background: 'transparent' },
-    card: { background: D ? '#000000' : 'white', margin: '8px 12px', borderRadius: 12, border: D ? '0.5px solid #000000' : '0.5px solid #e5e7eb', padding: 14 },
+    card: { background: D ? '#000000' : 'white', margin: '8px 12px', borderRadius: 12, border: 'none', padding: 14 },
     srow: { display: 'flex', alignItems: 'center', padding: '13px 16px', borderBottom: D ? '0.5px solid #000000' : '0.5px solid #f3f4f6' },
     sicon: { width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0, marginRight: 12 },
     metricCard: { background: D ? '#000000' : '#f9fafb', border: D ? '0.5px solid #000000' : '0.5px solid #e5e7eb', borderRadius: 11, padding: 12, flex: 1 },
     legendRow: { display: 'flex', alignItems: 'center', gap: 9, padding: '11px 13px' },
-    drow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: D ? '0.5px solid #000000' : '0.5px solid #f9fafb' },
+    drow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '9px 4px', borderBottom: D ? 'none' : '0.5px solid #f9fafb' },
   };
 
   return (
@@ -650,7 +650,7 @@ export default function MobilePage() {
         {tab === 'account' && (
           <>
             <div style={{ margin: '8px 12px', borderRadius: 12, border: '0.5px solid #e5e7eb', overflow: 'hidden', background: 'white' }}>
-            <div style={{ padding: '11px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '0.5px solid #f3f4f6' }}>
+            <div style={{ padding: '11px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: D ? 'none' : '0.5px solid #f3f4f6', background: D ? '#000000' : 'white' }}>
               <div style={{ display: 'flex', background: D ? '#000000' : '#f3f4f6', borderRadius: 20, padding: 3, gap: 2 }}>
                 {(['시세', '평가'] as const).map(m => (
                   <button key={m} onClick={() => setViewMode(m)} style={{ fontSize: 13, padding: '5px 16px', borderRadius: 18, border: 'none', cursor: 'pointer', background: viewMode === m ? (D ? '#3b82f6' : '#111827') : 'transparent', color: viewMode === m ? 'white' : (D ? '#475569' : '#9ca3af'), fontWeight: viewMode === m ? 600 : 500 }}>{m}</button>
@@ -734,7 +734,7 @@ export default function MobilePage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <p style={{ fontSize: 13, color: D ? '#64748b' : '#6b7280', margin: 0 }}>ASSET ALLOCATION</p>
                 <select value={pieFilter} onChange={e => setPieFilter(e.target.value as PieFilter)}
-                  style={{ fontSize: 12, border: D ? '0.5px solid #000000' : '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: D ? '#f1f5f9' : '#374151', background: D ? '#000000' : '#f9fafb', outline: 'none' }}>
+                  style={{ fontSize: 12, border: D ? '0.5px solid #000000' : '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: D ? '#f1f5f9' : '#374151', background: D ? '#000000' : '#f9fafb', outline: 'none', border: D ? 'none' : '0.5px solid #e5e7eb' }}>
                   {PIE_FILTERS.map(f => <option key={f}>{f}</option>)}
                 </select>
               </div>
