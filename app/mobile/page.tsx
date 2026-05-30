@@ -328,6 +328,12 @@ function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: bo
 export default function MobilePage() {
   const [tab, setTab] = useState<'account' | 'summary' | 'settlement'>('account');
   const [darkMode, setDarkMode] = useState(false);
+  useEffect(() => {
+    document.body.style.background = darkMode ? '#000000' : '#ffffff';
+    let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement;
+    if (!meta) { meta = document.createElement('meta') as HTMLMetaElement; meta.name = 'theme-color'; document.head.appendChild(meta); }
+    meta.content = darkMode ? '#000000' : '#ffffff';
+  }, [darkMode]);
   const tabSwipeRef = useRef<{ startX: number; startY: number; locked: 'x' | 'y' | null }>({ startX: 0, startY: 0, locked: null });
   const TABS: ('account' | 'summary' | 'settlement')[] = ['account', 'summary', 'settlement'];
   const wrapRef = useRef<HTMLDivElement>(null);
