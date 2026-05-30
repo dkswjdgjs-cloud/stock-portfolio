@@ -778,7 +778,7 @@ export default function MobilePage() {
         select { -webkit-appearance: none; appearance: none; }
         html, body { overscroll-behavior: none; overflow: hidden; height: 100%; }
       `}</style>
-      <style>{`html, body { background: ${darkMode ? '#000000' : 'white'}; }`}</style>
+
     </div>
   );
 }
