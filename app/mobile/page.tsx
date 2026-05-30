@@ -96,7 +96,7 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
       const maxV = Math.max(...vals, ...invs, 1);
       const minV = Math.min(...vals, ...invs, 0);
       const range = maxV - minV || 1;
-      const toY = (v: number) => 120 - ((v - minV) / range) * 110;
+      const toY = (v: number) => 170 - ((v - minV) / range) * 150;
       const toX = (i: number) => (i / (sorted.length - 1 || 1)) * 280 + 10;
       const evalPts = sorted.map((s, i) => `${toX(i)},${toY(s.total_valuation || 0)}`).join(' ');
       const invPts = sorted.map((s, i) => `${toX(i)},${toY(s.total_invested || 0)}`).join(' ');
@@ -106,10 +106,10 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#3b82f6', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>평가액</span></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 20, height: 2, background: '#10b981', borderRadius: 1 }} /><span style={{ fontSize: 11, color: '#6b7280' }}>투자원금</span></div>
           </div>
-          <svg width="100%" height="130" viewBox="0 0 300 130" preserveAspectRatio="none">
+          <svg width="100%" height="180" viewBox="0 0 300 180" preserveAspectRatio="none">
             <line x1="0" y1="20" x2="300" y2="20" stroke="#f3f4f6" strokeWidth="1" />
-            <line x1="0" y1="65" x2="300" y2="65" stroke="#f3f4f6" strokeWidth="1" />
-            <line x1="0" y1="110" x2="300" y2="110" stroke="#f3f4f6" strokeWidth="1" />
+            <line x1="0" y1="90" x2="300" y2="90" stroke="#f3f4f6" strokeWidth="1" />
+            <line x1="0" y1="160" x2="300" y2="160" stroke="#f3f4f6" strokeWidth="1" />
             <polyline points={invPts} fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             <polyline points={evalPts} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -470,7 +470,7 @@ export default function MobilePage() {
             <p style={{ color: '#9ca3af', fontSize: 11, marginBottom: 2 }}>현재 평가액</p>
             <p style={{ color: '#111827', fontSize: 28, fontWeight: 600, letterSpacing: -1, margin: 0 }}>{formatWFull(summary.currMonthValue)}</p>
           </div>
-          <div style={{ textAlign: 'right', cursor: 'pointer', userSelect: 'none', background: '#f9fafb', border: '0.5px solid #e5e7eb', borderRadius: 10, padding: '6px 12px' }}
+          <div style={{ textAlign: 'right', cursor: 'pointer', userSelect: 'none' }}
             onClick={() => setProfitIdx(i => (i + 1) % 4)}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', marginBottom: 2 }}>
               <span style={{ color: '#9ca3af', fontSize: 10 }}>{currentProfit.label}</span>
