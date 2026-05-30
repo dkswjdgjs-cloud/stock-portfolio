@@ -688,7 +688,11 @@ export default function MobilePage() {
                           {h.currency === 'USD' ? h.curr_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '$' : h.curr_price.toLocaleString('ko-KR', { maximumFractionDigits: 0 })}
                         </p>
                         <p style={{ fontSize: 13, color: pos(h.daily_change), marginTop: 3, margin: '3px 0 0' }}>
-                          {h.curr_price > 0 ? pct((h.daily_change / (h.curr_price - h.daily_change || 1)) * 100) : '-'}
+                          {(() => {
+                            const dailyProfit = h.daily_change * h.quantity * (h.exchangeRate || 1);
+                            const dailyRate = h.curr_price > 0 ? (h.daily_change / (h.curr_price - h.daily_change || 1)) * 100 : 0;
+                            return h.curr_price > 0 ? `${dailyProfit >= 0 ? '+' : ''}${formatWFull(dailyProfit)}(${pct(dailyRate)})` : '-';
+                          })()}
                         </p>
                       </div>
                     ) : (
