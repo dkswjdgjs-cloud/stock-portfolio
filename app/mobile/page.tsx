@@ -307,7 +307,7 @@ export default function MobilePage() {
                 ))}
               </div>
               <select value={accountFilter} onChange={e => handleAccountFilter(e.target.value)}
-                style={{ fontSize: 14, border: '0.5px solid #e5e7eb', borderRadius: 20, padding: '6px 14px', color: '#111827', background: 'white', outline: 'none' }}>
+                style={{ fontSize: 14, border: '0.5px solid #e5e7eb', borderRadius: 20, padding: '6px 14px', color: '#111827', background: 'white', outline: 'none', textAlign: 'center' }}>
                 {ACCOUNTS.map(a => <option key={a}>{a}</option>)}
               </select>
             </div>
@@ -322,7 +322,7 @@ export default function MobilePage() {
                       <p style={{ fontSize: 15, fontWeight: 500, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{h.stock_name}</p>
                       <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 3, margin: '3px 0 0' }}>
                         {viewMode === '시세'
-                          ? `${h.curr_price.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${h.currency === 'KRW' ? '원' : '$'}`
+                          ? `평균 ${h.avg_price.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${h.currency === 'KRW' ? '원' : '$'}`
                           : `${h.quantity.toLocaleString()}주`}
                       </p>
                     </div>
