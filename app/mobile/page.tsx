@@ -315,7 +315,7 @@ function SettlementTab({ snapshots, darkMode }: { snapshots: any[]; darkMode: bo
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 500, margin: 0 }}>결산 데이터</p>
           <select value={mode} onChange={e => setMode(e.target.value as SettlementMode)}
-            style={{ fontSize: 12, border: D ? '0.5px solid #000000' : '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: D ? '#f1f5f9' : '#374151', background: D ? '#000000' : '#f9fafb', outline: 'none', border: D ? 'none' : '0.5px solid #e5e7eb' }}>
+            style={{ fontSize: 12, border: D ? '0.5px solid #000000' : '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: D ? '#f1f5f9' : '#374151', background: D ? '#000000' : '#f9fafb', border: D ? 'none' : '0.5px solid #e5e7eb', outline: 'none' }}>
             {(['누적', '년도별', '월별', '일별'] as SettlementMode[]).map(m => <option key={m}>{m}</option>)}
           </select>
         </div>
@@ -734,7 +734,7 @@ export default function MobilePage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <p style={{ fontSize: 13, color: D ? '#64748b' : '#6b7280', margin: 0 }}>ASSET ALLOCATION</p>
                 <select value={pieFilter} onChange={e => setPieFilter(e.target.value as PieFilter)}
-                  style={{ fontSize: 12, border: D ? '0.5px solid #000000' : '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: D ? '#f1f5f9' : '#374151', background: D ? '#000000' : '#f9fafb', outline: 'none', border: D ? 'none' : '0.5px solid #e5e7eb' }}>
+                  style={{ fontSize: 12, border: D ? '0.5px solid #000000' : '0.5px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: D ? '#f1f5f9' : '#374151', background: D ? '#000000' : '#f9fafb', border: D ? 'none' : '0.5px solid #e5e7eb', outline: 'none' }}>
                   {PIE_FILTERS.map(f => <option key={f}>{f}</option>)}
                 </select>
               </div>
