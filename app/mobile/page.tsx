@@ -326,19 +326,43 @@ function SettlementTab({ snapshots }: { snapshots: any[] }) {
 
 export default function MobilePage() {
   const [tab, setTab] = useState<'account' | 'summary' | 'settlement'>('account');
-  const tabSwipeRef = useRef<{ startX: number; startY: number } | null>(null);
+  const [slideDir, setSlideDir] = useState<'left' | 'right' | null>(null);
+  const tabSwipeRef = useRef<{ startX: number; startY: number; locked: boolean } | null>(null);
   const TABS: ('account' | 'summary' | 'settlement')[] = ['account', 'summary', 'settlement'];
+
+  const changeTab = (next: 'account' | 'summary' | 'settlement', dir: 'left' | 'right') => {
+    setSlideDir(dir);
+    setTimeout(() => {
+      setTab(next);
+      setSlideDir(null);
+    }, 250);
+  };
+
   const handleTabSwipeStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) tabSwipeRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY };
+    if (e.touches.length === 1) tabSwipeRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, locked: false };
+  };
+  const handleTabSwipeMove = (e: React.TouchEvent) => {
+    if (!tabSwipeRef.current) return;
+    const dx = e.touches[0].clientX - tabSwipeRef.current.startX;
+    const dy = e.touches[0].clientY - tabSwipeRef.current.startY;
+    if (!tabSwipeRef.current.locked) {
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+        tabSwipeRef.current.locked = true;
+        e.preventDefault();
+      } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) {
+        tabSwipeRef.current = null;
+      }
+    } else {
+      e.preventDefault();
+    }
   };
   const handleTabSwipeEnd = (e: React.TouchEvent) => {
-    if (!tabSwipeRef.current) return;
+    if (!tabSwipeRef.current?.locked) { tabSwipeRef.current = null; return; }
     const dx = e.changedTouches[0].clientX - tabSwipeRef.current.startX;
-    const dy = e.changedTouches[0].clientY - tabSwipeRef.current.startY;
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+    if (Math.abs(dx) > 50) {
       const idx = TABS.indexOf(tab);
-      if (dx < 0 && idx < TABS.length - 1) setTab(TABS[idx + 1]);
-      if (dx > 0 && idx > 0) setTab(TABS[idx - 1]);
+      if (dx < 0 && idx < TABS.length - 1) changeTab(TABS[idx + 1], 'left');
+      if (dx > 0 && idx > 0) changeTab(TABS[idx - 1], 'right');
     }
     tabSwipeRef.current = null;
   };
@@ -615,7 +639,15 @@ export default function MobilePage() {
       </div>
 
       {/* 스크롤 영역 */}
-      <div style={S.scroll} onTouchStart={handleTabSwipeStart} onTouchEnd={handleTabSwipeEnd}>
+      <div style={{
+          ...S.scroll,
+          transform: slideDir === 'left' ? 'translateX(-30px)' : slideDir === 'right' ? 'translateX(30px)' : 'translateX(0)',
+          opacity: slideDir ? 0 : 1,
+          transition: slideDir ? 'transform 0.25s ease, opacity 0.25s ease' : 'none',
+        }}
+        onTouchStart={handleTabSwipeStart}
+        onTouchMove={handleTabSwipeMove}
+        onTouchEnd={handleTabSwipeEnd}>
 
         {/* 탭1: 계좌 내역 */}
         {tab === 'account' && (
@@ -739,12 +771,7 @@ export default function MobilePage() {
         <div style={{ height: 8 }} />
       </div>
 
-      {/* 페이지 인디케이터 */}
-      <div style={{ background: 'white', borderTop: '0.5px solid #e5e7eb', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, padding: '8px 0', paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)', flexShrink: 0 }}>
-        {(['account', 'summary', 'settlement'] as const).map(t => (
-          <div key={t} onClick={() => setTab(t)} style={{ width: tab === t ? 18 : 6, height: 6, borderRadius: 3, background: tab === t ? '#111827' : '#d1d5db', transition: 'all 0.2s', cursor: 'pointer' }} />
-        ))}
-      </div>
+
 
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
