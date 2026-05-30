@@ -241,7 +241,7 @@ export default function MobilePage() {
 
   if (loading) {
     return (
-      <div style={{ height: '100dvh', background: '#1e2433', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 17 }}>
+      <div style={{ height: '100dvh', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 17 }}>
         로딩 중...
       </div>
     );
@@ -249,8 +249,8 @@ export default function MobilePage() {
 
   const S: Record<string, React.CSSProperties> = {
     wrap: { height: '100dvh', display: 'flex', flexDirection: 'column', background: '#f3f4f6', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', },
-    header: { background: '#1e2433', padding: '12px 18px 0', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', flexShrink: 0 },
-    liveBox: { display: 'flex', alignItems: 'center', gap: 4, background: '#2a3147', borderRadius: 20, padding: '3px 8px' },
+    header: { background: 'white', padding: '12px 18px 0', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', flexShrink: 0 },
+    liveBox: { display: 'flex', alignItems: 'center', gap: 4, background: '#f3f4f6', borderRadius: 20, padding: '3px 8px' },
     scroll: { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' },
     tabBar: { background: 'white', borderTop: '0.5px solid #e5e7eb', display: 'flex', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' },
     tabItem: { flex: 1, textAlign: 'center', padding: '8px 0', cursor: 'pointer', border: 'none', background: 'transparent' },
@@ -281,8 +281,8 @@ export default function MobilePage() {
           </div>
         </div>
         <p style={{ color: '#9ca3af', fontSize: 11, marginBottom: 2 }}>현재 평가액</p>
-        <p style={{ color: 'white', fontSize: 28, fontWeight: 600, letterSpacing: -1, marginBottom: 10 }}>{formatWFull(summary.currMonthValue)}</p>
-        <div style={{ paddingTop: 10, borderTop: '1px solid #2a3147', paddingBottom: 14, cursor: 'pointer', userSelect: 'none' }}
+        <p style={{ color: '#111827', fontSize: 28, fontWeight: 600, letterSpacing: -1, marginBottom: 10 }}>{formatWFull(summary.currMonthValue)}</p>
+        <div style={{ paddingTop: 10, borderTop: '1px solid #e5e7eb', paddingBottom: 14, cursor: 'pointer', userSelect: 'none' }}
           onClick={() => setProfitIdx(i => (i + 1) % 4)}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
             <span style={{ color: '#9ca3af', fontSize: 11 }}>{currentProfit.label} <span style={{ color: '#4b5563', fontSize: 9 }}>↻ 탭</span></span>
