@@ -1098,33 +1098,108 @@ export default function Dashboard({
                 </div>
               </div>
               <div style={{height: '200px', overflowY: 'auto'}}>
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-white">
-                    <tr className="text-[#555555] border-b border-gray-200">
-                      {['날짜', '평가액', '누적투자금', '누적수익금', ''].map(h => (
-                        <th key={h} className="text-left py-2 px-2 font-medium">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {snapshots.filter(s => !snapshotSearch || s.snapshot_date.includes(snapshotSearch)).map((s, i) => (
-                      <tr key={i} className="border-b border-gray-200/80 hover:bg-gray-100/80">
-                        <td className={`py-2 px-2 ${highlightDate === s.snapshot_date ? 'text-blue-600 font-semibold' : 'text-[#1a1a1a]'}`}>
-                          {s.snapshot_date}
-                        </td>
-                        <td className="py-2 px-2">{formatCurrency(s.total_valuation || 0)}</td>
-                        <td className="py-2 px-2">{formatCurrency(s.total_invested || 0)}</td>
-                        <td className={cn('py-2 px-2', (s.total_profit || 0) >= 0 ? 'text-red-500' : 'text-blue-500')}>
-                          {formatCurrency(s.total_profit || 0)}
-                        </td>
-                        <td className="py-2 px-2">
-                          <button onClick={() => onDeleteSnapshot(s.snapshot_date)}
-                            className="text-gray-300 hover:text-red-500">✕</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {(() => {
+                  const sortedSnaps = [...snapshots].sort((a,b) => b.snapshot_date.localeCompare(a.snapshot_date));
+                  const filtered = sortedSnaps.filter(s => !snapshotSearch || s.snapshot_date.includes(snapshotSearch));
+
+                  if (profitMode === 'cumulative') {
+                    return (
+                      <table className="w-full text-sm">
+                        <thead className="sticky top-0 bg-white">
+                          <tr className="text-[#555555] border-b border-gray-200">
+                            {['날짜', '평가액', '누적투자금', '누적수익금', ''].map(h => (
+                              <th key={h} className="text-left py-2 px-2 font-medium">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filtered.map((s, i) => (
+                            <tr key={i} className="border-b border-gray-200/80 hover:bg-gray-100/80">
+                              <td className={`py-2 px-2 ${highlightDate === s.snapshot_date ? 'text-blue-600 font-semibold' : 'text-[#1a1a1a]'}`}>
+                                {s.snapshot_date}
+                              </td>
+                              <td className="py-2 px-2">{formatCurrency(s.total_valuation || 0)}</td>
+                              <td className="py-2 px-2">{formatCurrency(s.total_invested || 0)}</td>
+                              <td className={cn('py-2 px-2', (s.total_profit || 0) >= 0 ? 'text-red-500' : 'text-blue-500')}>
+                                {formatCurrency(s.total_profit || 0)}
+                              </td>
+                              <td className="py-2 px-2">
+                                <button onClick={() => onDeleteSnapshot(s.snapshot_date)}
+                                  className="text-gray-300 hover:text-red-500">✕</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    );
+                  }
+
+                  // 년도별/월별/일별 수익금 테이블
+                  const asc = [...snapshots].sort((a,b) => a.snapshot_date.localeCompare(b.snapshot_date));
+                  const calcData = () => {
+                    if (profitMode === 'yearly') {
+                      const years = [...new Set(asc.map(s => s.snapshot_date.slice(0,4)))];
+                      return years.map((year, yi) => {
+                        const yearSnaps = asc.filter(s => s.snapshot_date.startsWith(year));
+                        const last = yearSnaps[yearSnaps.length-1];
+                        const prevYearSnaps = yi === 0 ? [] : asc.filter(s => s.snapshot_date.startsWith(years[yi-1]));
+                        const prevLast = prevYearSnaps.length ? prevYearSnaps[prevYearSnaps.length-1] : null;
+                        const prevVal = prevLast ? prevLast.total_valuation||0 : 0;
+                        const prevInv = prevLast ? prevLast.total_invested||0 : 0;
+                        const profit = (last.total_valuation||0) - prevVal - ((last.total_invested||0) - prevInv);
+                        return { label: `${year}년`, profit, valuation: last.total_valuation||0 };
+                      }).reverse();
+                    }
+                    if (profitMode === 'monthly') {
+                      const months = [...new Set(asc.map(s => s.snapshot_date.slice(0,7)))];
+                      return months.map((month, mi) => {
+                        const monthSnaps = asc.filter(s => s.snapshot_date.startsWith(month));
+                        const last = monthSnaps[monthSnaps.length-1];
+                        const prevMonthSnaps = mi === 0 ? [] : asc.filter(s => s.snapshot_date.startsWith(months[mi-1]));
+                        const prevLast = prevMonthSnaps.length ? prevMonthSnaps[prevMonthSnaps.length-1] : null;
+                        const prevVal = prevLast ? prevLast.total_valuation||0 : 0;
+                        const prevInv = prevLast ? prevLast.total_invested||0 : 0;
+                        const profit = (last.total_valuation||0) - prevVal - ((last.total_invested||0) - prevInv);
+                        return { label: month, profit, valuation: last.total_valuation||0 };
+                      }).reverse();
+                    }
+                    if (profitMode === 'daily') {
+                      return asc.map((s, i) => {
+                        const prev = i === 0 ? null : asc[i-1];
+                        const prevVal = prev ? prev.total_valuation||0 : 0;
+                        const prevInv = prev ? prev.total_invested||0 : 0;
+                        const profit = (s.total_valuation||0) - prevVal - ((s.total_invested||0) - prevInv);
+                        return { label: s.snapshot_date, profit, valuation: s.total_valuation||0 };
+                      }).reverse();
+                    }
+                    return [];
+                  };
+                  const tableData = calcData().filter(d => !snapshotSearch || d.label.includes(snapshotSearch));
+
+                  return (
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-white">
+                        <tr className="text-[#555555] border-b border-gray-200">
+                          {['기간', '평가액', '수익금', ''].map(h => (
+                            <th key={h} className="text-left py-2 px-2 font-medium">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tableData.map((d, i) => (
+                          <tr key={i} className="border-b border-gray-200/80 hover:bg-gray-100/80">
+                            <td className="py-2 px-2 text-[#1a1a1a]">{d.label}</td>
+                            <td className="py-2 px-2">{formatCurrency(d.valuation)}</td>
+                            <td className={cn('py-2 px-2', d.profit >= 0 ? 'text-red-500' : 'text-blue-500')}>
+                              {formatCurrency(d.profit)}
+                            </td>
+                            <td className="py-2 px-2"></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  );
+                })()}
               </div>
             </div>
           </div>
