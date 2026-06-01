@@ -217,7 +217,7 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-[#999999]">수익률</span>
                       <span className={cn('text-lg font-medium', isPos(holding.return_rate) ? 'text-emerald-600' : 'text-red-500')}>
-                        {formatPercent(holding.return_rate / 100)}
+                        {formatPercent(holding.return_rate)}
                       </span>
                     </div>
                   </div>
@@ -296,7 +296,7 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
                     <div className="border-t border-gray-200 pt-2 flex justify-between items-baseline">
                       <span className="text-xs text-[#999999]">평가 손익률</span>
                       <span className={cn('text-lg font-medium', isPos(holding.return_rate) ? 'text-emerald-600' : 'text-red-500')}>
-                        {formatPercent(holding.return_rate / 100)}
+                        {formatPercent(holding.return_rate)}
                       </span>
                     </div>
                   </div>
