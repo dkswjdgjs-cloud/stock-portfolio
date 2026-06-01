@@ -355,7 +355,7 @@ export default function Dashboard({
                       profitFilter === 'cumulative' ? summary.cumulativeProfit :
                       profitFilter === 'annual' ? summary.annualProfit :
                       profitFilter === 'monthly' ? summary.monthlyProfit : summary.dailyProfit
-                    ) ? 'text-emerald-600' : 'text-red-500')}>
+                    ) ? 'text-red-500' : 'text-blue-500')}>
                       {formatCurrency(
                         profitFilter === 'cumulative' ? summary.cumulativeProfit :
                         profitFilter === 'annual' ? summary.annualProfit :
@@ -366,7 +366,7 @@ export default function Dashboard({
                       profitFilter === 'cumulative' ? summary.cumulativeReturn :
                       profitFilter === 'annual' ? summary.annualReturn :
                       profitFilter === 'monthly' ? summary.monthlyReturn : summary.dailyReturn
-                    ) ? 'text-emerald-600' : 'text-red-500')}>
+                    ) ? 'text-red-500' : 'text-blue-500')}>
                       {formatPercent(
                         profitFilter === 'cumulative' ? summary.cumulativeReturn :
                         profitFilter === 'annual' ? summary.annualReturn :
@@ -418,7 +418,7 @@ export default function Dashboard({
                   </div>
                   <div className="bg-white border border-gray-200 rounded-md p-5">
                     <p className="text-sm text-[#555555] tracking-wider mb-2">MDD (최대낙폭)</p>
-                    <p className="text-2xl font-semibold text-red-500">{mdd.toFixed(2)}%</p>
+                    <p className="text-2xl font-semibold text-blue-500">{mdd.toFixed(2)}%</p>
                     <p className="text-sm text-[#555555] mt-1">고점 대비 최대 하락폭</p>
                     {mddPeakDate && mddDate && (
                       <p className="text-sm text-[#555555] mt-1">{mddPeakDate} → {mddDate}</p>
@@ -477,7 +477,7 @@ export default function Dashboard({
                     </PieChart>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <p className="text-base text-[#555555] tracking-wider">MARKET VALUE</p>
-                      <p className="text-3xl font-semibold text-[#1a1a1a]">{formatCurrency(totalValuation)}</p>
+                      <p className="text-2xl font-semibold text-[#1a1a1a]">{formatCurrency(totalValuation)}</p>
                     </div>
                   </div>
                 </div>
