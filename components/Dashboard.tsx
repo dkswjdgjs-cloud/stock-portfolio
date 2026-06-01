@@ -1035,10 +1035,10 @@ export default function Dashboard({
           </div>
         )}
       </div>
-    </div>
       <StockModal
         holding={selectedHolding}
         onClose={() => setSelectedHolding(null)}
       />
-  );
+    </div>
+
 }
