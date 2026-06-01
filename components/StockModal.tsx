@@ -21,10 +21,10 @@ const TABS = [
 ];
 
 const PERIODS = [
-  { label: '1개월', value: 'D' },
-  { label: '3개월', value: 'W' },
-  { label: '1년', value: 'M' },
-  { label: '3년', value: 'Y' },
+  { label: '1개월', value: '1M' },
+  { label: '3개월', value: '3M' },
+  { label: '1년', value: '1Y' },
+  { label: '3년', value: '3Y' },
 ];
 
 export default function StockModal({ holding, onClose }: StockModalProps) {
@@ -47,7 +47,7 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
     if (!holding || activeTab !== 'price') return;
     setChartLoading(true);
     const market = holding.currency === 'USD' ? 'US' : 'KR';
-    fetch(`/api/stock-chart?ticker=${holding.ticker}&market=${market}&period=${period}`)
+    fetch(`/api/stock-chart?ticker=${holding.ticker}&market=${market}&range=${period}`)
       .then(r => r.json())
       .then(data => {
         setChartData(data.chartData || []);
