@@ -68,6 +68,7 @@ export default function Dashboard({
   }, []);
   const [showTradeTable, setShowTradeTable] = useState(false);
   const [selectedHolding, setSelectedHolding] = useState<AccountHolding | null>(null);
+  const [profitFilter, setProfitFilter] = useState<'cumulative' | 'annual' | 'monthly' | 'daily'>('cumulative');
   const [showIncomeTable, setShowIncomeTable] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
   const [snapshotForm, setSnapshotForm] = useState({
@@ -304,41 +305,65 @@ export default function Dashboard({
         {/* 탭1: 종합 내역 */}
         {activeTab === 0 && (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white border border-gray-200 rounded-md p-5">
-                <p className="text-xs text-[#999999] tracking-wider mb-2">전월 평가액</p>
-                <p className="text-2xl font-semibold text-[#1a1a1a]">{formatCurrency(summary.prevMonthValue)}</p>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-md p-5">
-                <p className="text-xs text-[#999999] tracking-wider mb-2">투입금액</p>
-                <p className="text-2xl font-semibold text-[#1a1a1a]">{formatCurrency(summary.totalInvested)}</p>
-                <div className="mt-2 pt-2 border-t border-gray-300">
-                  <p className="text-xs text-[#999999]">당월 투입액</p>
-                  <p className="text-sm text-[#333333]">{formatCurrency(summary.currMonthInvestment)}</p>
-                </div>
-              </div>
+            <div className="grid grid-cols-2 gap-4">
+              {/* 박스1: 현재 평가액 + 전월 평가액 */}
               <div className="bg-white border border-gray-200 rounded-md p-5">
                 <p className="text-xs text-[#999999] tracking-wider mb-2">현재 평가액</p>
                 <p className="text-2xl font-semibold text-[#1a1a1a]">{formatCurrency(summary.currMonthValue)}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 gap-4">
-              {[
-                { label: '누적 수익금', profit: summary.cumulativeProfit, rate: summary.cumulativeReturn },
-                { label: '연 수익금', profit: summary.annualProfit, rate: summary.annualReturn },
-                { label: '월 수익금', profit: summary.monthlyProfit, rate: summary.monthlyReturn },
-                { label: '일 수익금', profit: summary.dailyProfit, rate: summary.dailyReturn },
-              ].map((item, i) => (
-                <div key={i} className="bg-white border border-gray-200 rounded-md p-5">
-                  <p className="text-xs text-[#999999] tracking-wider mb-2">{item.label}</p>
-                  <p className={cn('text-xl font-semibold', isPos(item.profit) ? 'text-emerald-600' : 'text-red-500')}>
-                    {formatCurrency(item.profit)}
-                  </p>
-                  <p className={cn('text-sm mt-1', isPos(item.rate) ? 'text-emerald-600' : 'text-red-500')}>
-                    {formatPercent(item.rate)}
-                  </p>
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <p className="text-xs text-[#999999]">전월 평가액</p>
+                  <p className="text-sm text-[#333333]">{formatCurrency(summary.prevMonthValue)}</p>
                 </div>
-              ))}
+              </div>
+              {/* 박스2: 투입금액 + 수익금 드롭다운 */}
+              <div className="bg-white border border-gray-200 rounded-md p-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-[#999999] tracking-wider mb-2">투입금액</p>
+                    <p className="text-2xl font-semibold text-[#1a1a1a]">{formatCurrency(summary.totalInvested)}</p>
+                    <div className="mt-2 pt-2 border-t border-gray-200">
+                      <p className="text-xs text-[#999999]">당월 투입액</p>
+                      <p className="text-sm text-[#333333]">{formatCurrency(summary.currMonthInvestment)}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center justify-end gap-2 mb-2">
+                      <p className="text-xs text-[#999999] tracking-wider">수익금</p>
+                      <select
+                        value={profitFilter}
+                        onChange={e => setProfitFilter(e.target.value as any)}
+                        className="text-xs bg-gray-100 border border-gray-200 rounded px-2 py-0.5 text-[#333333]">
+                        <option value="cumulative">누적</option>
+                        <option value="annual">연</option>
+                        <option value="monthly">월</option>
+                        <option value="daily">일</option>
+                      </select>
+                    </div>
+                    <p className={cn('text-2xl font-semibold', isPos(
+                      profitFilter === 'cumulative' ? summary.cumulativeProfit :
+                      profitFilter === 'annual' ? summary.annualProfit :
+                      profitFilter === 'monthly' ? summary.monthlyProfit : summary.dailyProfit
+                    ) ? 'text-emerald-600' : 'text-red-500')}>
+                      {formatCurrency(
+                        profitFilter === 'cumulative' ? summary.cumulativeProfit :
+                        profitFilter === 'annual' ? summary.annualProfit :
+                        profitFilter === 'monthly' ? summary.monthlyProfit : summary.dailyProfit
+                      )}
+                    </p>
+                    <p className={cn('text-sm mt-1', isPos(
+                      profitFilter === 'cumulative' ? summary.cumulativeReturn :
+                      profitFilter === 'annual' ? summary.annualReturn :
+                      profitFilter === 'monthly' ? summary.monthlyReturn : summary.dailyReturn
+                    ) ? 'text-emerald-600' : 'text-red-500')}>
+                      {formatPercent(
+                        profitFilter === 'cumulative' ? summary.cumulativeReturn :
+                        profitFilter === 'annual' ? summary.annualReturn :
+                        profitFilter === 'monthly' ? summary.monthlyReturn : summary.dailyReturn
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
             {/* CAGR / MDD / 목표 달성률 카드 */}
             {(() => {
