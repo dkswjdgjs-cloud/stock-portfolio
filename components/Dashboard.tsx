@@ -490,7 +490,7 @@ export default function Dashboard({
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                        <span className="text-base text-blue-600 font-medium">{d.ticker || d.name}</span>
+                        <span className="text-base text-blue-600 font-medium w-20 inline-block">{d.ticker || d.name}</span>
                         <span className="text-base text-[#1a1a1a]">{d.ticker ? d.name : ''}</span>
                       </div>
                       <div className="flex items-center gap-4">
