@@ -119,8 +119,19 @@ export default function Dashboard({
     }
     if (pieFilter === '계좌별') {
       const map = new Map<string, number>();
-      filteredHoldings.forEach(h => map.set(h.account, (map.get(h.account) || 0) + h.valuation));
-      return Array.from(map.entries()).map(([name, value]) => ({ name, ticker: '', value }));
+      // 전체 holdings에서 ticker별 현재가 맵 생성
+      const priceMap = new Map<string, number>();
+      holdings.forEach(h => priceMap.set(h.ticker, h.curr_price || h.avg_price));
+      // transactions에서 계좌별로 직접 집계
+      transactions.filter(t => t.trade_type && t.ticker).forEach(t => {
+        const currPrice = priceMap.get(t.ticker!) || t.buy_price || 0;
+        const existing = map.get(t.account) || 0;
+        if (t.trade_type === '매수') map.set(t.account, existing + (t.quantity || 0) * currPrice);
+        else if (t.trade_type === '매도') map.set(t.account, existing - (t.quantity || 0) * currPrice);
+      });
+      return Array.from(map.entries())
+        .filter(([, v]) => v > 0)
+        .map(([name, value]) => ({ name, ticker: '', value }));
     }
     if (pieFilter === '섹터별') {
       const map = new Map<string, number>();
