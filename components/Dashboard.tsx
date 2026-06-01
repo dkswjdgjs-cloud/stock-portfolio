@@ -409,7 +409,7 @@ export default function Dashboard({
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-white border border-gray-200 rounded-md p-5">
                     <p className="text-xs text-[#999999] tracking-wider mb-2">CAGR (연평균 수익률)</p>
-                    <p className={cn("text-xl font-semibold", cagr >= 0 ? "text-emerald-600" : "text-red-500")}>
+                    <p className={cn("text-xl font-semibold", cagr >= 0 ? "text-red-500" : "text-blue-500")}>
                       {cagr.toFixed(2)}%
                     </p>
                     <p className="text-xs text-[#999999] mt-1">
@@ -545,11 +545,11 @@ export default function Dashboard({
                         <td className="py-2 px-2">{h.quantity}</td>
                         <td className="py-2 px-2">{formatCurrency(h.curr_price, h.currency)}</td>
                         <td className="py-2 px-2 font-medium">{formatCurrency(h.valuation)}</td>
-                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.return_rate) ? 'text-emerald-600' : 'text-red-500')}>{formatPercent(h.return_rate)}</td>
-                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.profit) ? 'text-emerald-600' : 'text-red-500')}>{formatCurrency(h.profit)}</td>
+                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.return_rate) ? 'text-red-500' : 'text-blue-500')}>{formatPercent(h.return_rate)}</td>
+                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.profit) ? 'text-red-500' : 'text-blue-500')}>{formatCurrency(h.profit)}</td>
                         <td className="py-2 px-2 text-[#666666]">{h.weight.toFixed(1)}%</td>
                         <td className="py-2 px-2 text-[#666666]">{h.sector}</td>
-                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.daily_change) ? 'text-emerald-600' : 'text-red-500')}>
+                        <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.daily_change) ? 'text-red-500' : 'text-blue-500')}>
                           <div>{formatCurrency(h.daily_change * (h.quantity || 0))}</div>
                           <div className="text-xs opacity-70">
                             ({h.curr_price > 0 ? ((h.daily_change / (h.curr_price - h.daily_change)) * 100).toFixed(2) : '0.00'}%)
@@ -624,15 +624,15 @@ export default function Dashboard({
                     <tr className="border-t-2 border-gray-400 bg-gray-50/80 font-medium">
                       <td className="py-2 px-2 text-[#333333] text-xs" colSpan={6}>SELECTED TOTAL (선택 합계)</td>
                       <td className="py-2 px-2 text-[#1a1a1a] text-xs">{formatCurrency(displayHoldings.reduce((s,h) => s+h.valuation, 0) + (accountFilter === '전체' ? totalCashBalance : getCashBalance(accountFilter)))}</td>
-                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+(h.return_rate*h.valuation), 0)/Math.max(displayHoldings.reduce((s,h) => s+h.valuation, 0),1)) ? "text-emerald-600" : "text-red-500")}>
+                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+(h.return_rate*h.valuation), 0)/Math.max(displayHoldings.reduce((s,h) => s+h.valuation, 0),1)) ? "text-red-500" : "text-blue-500")}>
                         {formatPercent(displayHoldings.reduce((s,h) => s+(h.return_rate*h.valuation), 0)/Math.max(displayHoldings.reduce((s,h) => s+h.valuation, 0),1))}
                       </td>
-                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+h.profit, 0)) ? "text-emerald-600" : "text-red-500")}>
+                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+h.profit, 0)) ? "text-red-500" : "text-blue-500")}>
                         {formatCurrency(displayHoldings.reduce((s,h) => s+h.profit, 0))}
                       </td>
                       <td className="py-2 px-2 text-[#666666] text-xs">100%</td>
                       <td className="py-2 px-2"></td>
-                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+(h.daily_change*(h.quantity||0)), 0)) ? "text-emerald-600" : "text-red-500")}>
+                      <td className={cn("py-2 px-2 text-xs", isPos(displayHoldings.reduce((s,h) => s+(h.daily_change*(h.quantity||0)), 0)) ? "text-red-500" : "text-blue-500")}>
                         {formatCurrency(displayHoldings.reduce((s,h) => s+(h.daily_change*(h.quantity||0)), 0))}
                       </td>
                     </tr>
@@ -787,10 +787,10 @@ export default function Dashboard({
                           <td className="py-2 px-2">{t.quantity || '-'}</td>
                           <td className="py-2 px-2">{t.buy_price ? formatCurrency(t.buy_price, t.currency) : '-'}</td>
                           <td className="py-2 px-2">{t.sell_price ? formatCurrency(t.sell_price, t.currency) : '-'}</td>
-                          <td className={cn('py-2 px-2', t.profit_loss && t.profit_loss >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+                          <td className={cn('py-2 px-2', t.profit_loss && t.profit_loss >= 0 ? 'text-red-500' : 'text-blue-500')}>
                             {t.profit_loss ? formatCurrency(t.profit_loss) : '-'}
                           </td>
-                          <td className={cn('py-2 px-2', t.profit_rate && t.profit_rate >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+                          <td className={cn('py-2 px-2', t.profit_rate && t.profit_rate >= 0 ? 'text-red-500' : 'text-blue-500')}>
                             {t.profit_rate ? formatPercent(t.profit_rate) : '-'}
                           </td>
                           <td className="py-2 px-2 flex gap-2">
@@ -944,7 +944,7 @@ export default function Dashboard({
                           // 양수 초록, 음수 빨강
                           // @ts-ignore
                           cells={profitData.map((d, i) => (
-                            <Cell key={i} fill={d.profit >= 0 ? '#10b981' : '#ef4444'} />
+                            <Cell key={i} fill={d.profit >= 0 ? '#E24B4A' : '#378ADD'} />
                           ))}
                         />
                       </BarChart>
@@ -1114,7 +1114,7 @@ export default function Dashboard({
                         </td>
                         <td className="py-2 px-2">{formatCurrency(s.total_valuation || 0)}</td>
                         <td className="py-2 px-2">{formatCurrency(s.total_invested || 0)}</td>
-                        <td className={cn('py-2 px-2', (s.total_profit || 0) >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+                        <td className={cn('py-2 px-2', (s.total_profit || 0) >= 0 ? 'text-red-500' : 'text-blue-500')}>
                           {formatCurrency(s.total_profit || 0)}
                         </td>
                         <td className="py-2 px-2">
