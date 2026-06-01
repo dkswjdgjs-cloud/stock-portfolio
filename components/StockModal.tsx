@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { X, TrendingUp, Info, Newspaper, RefreshCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, TrendingUp, Info, Newspaper } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { AccountHolding } from '../types';
 
 interface StockModalProps {
@@ -19,10 +20,19 @@ const TABS = [
   { key: 'news', label: '뉴스·공시', icon: <Newspaper className="w-3.5 h-3.5" /> },
 ];
 
+const PERIODS = [
+  { label: '1개월', value: 'D' },
+  { label: '3개월', value: 'W' },
+  { label: '1년', value: 'M' },
+  { label: '3년', value: 'Y' },
+];
+
 export default function StockModal({ holding, onClose }: StockModalProps) {
   const [activeTab, setActiveTab] = useState('price');
-
-  if (!holding) return null;
+  const [period, setPeriod] = useState('D');
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [chartLoading, setChartLoading] = useState(false);
+  const [priceInfo, setPriceInfo] = useState<any>(null);
 
   const isPos = (v: number) => v >= 0;
 
@@ -32,6 +42,39 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
   };
 
   const formatPercent = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
+
+  useEffect(() => {
+    if (!holding || activeTab !== 'price') return;
+    setChartLoading(true);
+    const market = holding.currency === 'USD' ? 'US' : 'KR';
+    fetch(`/api/stock-chart?ticker=${holding.ticker}&market=${market}&period=${period}`)
+      .then(r => r.json())
+      .then(data => {
+        setChartData(data.chartData || []);
+        if (data.chartData?.length > 0) {
+          const last = data.chartData[data.chartData.length - 1];
+          setPriceInfo(last);
+        }
+      })
+      .finally(() => setChartLoading(false));
+  }, [holding, period, activeTab]);
+
+  if (!holding) return null;
+
+  const dailyChangeRate = holding.curr_price > 0
+    ? (holding.daily_change / (holding.curr_price - holding.daily_change)) * 100
+    : 0;
+
+  const formatDate = (d: string) => {
+    if (!d) return '';
+    return `${d.slice(0,4)}.${d.slice(4,6)}.${d.slice(6,8)}`;
+  };
+
+  const minClose = chartData.length > 0 ? Math.min(...chartData.map(d => d.close)) : 0;
+  const maxClose = chartData.length > 0 ? Math.max(...chartData.map(d => d.close)) : 0;
+  const isChartPos = chartData.length > 1
+    ? chartData[chartData.length - 1].close >= chartData[0].close
+    : true;
 
   return (
     <div
@@ -61,11 +104,7 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
               </span>
               <span className={cn('text-base font-medium', isPos(holding.daily_change) ? 'text-emerald-600' : 'text-red-500')}>
                 {isPos(holding.daily_change) ? '▲' : '▼'} {formatCurrency(Math.abs(holding.daily_change), holding.currency)}
-                {holding.curr_price > 0 && (
-                  <span className="ml-1">
-                    ({formatPercent(holding.daily_change / (holding.curr_price - holding.daily_change) * 100)})
-                  </span>
-                )}
+                <span className="ml-1">({formatPercent(dailyChangeRate)})</span>
               </span>
             </div>
           </div>
@@ -94,29 +133,59 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
 
           {/* 시세 탭 */}
           {activeTab === 'price' && (
-            <div className="flex h-full">
-              {/* 왼쪽: 차트 영역 */}
+            <div className="flex" style={{minHeight: '420px'}}>
               <div className="flex-1 p-6 border-r border-gray-200">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-xs text-[#999999]">기간</span>
-                  {['1일', '1주', '1개월', '3개월', '1년'].map(r => (
-                    <button key={r}
-                      className="text-xs px-3 py-1 rounded border border-gray-200 text-[#666666] hover:border-blue-500 hover:text-blue-600 transition-colors">
-                      {r}
+                  {PERIODS.map(p => (
+                    <button key={p.value} onClick={() => setPeriod(p.value)}
+                      className={cn(
+                        'text-xs px-3 py-1 rounded border transition-colors',
+                        period === p.value
+                          ? 'border-blue-500 text-blue-600 bg-blue-50'
+                          : 'border-gray-200 text-[#666666] hover:border-blue-400'
+                      )}>
+                      {p.label}
                     </button>
                   ))}
                 </div>
-                {/* 차트 placeholder - 다음 단계에서 실제 차트로 교체 */}
-                <div className="bg-gray-50 rounded-lg h-48 flex items-center justify-center mb-4 border border-gray-200">
-                  <span className="text-xs text-[#999999]">차트 로딩 중...</span>
-                </div>
-                {/* 시가/고가/저가/거래대금 */}
+
+                {chartLoading ? (
+                  <div className="h-48 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200 mb-4">
+                    <span className="text-xs text-[#999999]">차트 로딩 중...</span>
+                  </div>
+                ) : chartData.length > 0 ? (
+                  <div className="mb-4">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#999' }}
+                          tickFormatter={formatDate}
+                          interval={Math.floor(chartData.length / 5)} />
+                        <YAxis tick={{ fontSize: 10, fill: '#999' }}
+                          domain={[minClose * 0.98, maxClose * 1.02]}
+                          tickFormatter={(v) => holding.currency === 'USD' ? `$${v.toFixed(0)}` : `${(v/1000).toFixed(0)}k`} />
+                        <Tooltip
+                          contentStyle={{ fontSize: '11px', borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                          formatter={(v: any) => [formatCurrency(v, holding.currency), '종가']}
+                          labelFormatter={formatDate} />
+                        <Line type="monotone" dataKey="close" stroke={isChartPos ? '#10b981' : '#ef4444'}
+                          strokeWidth={2} dot={false} isAnimationActive={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-48 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200 mb-4">
+                    <span className="text-xs text-[#999999]">차트 데이터 없음</span>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-4 gap-3">
                   {[
-                    { label: '시가', value: '-' },
-                    { label: '고가', value: '-' },
-                    { label: '저가', value: '-' },
-                    { label: '거래대금', value: '-' },
+                    { label: '시가', value: priceInfo ? formatCurrency(priceInfo.open, holding.currency) : '-' },
+                    { label: '고가', value: priceInfo ? formatCurrency(priceInfo.high, holding.currency) : '-' },
+                    { label: '저가', value: priceInfo ? formatCurrency(priceInfo.low, holding.currency) : '-' },
+                    { label: '거래량', value: priceInfo ? priceInfo.volume.toLocaleString() : '-' },
                   ].map(item => (
                     <div key={item.label} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                       <div className="text-xs text-[#999999] mb-1.5">{item.label}</div>
@@ -126,7 +195,6 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
                 </div>
               </div>
 
-              {/* 오른쪽: 내 보유 현황 */}
               <div className="w-56 p-6 flex-shrink-0">
                 <div className="text-xs text-[#999999] tracking-wider mb-4">내 보유 현황</div>
                 <div className="space-y-3 mb-6">
@@ -149,7 +217,7 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-[#999999]">수익률</span>
-                      <span className={cn('text-base font-medium', isPos(holding.return_rate) ? 'text-emerald-600' : 'text-red-500')}>
+                      <span className={cn('text-lg font-medium', isPos(holding.return_rate) ? 'text-emerald-600' : 'text-red-500')}>
                         {formatPercent(holding.return_rate * 100)}
                       </span>
                     </div>
@@ -168,9 +236,8 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
 
           {/* 종목정보 탭 */}
           {activeTab === 'info' && (
-            <div className="flex h-full">
+            <div className="flex" style={{minHeight: '420px'}}>
               <div className="flex-1 p-6 border-r border-gray-200">
-                {/* 상단 핵심 지표 3개 */}
                 <div className="grid grid-cols-3 gap-0 mb-6">
                   {[
                     { label: '시가총액', value: '-' },
@@ -184,7 +251,6 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
                   ))}
                 </div>
                 <div className="border-t border-gray-200 mb-4" />
-                {/* 상세 지표 리스트 */}
                 <div className="space-y-0">
                   {[
                     { label: 'EPS', value: '-' },
@@ -202,7 +268,6 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
                   ))}
                 </div>
               </div>
-              {/* 오른쪽: 52주 + 매수단가 */}
               <div className="w-56 p-6 flex-shrink-0">
                 <div className="text-xs text-[#999999] tracking-wider mb-4">52주 가격 범위</div>
                 <div className="mb-6">
@@ -243,17 +308,16 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
 
           {/* 뉴스 탭 */}
           {activeTab === 'news' && (
-            <div className="p-6">
+            <div className="p-6" style={{minHeight: '420px'}}>
               {holding.currency === 'USD' ? (
                 <div className="flex flex-col items-center justify-center h-48 text-[#999999]">
                   <Newspaper className="w-8 h-8 mb-3 opacity-30" />
                   <p className="text-sm">해외 종목은 뉴스를 제공하지 않습니다</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2 flex items-center justify-center h-32 text-[#999999] bg-gray-50 rounded-lg border border-gray-200">
-                    <span className="text-xs">뉴스 로딩 중...</span>
-                  </div>
+                <div className="flex flex-col items-center justify-center h-48 text-[#999999]">
+                  <Newspaper className="w-8 h-8 mb-3 opacity-30" />
+                  <p className="text-sm">뉴스 기능은 준비 중입니다</p>
                 </div>
               )}
             </div>
