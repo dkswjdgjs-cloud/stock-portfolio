@@ -70,7 +70,10 @@ export default function Home() {
       const avgPriceKRW = isUSD ? h.avg_price * rate : h.avg_price;
       const profit = (priceData.price - avgPriceKRW) * h.quantity;
       const return_rate = avgPriceKRW > 0 ? ((priceData.price - avgPriceKRW) / avgPriceKRW) * 100 : 0;
-      return { ...h, curr_price, valuation: valuationKRW, profit, return_rate, daily_change: priceData.dailyChange };
+      const dailyChangeKRW = priceData.dailyChange;
+      const prevPriceKRW = priceData.price - dailyChangeKRW;
+      const daily_change_rate = prevPriceKRW > 0 ? (dailyChangeKRW / prevPriceKRW) * 100 : 0;
+      return { ...h, curr_price, valuation: valuationKRW, profit, return_rate, daily_change: priceData.dailyChange, daily_change_rate };
     });
   }, []);
 

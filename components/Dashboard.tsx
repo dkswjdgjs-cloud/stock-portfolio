@@ -552,7 +552,7 @@ export default function Dashboard({
                         <td className={cn('py-2 px-2 transition-colors duration-500', isPos(h.daily_change) ? 'text-red-500' : 'text-blue-500')}>
                           <div>{formatCurrency(h.daily_change * (h.quantity || 0))}</div>
                           <div className="text-sm opacity-70">
-                            ({h.curr_price > 0 ? ((h.daily_change / (h.curr_price - h.daily_change)) * 100).toFixed(2) : '0.00'}%)
+                            ({h.daily_change_rate !== undefined ? h.daily_change_rate.toFixed(2) : (h.curr_price > 0 ? ((h.daily_change / (h.curr_price - h.daily_change)) * 100).toFixed(2) : '0.00')}%)
                           </div>
                         </td>
                       </tr>

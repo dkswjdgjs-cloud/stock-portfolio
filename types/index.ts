@@ -31,6 +31,7 @@ export interface AccountHolding {
   return_rate: number;
   weight: number;
   daily_change: number;
+  daily_change_rate?: number;
   exchangeRate?: number;
   currency: string;
 }
