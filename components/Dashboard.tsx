@@ -1040,5 +1040,5 @@ export default function Dashboard({
         onClose={() => setSelectedHolding(null)}
       />
     </div>
-
+  );
 }
