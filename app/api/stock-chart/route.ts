@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
       const url = `${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}&FID_INPUT_DATE_1=${startStr}&FID_INPUT_DATE_2=${endDate}&FID_PERIOD_DIV_CODE=${period}&FID_ORG_ADJ_PRC=0`;
       const res = await fetch(url, { headers });
       const data = await res.json();
+      console.log('KIS chart response:', JSON.stringify(data).slice(0, 500));
       const chartData = (data.output2 || []).map((item: any) => ({
         date: item.stck_bsop_date,
         open: parseFloat(item.stck_oprc || '0'),
