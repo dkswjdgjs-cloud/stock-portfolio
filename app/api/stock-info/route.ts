@@ -46,21 +46,23 @@ export async function GET(request: NextRequest) {
     const p = priceData.output || {};
 
     // 재무비율 (ROE, 부채비율, 매출성장률)
-    headers['tr_id'] = 'FHKST66430200';
-    const finUrl = `${KIS_BASE_URL}/uapi/domestic-stock/v1/finance/financial-ratio?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}&FID_PERIOD_DIV_CODE=Y`;
+    headers['tr_id'] = 'FHKST66430300';
+    const finUrl = `${KIS_BASE_URL}/uapi/domestic-stock/v1/finance/financial-ratio?fid_cond_mrkt_div_code=J&fid_input_iscd=${ticker}&fid_period_div_code=Y`;
     const finRes = await fetch(finUrl, { headers });
     const finData = await finRes.json();
+    console.log('fin API:', JSON.stringify(finData).slice(0, 300));
+    console.log('price API fields:', Object.keys(p).join(','));
     const f = finData.output && finData.output.length > 0 ? finData.output[0] : {};
 
     const info = {
       // 시세 API
-      mktCap: p.hts_avls ? `${(parseFloat(p.hts_avls) / 100000000).toFixed(0)}억` : '-',
+      mktCap: (p.hts_avls && p.hts_avls !== '0') ? `${(parseFloat(p.hts_avls) / 100000000).toFixed(0)}억` : (p.stck_avls ? `${(parseFloat(p.stck_avls) / 100000000).toFixed(0)}억` : '-'),
       per: p.per ? `${parseFloat(p.per).toFixed(2)}배` : '-',
       pbr: p.pbr ? `${parseFloat(p.pbr).toFixed(2)}배` : '-',
       eps: p.eps ? `${parseInt(p.eps).toLocaleString()}원` : '-',
       w52High: p.d250_hgpr ? parseInt(p.d250_hgpr) : 0,
       w52Low: p.d250_lwpr ? parseInt(p.d250_lwpr) : 0,
-      avgVol: p.avrg_vol ? parseInt(p.avrg_vol).toLocaleString() : '-',
+      avgVol: p.avrg_vol ? parseInt(p.avrg_vol).toLocaleString() : (p.acml_vol ? parseInt(p.acml_vol).toLocaleString() : '-'),
       dvdRate: p.bps ? '-' : '-',
       // 재무비율 API
       roe: f.roe_val ? `${parseFloat(f.roe_val).toFixed(2)}%` : '-',
