@@ -168,7 +168,7 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
                         <Tooltip
                           contentStyle={{ fontSize: '11px', borderRadius: '8px', border: '1px solid #e5e7eb' }}
                           formatter={(v: any) => [formatCurrency(v, holding.currency), '종가']}
-                          labelFormatter={formatDate} />
+                          labelFormatter={(d: any) => formatDate(String(d))} />
                         <Line type="monotone" dataKey="close" stroke={isChartPos ? '#10b981' : '#ef4444'}
                           strokeWidth={2} dot={false} isAnimationActive={false} />
                       </LineChart>
