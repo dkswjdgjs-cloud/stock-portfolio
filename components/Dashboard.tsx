@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { TrendingUp, RefreshCw, Plus, LayoutDashboard, Building2, Clock } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
 import { formatCurrency, formatPercent, cn } from '@/lib/utils';
 import StockModal from './StockModal';
 import { AccountHolding, SummaryData, DailySettlement, Transaction, CashIncome, CashBalance } from '@/types';
@@ -59,6 +59,7 @@ export default function Dashboard({
   const [sortKey, setSortKey] = useState('');
   const [sortDir, setSortDir] = useState(1);
   const [graphFilter, setGraphFilter] = useState('daily');
+  const [profitMode, setProfitMode] = useState('cumulative');
   const [targetValue, setTargetValue] = useState(0);
   const [targetInput, setTargetInput] = useState('');
   const [showTargetInput, setShowTargetInput] = useState(false);
@@ -865,37 +866,103 @@ export default function Dashboard({
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xs text-[#666666] tracking-wider">| 성과 추이 MATRIX</h2>
                 <div className="flex items-center gap-2">
-                  <select value={graphFilter} onChange={e => setGraphFilter(e.target.value as any)}
+                  <select value={profitMode} onChange={e => setProfitMode(e.target.value)}
                     className="text-xs bg-white border border-gray-200 rounded px-2 py-1.5 text-[#333333]">
-                    <option value="daily">일별</option>
-                    <option value="monthly">월별</option>
-                    <option value="quarterly">분기별</option>
-                    <option value="yearly">년도별</option>
+                    <option value="cumulative">누적</option>
+                    <option value="yearly">년도별 수익금</option>
+                    <option value="monthly">월별 수익금</option>
+                    <option value="daily">일별 수익금</option>
                   </select>
+                  {profitMode === 'cumulative' && (
+                    <select value={graphFilter} onChange={e => setGraphFilter(e.target.value as any)}
+                      className="text-xs bg-white border border-gray-200 rounded px-2 py-1.5 text-[#333333]">
+                      <option value="daily">일별</option>
+                      <option value="monthly">월별</option>
+                      <option value="quarterly">분기별</option>
+                      <option value="yearly">년도별</option>
+                    </select>
+                  )}
                 </div>
               </div>
               {(() => {
+                const sorted = [...snapshots].sort((a,b) => a.snapshot_date.localeCompare(b.snapshot_date));
+
+                // 수익금 막대 그래프 데이터 계산
+                const calcProfitData = () => {
+                  if (profitMode === 'yearly') {
+                    const years = [...new Set(sorted.map(s => s.snapshot_date.slice(0,4)))];
+                    return years.map((year, yi) => {
+                      const yearSnaps = sorted.filter(s => s.snapshot_date.startsWith(year));
+                      const last = yearSnaps[yearSnaps.length - 1];
+                      const prevYearSnaps = yi === 0 ? [] : sorted.filter(s => s.snapshot_date.startsWith(years[yi-1]));
+                      const prevLast = prevYearSnaps.length ? prevYearSnaps[prevYearSnaps.length-1] : null;
+                      const prevVal = prevLast ? prevLast.total_valuation || 0 : 0;
+                      const prevInv = prevLast ? prevLast.total_invested || 0 : 0;
+                      const profit = (last.total_valuation||0) - prevVal - ((last.total_invested||0) - prevInv);
+                      return { label: `${year}년`, profit };
+                    });
+                  }
+                  if (profitMode === 'monthly') {
+                    const months = [...new Set(sorted.map(s => s.snapshot_date.slice(0,7)))];
+                    return months.map((month, mi) => {
+                      const monthSnaps = sorted.filter(s => s.snapshot_date.startsWith(month));
+                      const last = monthSnaps[monthSnaps.length-1];
+                      const prevMonthSnaps = mi === 0 ? [] : sorted.filter(s => s.snapshot_date.startsWith(months[mi-1]));
+                      const prevLast = prevMonthSnaps.length ? prevMonthSnaps[prevMonthSnaps.length-1] : null;
+                      const prevVal = prevLast ? prevLast.total_valuation||0 : 0;
+                      const prevInv = prevLast ? prevLast.total_invested||0 : 0;
+                      const profit = (last.total_valuation||0) - prevVal - ((last.total_invested||0) - prevInv);
+                      return { label: month, profit };
+                    });
+                  }
+                  if (profitMode === 'daily') {
+                    return sorted.map((s, i) => {
+                      const prev = i === 0 ? null : sorted[i-1];
+                      const prevVal = prev ? prev.total_valuation||0 : 0;
+                      const prevInv = prev ? prev.total_invested||0 : 0;
+                      const profit = (s.total_valuation||0) - prevVal - ((s.total_invested||0) - prevInv);
+                      return { label: s.snapshot_date, profit };
+                    });
+                  }
+                  return [];
+                };
+
+                if (profitMode !== 'cumulative') {
+                  const profitData = calcProfitData();
+                  return (
+                    <ResponsiveContainer width="100%" height={450}>
+                      <BarChart data={profitData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 10 }} interval={profitMode === 'daily' ? 30 : 0} />
+                        <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} />
+                        <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4 2" />
+                        <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }}
+                          formatter={(v) => formatCurrency(Number(v))} />
+                        <Bar dataKey="profit" name="수익금" isAnimationActive={false}
+                          fill="#10b981"
+                          label={false}
+                          // 양수 초록, 음수 빨강
+                          // @ts-ignore
+                          cells={profitData.map((d, i) => (
+                            <Cell key={i} fill={d.profit >= 0 ? '#10b981' : '#ef4444'} />
+                          ))}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  );
+                }
+
+                // 누적 꺾은선 그래프
                 const filterSnapshots = () => {
                   if (graphFilter === "daily") return snapshots;
                   const map = new Map<string, any>();
                   snapshots.forEach(s => {
                     const d = new Date(s.snapshot_date);
                     let key = "";
-                    if (graphFilter === "monthly") {
-                      // 월말: 해당 월의 마지막 데이터
-                      key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-                    } else if (graphFilter === "quarterly") {
-                      // 분기말: Q1=3월, Q2=6월, Q3=9월, Q4=12월
-                      const q = Math.floor(d.getMonth() / 3);
-                      key = `${d.getFullYear()}-Q${q+1}`;
-                    } else if (graphFilter === "yearly") {
-                      // 년말: 해당 년도의 마지막 데이터
-                      key = `${d.getFullYear()}`;
-                    }
-                    // 같은 키에서 가장 늦은 날짜(말일)로 덮어씀
-                    if (!map.has(key) || s.snapshot_date > map.get(key).snapshot_date) {
-                      map.set(key, s);
-                    }
+                    if (graphFilter === "monthly") key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+                    else if (graphFilter === "quarterly") { const q = Math.floor(d.getMonth()/3); key = `${d.getFullYear()}-Q${q+1}`; }
+                    else if (graphFilter === "yearly") key = `${d.getFullYear()}`;
+                    if (!map.has(key) || s.snapshot_date > map.get(key).snapshot_date) map.set(key, s);
                   });
                   return Array.from(map.values()).sort((a,b) => a.snapshot_date.localeCompare(b.snapshot_date));
                 };
@@ -907,30 +974,22 @@ export default function Dashboard({
                   return v?.slice(0,7);
                 };
                 return (
-              <ResponsiveContainer width="100%" height={450}>
-                <AreaChart data={filtered} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis
-                    dataKey="snapshot_date"
-                    tick={{ fill: '#64748b', fontSize: 10 }}
-                    interval={xInterval}
-                    tickFormatter={xFormatter}
-                  />
-                  <YAxis
-                    tick={{ fill: '#64748b', fontSize: 10 }}
-                    tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`}
-                    domain={[-10000000, (dataMax: number) => Math.ceil(dataMax * 1.05 / 10000000) * 10000000]}
-                  />
-                  <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4 2" />
-                  {highlightDate && <ReferenceLine x={highlightDate} stroke="#3b82f6" strokeWidth={2} label={{ value: highlightDate, position: "top", fontSize: 10, fill: "#3b82f6" }} />}
-                  {targetValue > 0 && <ReferenceLine y={targetValue} stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="6 3" label={{ value: `목표 ${(targetValue/1000000).toFixed(0)}M`, position: "right", fontSize: 10, fill: "#3b82f6" }} />}
-                  <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }}
-                    formatter={(v) => formatCurrency(Number(v))} />
-                  <Area isAnimationActive={false} type="monotone" dataKey="total_valuation" name="평가액" stroke="#3b82f6" fill="#3b82f620" strokeWidth={2} />
-                  <Area isAnimationActive={false} type="monotone" dataKey="total_invested" name="투자금" stroke="#10b981" fill="#10b98120" strokeWidth={2} />
-                  <Area isAnimationActive={false} type="monotone" dataKey="total_profit" name="누적수익금" stroke="#f59e0b" fill="#f59e0b20" strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height={450}>
+                    <AreaChart data={filtered} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="snapshot_date" tick={{ fill: '#64748b', fontSize: 10 }} interval={xInterval} tickFormatter={xFormatter} />
+                      <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`}
+                        domain={[-10000000, (dataMax: number) => Math.ceil(dataMax * 1.05 / 10000000) * 10000000]} />
+                      <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4 2" />
+                      {highlightDate && <ReferenceLine x={highlightDate} stroke="#3b82f6" strokeWidth={2} label={{ value: highlightDate, position: "top", fontSize: 10, fill: "#3b82f6" }} />}
+                      {targetValue > 0 && <ReferenceLine y={targetValue} stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="6 3" label={{ value: `목표 ${(targetValue/1000000).toFixed(0)}M`, position: "right", fontSize: 10, fill: "#3b82f6" }} />}
+                      <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }}
+                        formatter={(v) => formatCurrency(Number(v))} />
+                      <Area isAnimationActive={false} type="monotone" dataKey="total_valuation" name="평가액" stroke="#3b82f6" fill="#3b82f620" strokeWidth={2} />
+                      <Area isAnimationActive={false} type="monotone" dataKey="total_invested" name="투자금" stroke="#10b981" fill="#10b98120" strokeWidth={2} />
+                      <Area isAnimationActive={false} type="monotone" dataKey="total_profit" name="누적수익금" stroke="#f59e0b" fill="#f59e0b20" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 );
               })()}
             </div>
