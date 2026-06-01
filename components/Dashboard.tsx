@@ -936,8 +936,12 @@ export default function Dashboard({
                         <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 10 }} interval={profitMode === 'daily' ? 30 : 0} />
                         <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} />
                         <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4 2" />
-                        <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }}
-                          formatter={(v) => formatCurrency(Number(v))} />
+                        <Tooltip
+                          contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }}
+                          formatter={(v: any) => [
+                            <span style={{ color: Number(v) >= 0 ? '#E24B4A' : '#378ADD' }}>{formatCurrency(Number(v))}</span>,
+                            '수익금'
+                          ]} />
                         <Bar dataKey="profit" name="수익금" isAnimationActive={false} fill="#E24B4A" label={false}>
                           {profitData.map((d, i) => (
                             <Cell key={i} fill={d.profit >= 0 ? '#E24B4A' : '#378ADD'} />
