@@ -32,6 +32,8 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
   const [chartData, setChartData] = useState<any[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [priceInfo, setPriceInfo] = useState<any>(null);
+  const [stockInfo, setStockInfo] = useState<any>(null);
+  const [infoLoading, setInfoLoading] = useState(false);
 
   const isPos = (v: number) => v >= 0;
 
@@ -57,6 +59,17 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
       })
       .finally(() => setChartLoading(false));
   }, [holding, period, activeTab]);
+
+  useEffect(() => {
+    if (!holding || activeTab !== 'info') return;
+    if (holding.currency === 'USD') return;
+    setInfoLoading(true);
+    fetch(`/api/stock-info?ticker=${holding.ticker}&market=KR`)
+      .then(r => r.json())
+      .then(data => setStockInfo(data.info || null))
+      .finally(() => setInfoLoading(false));
+  }, [holding, activeTab]);
+
 
   if (!holding) return null;
 
@@ -237,27 +250,31 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
           {activeTab === 'info' && (
             <div className="flex" style={{minHeight: '420px'}}>
               <div className="flex-1 p-6 border-r border-gray-200">
-                <div className="grid grid-cols-3 gap-0 mb-6">
-                  {[
-                    { label: '시가총액', value: '-' },
-                    { label: 'PER', value: '-' },
-                    { label: 'PBR', value: '-' },
-                  ].map((item, i) => (
-                    <div key={item.label} className={cn('', i > 0 && 'pl-6 border-l border-gray-200')}>
-                      <div className="text-xs text-[#999999] mb-1.5">{item.label}</div>
-                      <div className="text-2xl font-medium text-[#1a1a1a]">{item.value}</div>
-                    </div>
-                  ))}
-                </div>
+                {infoLoading ? (
+                  <div className="h-16 flex items-center justify-center text-xs text-[#999999] mb-6">데이터 로딩 중...</div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-0 mb-6">
+                    {[
+                      { label: '시가총액', value: stockInfo?.mktCap || '-' },
+                      { label: 'PER', value: stockInfo?.per || '-' },
+                      { label: 'PBR', value: stockInfo?.pbr || '-' },
+                    ].map((item, i) => (
+                      <div key={item.label} className={cn('', i > 0 && 'pl-6 border-l border-gray-200')}>
+                        <div className="text-xs text-[#999999] mb-1.5">{item.label}</div>
+                        <div className="text-2xl font-medium text-[#1a1a1a]">{item.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="border-t border-gray-200 mb-4" />
                 <div className="space-y-0">
                   {[
-                    { label: 'EPS', value: '-' },
-                    { label: 'ROE', value: '-' },
-                    { label: '부채비율', value: '-' },
-                    { label: '매출 성장률 (YoY)', value: '-' },
-                    { label: '배당수익률', value: '-' },
-                    { label: '거래량 (평균)', value: '-' },
+                    { label: 'EPS', value: stockInfo?.eps || '-' },
+                    { label: 'ROE', value: stockInfo?.roe || '-' },
+                    { label: '부채비율', value: stockInfo?.debtRate || '-' },
+                    { label: '매출 성장률 (YoY)', value: stockInfo?.salesGrowth || '-' },
+                    { label: '배당수익률', value: stockInfo?.dvdRate || '-' },
+                    { label: '거래량 (평균)', value: stockInfo?.avgVol || '-' },
                     { label: '업종', value: holding.sector !== '-' ? holding.sector : '-' },
                   ].map(item => (
                     <div key={item.label} className="flex justify-between items-center py-3 border-b border-gray-100">
@@ -271,12 +288,17 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
                 <div className="text-xs text-[#999999] tracking-wider mb-4">52주 가격 범위</div>
                 <div className="mb-6">
                   <div className="flex justify-between text-xs mb-2">
-                    <span className="text-blue-500 font-medium">-</span>
+                    <span className="text-blue-500 font-medium">{stockInfo?.w52Low ? stockInfo.w52Low.toLocaleString()+'원' : '-'}</span>
                     <span className="text-[#1a1a1a] font-medium">{formatCurrency(holding.curr_price, holding.currency)}</span>
-                    <span className="text-red-500 font-medium">-</span>
+                    <span className="text-red-500 font-medium">{stockInfo?.w52High ? stockInfo.w52High.toLocaleString()+'원' : '-'}</span>
                   </div>
                   <div className="bg-gray-100 rounded h-1.5 relative">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-[#1a1a1a]" />
+                    {stockInfo?.w52High && stockInfo?.w52Low && (
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-[#1a1a1a]"
+                        style={{ left: `${Math.min(Math.max(((holding.curr_price - stockInfo.w52Low) / (stockInfo.w52High - stockInfo.w52Low)) * 100, 0), 100)}%`, transform: 'translate(-50%, -50%)' }}
+                      />
+                    )}
                   </div>
                   <div className="flex justify-between text-xs text-[#999999] mt-1.5">
                     <span>최저</span><span>최고</span>
