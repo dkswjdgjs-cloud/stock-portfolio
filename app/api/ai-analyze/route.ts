@@ -41,7 +41,7 @@ Google Search를 통해 최신 정보를 검색한 후 다음 4가지 섹션으�
 각 섹션은 구체적인 수치와 근거를 포함해서 작성해주세요.`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
