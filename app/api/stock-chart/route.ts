@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       const res = await fetch(url, { headers });
       const data = await res.json();
       console.log('KIS chart response:', JSON.stringify(data).slice(0, 500));
-      const chartData = (data.output2 || []).map((item: any) => ({
+      const chartData = (data.output2 || data.output || []).map((item: any) => ({
         date: item.stck_bsop_date,
         open: parseFloat(item.stck_oprc || '0'),
         high: parseFloat(item.stck_hgpr || '0'),
