@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       salesGrowth: f.grs ? `${parseFloat(f.grs).toFixed(2)}%` : '-',
     };
 
-    return NextResponse.json({ info });
+    return NextResponse.json({ info, debug: { priceKeys: Object.keys(p), finKeys: Object.keys(f), finRaw: f, perRaw: p.per, mktCapRaw: p.hts_avls, stckAvls: p.stck_avls } });
   } catch (error) {
     console.error('Stock info API error:', error);
     return NextResponse.json({ error: 'Failed to fetch stock info' }, { status: 500 });
