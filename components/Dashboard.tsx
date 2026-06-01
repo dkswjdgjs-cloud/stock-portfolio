@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { TrendingUp, RefreshCw, Plus, LayoutDashboard, Building2, Clock } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
 import { formatCurrency, formatPercent, cn } from '@/lib/utils';
+import StockModal from './StockModal';
 import { AccountHolding, SummaryData, DailySettlement, Transaction, CashIncome, CashBalance } from '@/types';
 
 const ACCOUNTS = ['전체', 'ISA', 'IRP', '연금저축', 'DC형 연금', '일반직투1', '일반직투2'];
@@ -66,6 +67,7 @@ export default function Dashboard({
     if (saved) setTargetValue(parseFloat(saved) || 0);
   }, []);
   const [showTradeTable, setShowTradeTable] = useState(false);
+  const [selectedHolding, setSelectedHolding] = useState<AccountHolding | null>(null);
   const [showIncomeTable, setShowIncomeTable] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
   const [snapshotForm, setSnapshotForm] = useState({
@@ -498,7 +500,7 @@ export default function Dashboard({
                   </thead>
                   <tbody>
                     {displayHoldings.map((h, i) => (
-                      <tr key={i} className="border-b border-gray-200/80 hover:bg-gray-100/80 transition-colors">
+                      <tr key={i} className="border-b border-gray-200/80 hover:bg-gray-100/80 transition-colors cursor-pointer" onClick={() => setSelectedHolding(h)}>
                         <td className="py-2 px-2 text-[#666666]">{h.account}</td>
                         <td className="py-2 px-2 text-blue-600">{h.ticker}</td>
                         <td className="py-2 px-2">{h.stock_name}</td>
@@ -1034,5 +1036,9 @@ export default function Dashboard({
         )}
       </div>
     </div>
+      <StockModal
+        holding={selectedHolding}
+        onClose={() => setSelectedHolding(null)}
+      />
   );
 }
