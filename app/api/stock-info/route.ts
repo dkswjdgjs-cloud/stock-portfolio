@@ -50,8 +50,7 @@ export async function GET(request: NextRequest) {
     const finUrl = `${KIS_BASE_URL}/uapi/domestic-stock/v1/finance/financial-ratio?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}&FID_PERIOD_DIV_CODE=Y`;
     const finRes = await fetch(finUrl, { headers });
     const finData = await finRes.json();
-    console.log('fin API:', JSON.stringify(finData).slice(0, 300));
-    console.log('price API fields:', Object.keys(p).join(','));
+    console.log('fin API full:', JSON.stringify(finData).slice(0, 500));
     const f = finData.output && finData.output.length > 0 ? finData.output[0] : {};
 
     const info = {
@@ -70,7 +69,7 @@ export async function GET(request: NextRequest) {
       salesGrowth: f.grs ? `${parseFloat(f.grs).toFixed(2)}%` : '-',
     };
 
-    return NextResponse.json({ info, debug: { finRaw: f, finKeys: Object.keys(f) } });
+    return NextResponse.json({ info, debug: { finRaw: f, finKeys: Object.keys(f), finDataFull: JSON.stringify(finData).slice(0, 500) } });
   } catch (error) {
     console.error('Stock info API error:', error);
     return NextResponse.json({ error: 'Failed to fetch stock info' }, { status: 500 });
