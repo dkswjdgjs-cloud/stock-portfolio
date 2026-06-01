@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const ticker = searchParams.get('ticker');
   const market = searchParams.get('market') || 'KR';
-  const period = searchParams.get('period') || 'D';
+  const range = searchParams.get('range') || '1M';
 
   if (!ticker) return NextResponse.json({ error: 'ticker is required' }, { status: 400 });
 
@@ -32,11 +32,12 @@ export async function GET(request: NextRequest) {
     const endDate = today.toISOString().slice(0, 10).replace(/-/g, '');
     const startDate = new Date(today);
 
-    if (period === 'D') startDate.setDate(today.getDate() - 30);
-    else if (period === 'W') startDate.setDate(today.getDate() - 90);
-    else if (period === 'M') startDate.setMonth(today.getMonth() - 12);
-    else if (period === 'Y') startDate.setFullYear(today.getFullYear() - 3);
+    if (range === '1M') startDate.setMonth(today.getMonth() - 1);
+    else if (range === '3M') startDate.setMonth(today.getMonth() - 3);
+    else if (range === '1Y') startDate.setFullYear(today.getFullYear() - 1);
+    else if (range === '3Y') startDate.setFullYear(today.getFullYear() - 3);
 
+    const periodCode = range === '3Y' ? 'M' : range === '1Y' ? 'W' : 'D';
     const startStr = startDate.toISOString().slice(0, 10).replace(/-/g, '');
 
     const headers: Record<string, string> = {
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     if (market === 'KR') {
       headers['tr_id'] = 'FHKST01010400';
-      const url = `${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}&FID_INPUT_DATE_1=${startStr}&FID_INPUT_DATE_2=${endDate}&FID_PERIOD_DIV_CODE=${period}&FID_ORG_ADJ_PRC=0`;
+      const url = `${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}&FID_INPUT_DATE_1=${startStr}&FID_INPUT_DATE_2=${endDate}&FID_PERIOD_DIV_CODE=${periodCode}&FID_ORG_ADJ_PRC=0`;
       const res = await fetch(url, { headers });
       const data = await res.json();
       console.log('KIS chart response:', JSON.stringify(data).slice(0, 500));

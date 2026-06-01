@@ -29,7 +29,7 @@ const PERIODS = [
 
 export default function StockModal({ holding, onClose }: StockModalProps) {
   const [activeTab, setActiveTab] = useState('price');
-  const [period, setPeriod] = useState('D');
+  const [period, setPeriod] = useState('1M');
   const [chartData, setChartData] = useState<any[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [priceInfo, setPriceInfo] = useState<any>(null);
