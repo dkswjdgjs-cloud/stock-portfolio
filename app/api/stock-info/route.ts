@@ -46,9 +46,15 @@ export async function GET(request: NextRequest) {
     const p = priceData.output || {};
 
     // 재무비율 (ROE, 부채비율, 매출성장률)
-    headers['tr_id'] = 'FHKST66430200';
+    const finHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      appkey: KIS_APP_KEY,
+      appsecret: KIS_APP_SECRET,
+      'tr_id': 'FHKST66430200',
+    };
     const finUrl = `${KIS_BASE_URL}/uapi/domestic-stock/v1/finance/financial-ratio?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}&FID_PERIOD_DIV_CODE=Y`;
-    const finRes = await fetch(finUrl, { headers });
+    const finRes = await fetch(finUrl, { headers: finHeaders });
     const finData = await finRes.json();
     console.log('fin API full:', JSON.stringify(finData).slice(0, 500));
     const f = finData.output && finData.output.length > 0 ? finData.output[0] : {};
