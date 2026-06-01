@@ -33,6 +33,8 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
   const [chartLoading, setChartLoading] = useState(false);
   const [priceInfo, setPriceInfo] = useState<any>(null);
   const [stockInfo, setStockInfo] = useState<any>(null);
+  const [isEtf, setIsEtf] = useState(false);
+  const [etfComponents, setEtfComponents] = useState<any[]>([]);
   const [infoLoading, setInfoLoading] = useState(false);
 
   const isPos = (v: number) => v >= 0;
@@ -66,7 +68,11 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
     setInfoLoading(true);
     fetch(`/api/stock-info?ticker=${holding.ticker}&market=KR`)
       .then(r => r.json())
-      .then(data => setStockInfo(data.info || null))
+      .then(data => {
+        setStockInfo(data.info || null);
+        setIsEtf(data.isEtf || false);
+        setEtfComponents(data.etfComponents || []);
+      })
       .finally(() => setInfoLoading(false));
   }, [holding, activeTab]);
 
@@ -284,6 +290,33 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
                   ))}
                 </div>
               </div>
+              {isEtf && etfComponents.length > 0 && (
+                <div className="flex-1 px-6 pb-6 border-r border-gray-200">
+                  <div className="text-xs text-[#999999] tracking-wider mb-3">구성종목 상위 10</div>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-gray-200 text-[#999999]">
+                        <th className="text-left py-2 font-medium">종목명</th>
+                        <th className="text-right py-2 font-medium">비중</th>
+                        <th className="text-right py-2 font-medium">일일등락</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {etfComponents.map((c, i) => (
+                        <tr key={i} className="border-b border-gray-100">
+                          <td className="py-2 text-[#1a1a1a]">{c.name}</td>
+                          <td className="py-2 text-right text-[#1a1a1a]">{c.weight}%</td>
+                          <td className={cn('py-2 text-right font-medium',
+                            c.changeSign === '1' || c.changeSign === '2' ? 'text-emerald-600' : 'text-red-500'
+                          )}>
+                            {c.changeSign === '1' || c.changeSign === '2' ? '+' : '-'}{c.dailyChange}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               <div className="w-56 p-6 flex-shrink-0">
                 <div className="text-xs text-[#999999] tracking-wider mb-4">52주 가격 범위</div>
                 <div className="mb-6">

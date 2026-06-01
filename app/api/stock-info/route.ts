@@ -75,7 +75,34 @@ export async function GET(request: NextRequest) {
       salesGrowth: f.grs ? `${parseFloat(f.grs).toFixed(2)}%` : '-',
     };
 
-    return NextResponse.json({ info, debug: { finRaw: f, finKeys: Object.keys(f), finDataFull: JSON.stringify(finData).slice(0, 500) } });
+    // ETF 구성종목 조회
+    let etfComponents: any[] = [];
+    const etfKeywords = ['ETF', 'ETN', '인덱스펀드'];
+    const isEtf = etfKeywords.some(k => (p.bstp_kor_isnm || '').includes(k) || (p.rprs_mrkt_kor_name || '').includes(k));
+    if (isEtf) {
+      try {
+        const etfHeaders: Record<string, string> = {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          appkey: KIS_APP_KEY,
+          appsecret: KIS_APP_SECRET,
+          'tr_id': 'FHKST121204C0',
+        };
+        const etfUrl = `${KIS_BASE_URL}/uapi/etfetn/v1/quotations/inquire-component-stock-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}`;
+        const etfRes = await fetch(etfUrl, { headers: etfHeaders });
+        const etfData = await etfRes.json();
+        etfComponents = (etfData.output || []).slice(0, 10).map((item: any) => ({
+          name: item.hts_kor_isnm || '-',
+          ticker: item.stck_shrn_iscd || '-',
+          weight: item.etf_cnfg_issu_rate ? parseFloat(item.etf_cnfg_issu_rate).toFixed(2) : '-',
+          dailyChange: item.prdy_ctrt ? parseFloat(item.prdy_ctrt).toFixed(2) : '-',
+          changeSign: item.prdy_vrss_sign || '3',
+        }));
+      } catch (e) {
+        etfComponents = [];
+      }
+    }
+    return NextResponse.json({ info, isEtf, etfComponents });
   } catch (error) {
     console.error('Stock info API error:', error);
     return NextResponse.json({ error: 'Failed to fetch stock info' }, { status: 500 });
