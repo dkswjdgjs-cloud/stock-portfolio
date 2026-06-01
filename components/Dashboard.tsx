@@ -938,15 +938,11 @@ export default function Dashboard({
                         <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4 2" />
                         <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }}
                           formatter={(v) => formatCurrency(Number(v))} />
-                        <Bar dataKey="profit" name="수익금" isAnimationActive={false}
-                          fill="#10b981"
-                          label={false}
-                          // 양수 초록, 음수 빨강
-                          // @ts-ignore
-                          cells={profitData.map((d, i) => (
+                        <Bar dataKey="profit" name="수익금" isAnimationActive={false} fill="#E24B4A" label={false}>
+                          {profitData.map((d, i) => (
                             <Cell key={i} fill={d.profit >= 0 ? '#E24B4A' : '#378ADD'} />
                           ))}
-                        />
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   );
