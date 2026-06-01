@@ -91,6 +91,7 @@ export async function GET(request: NextRequest) {
         const etfUrl = `${KIS_BASE_URL}/uapi/etfetn/v1/quotations/inquire-component-stock-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}`;
         const etfRes = await fetch(etfUrl, { headers: etfHeaders });
         const etfData = await etfRes.json();
+        console.log('ETF API response:', JSON.stringify(etfData).slice(0, 300));
         etfComponents = (etfData.output || []).slice(0, 10).map((item: any) => ({
           name: item.hts_kor_isnm || '-',
           ticker: item.stck_shrn_iscd || '-',
@@ -99,6 +100,7 @@ export async function GET(request: NextRequest) {
           changeSign: item.prdy_vrss_sign || '3',
         }));
       } catch (e) {
+        console.log('ETF API error:', e);
         etfComponents = [];
       }
     }
