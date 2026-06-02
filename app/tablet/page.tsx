@@ -128,12 +128,36 @@ export default function TabletPage() {
       const cumulativeReturn = totalInvested > 0 ? (cumulativeProfit / totalInvested) * 100 : 0;
       const dailyProfit = withPrices.reduce((sum: number, h: any) => sum + (h.daily_change || 0) * (h.quantity || 0), 0);
       const dailyReturn = currMonthValue > 0 ? (dailyProfit / (currMonthValue - dailyProfit)) * 100 : 0;
+      // 연/월 수익 계산 (snapshot 기반)
+      const sortedSnaps = [...(snapshotData || [])].sort((a: any, b: any) => a.snapshot_date.localeCompare(b.snapshot_date));
+      const thisYear = new Date().getFullYear();
+      const thisMonth = new Date().getMonth() + 1;
+      const prevYearSnap = [...sortedSnaps].filter((s: any) => s.snapshot_date.startsWith(`${thisYear - 1}`)).pop();
+      const prevMonthStr = thisMonth === 1 ? `${thisYear - 1}-12` : `${thisYear}-${String(thisMonth - 1).padStart(2, '0')}`;
+      const prevMonthSnap = [...sortedSnaps].filter((s: any) => s.snapshot_date.startsWith(prevMonthStr)).pop();
+
+      const prevYearVal = prevYearSnap?.total_valuation || 0;
+      const prevYearInv = prevYearSnap?.total_invested || 0;
+      const prevMonthVal = prevMonthSnap?.total_valuation || 0;
+      const prevMonthInv = prevMonthSnap?.total_invested || 0;
+
+      const annualProfit = currMonthValue - prevYearVal - (totalInvested - prevYearInv);
+      const annualBase = prevYearVal + (totalInvested - prevYearInv);
+      const annualReturn = annualBase > 0 ? (annualProfit / annualBase) * 100 : 0;
+      const monthlyProfit = currMonthValue - prevMonthVal - (totalInvested - prevMonthInv);
+      const monthlyBase = prevMonthVal + (totalInvested - prevMonthInv);
+      const monthlyReturn = monthlyBase > 0 ? (monthlyProfit / monthlyBase) * 100 : 0;
+
       setSummary({
         ...calcedSummary,
         currMonthValue,
         totalInvested,
         cumulativeProfit,
         cumulativeReturn,
+        annualProfit,
+        annualReturn,
+        monthlyProfit,
+        monthlyReturn,
         dailyProfit,
         dailyReturn,
       });
@@ -235,7 +259,7 @@ export default function TabletPage() {
               return (
                 <>
                   <p style={{ fontSize: 13, color: pos(cur.profit), margin: 0 }}>{cur.rate >= 0 ? '+' : ''}{cur.rate.toFixed(1)}%</p>
-                  <p style={{ fontSize: 20, fontWeight: 600, color: pos(cur.profit), margin: '2px 0 0' }}>{cur.profit >= 0 ? '+' : ''}{formatWFull(cur.profit)}</p>
+                  <p style={{ fontSize: 20, fontWeight: 600, color: pos(cur.profit), margin: '2px 0 0' }}>{cur.profit >= 0 ? '+' : ''}{formatWFull(Math.round(cur.profit))}</p>
                 </>
               );
             })()}
