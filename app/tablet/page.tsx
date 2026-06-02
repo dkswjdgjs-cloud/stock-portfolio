@@ -178,7 +178,7 @@ export default function TabletPage() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#f8fafc', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
 
       {/* 전체 상단 헤더 */}
-      <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '12px 20px', flexShrink: 0 }}>
+      <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '10px 20px', flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 12, color: '#9ca3af', letterSpacing: '0.08em' }}>WEALTHFLOW</span>
@@ -188,17 +188,17 @@ export default function TabletPage() {
             </div>
             <button onClick={loadAll} style={{ background: '#f3f4f6', border: 'none', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontSize: 14 }}>🔄</button>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>누적 수익금</p>
-            <p style={{ fontSize: 13, color: '#E24B4A', margin: 0 }}>{pct(holdings.reduce((s,h) => s+(h.return_rate||0)*h.valuation, 0) / Math.max(holdings.reduce((s,h) => s+h.valuation, 0), 1))}</p>
-            <p style={{ fontSize: 18, fontWeight: 600, color: '#E24B4A', margin: '2px 0 0' }}>
-              +{formatWFull(holdings.reduce((s,h) => s+h.profit, 0))}
-            </p>
-          </div>
+          <div style={{ fontSize: 11, color: '#9ca3af' }}>누적 수익금</div>
         </div>
-        <div>
-          <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>현재 평가액</p>
-          <p style={{ fontSize: 26, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>현재 평가액</p>
+            <p style={{ fontSize: 24, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: 13, color: '#E24B4A', margin: 0 }}>{pct(holdings.reduce((s,h) => s+(h.return_rate||0)*h.valuation, 0) / Math.max(holdings.reduce((s,h) => s+h.valuation, 0), 1))}</p>
+            <p style={{ fontSize: 20, fontWeight: 600, color: '#E24B4A', margin: '2px 0 0' }}>+{formatWFull(holdings.reduce((s,h) => s+h.profit, 0))}</p>
+          </div>
         </div>
       </div>
 
@@ -206,26 +206,26 @@ export default function TabletPage() {
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
       {/* 왼쪽 패널 */}
-      <div style={{ width: 400, borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', background: 'white', flexShrink: 0 }}>
+      <div style={{ width: 400, display: 'flex', flexDirection: 'column', flexShrink: 0, padding: '8px', gap: 4 }}>
 
         {/* 계좌 필터 */}
-        <div style={{ padding: '10px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 18, padding: 2, flexShrink: 0 }}>
+        <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, background: 'white', borderRadius: 10, border: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 16, padding: 2, flexShrink: 0 }}>
             {(['시세', '평가'] as const).map(m => (
               <button key={m} onClick={() => setViewMode(m)}
-                style={{ fontSize: 12, padding: '4px 12px', borderRadius: 16, border: 'none', cursor: 'pointer',
+                style={{ fontSize: 11, padding: '3px 10px', borderRadius: 14, border: 'none', cursor: 'pointer',
                   background: viewMode === m ? '#111827' : 'transparent',
                   color: viewMode === m ? 'white' : '#9ca3af', fontWeight: viewMode === m ? 600 : 500 }}>{m}</button>
             ))}
           </div>
           <select value={accountFilter} onChange={e => handleAccountFilter(e.target.value)}
-            style={{ flex: 1, fontSize: 13, border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 10px', color: '#111827', background: 'white', outline: 'none' }}>
+            style={{ flex: 1, fontSize: 12, border: '1px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: '#111827', background: 'white', outline: 'none' }}>
             {ACCOUNTS.map(a => <option key={a}>{a}</option>)}
           </select>
         </div>
 
         {/* 종목 리스트 */}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', background: 'white', borderRadius: 10, border: '1px solid #e5e7eb' }}>
           {holdings.map((h, i) => {
             const ic = getIcon(h.ticker, h.stock_name);
             const isSelected = selectedHolding?.ticker === h.ticker;
@@ -286,11 +286,11 @@ export default function TabletPage() {
 
 
       {/* 오른쪽 패널 */}
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '0 8px 0 0' }}>
         {selectedHolding ? (
           <>
             {/* 상단 블럭 - 종목헤더 + 차트 + 종목정보 */}
-            <div style={{ margin: '8px 8px 4px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+            <div style={{ margin: '8px 0 4px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
               {/* 종목 헤더 */}
               <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -395,7 +395,7 @@ export default function TabletPage() {
             </div>
             </div>
             {/* 거래 내역 - 흰색 박스 */}
-            <div style={{ margin: '0 8px 8px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px 24px' }}>
+            <div style={{ margin: '0 0 8px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '14px 18px' }}>
               <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 12px' }}>
                 {selectedHolding.stock_name} 거래 내역
                 {accountFilter !== '전체' && ` · ${accountFilter}`}
@@ -437,7 +437,7 @@ export default function TabletPage() {
       </div>{/* 가운데 영역 끝 */}
 
       {/* 전체 하단 합계 */}
-      <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', background: 'white', flexShrink: 0 }}>
+      <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', background: 'white', flexShrink: 0, marginTop: 'auto' }}>
         <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 4px' }}>선택 합계 · {holdings.length}종목 + 현금</p>
         <p style={{ fontSize: 18, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
       </div>
