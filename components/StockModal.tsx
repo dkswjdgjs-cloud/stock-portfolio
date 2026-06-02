@@ -18,7 +18,7 @@ const TABS = [
   { key: 'price', label: '시세', icon: <TrendingUp className="w-3.5 h-3.5" /> },
   { key: 'info', label: '종목정보', icon: <Info className="w-3.5 h-3.5" /> },
   { key: 'news', label: '뉴스·공시', icon: <Newspaper className="w-3.5 h-3.5" /> },
-  { key: 'ai', label: 'AI 분석', icon: <span className="text-xs">✦</span> },
+
 ];
 
 const PERIODS = [
@@ -37,9 +37,9 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
   const [isEtf, setIsEtf] = useState(false);
   const [etfComponents, setEtfComponents] = useState<any[]>([]);
   const [infoLoading, setInfoLoading] = useState(false);
-  const [aiAnalysis, setAiAnalysis] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState('');
+  const [newsText, setNewsText] = useState('');
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [newsError, setNewsError] = useState('');
 
   const isPos = (v: number) => v >= 0;
 
@@ -79,6 +79,30 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
       })
       .finally(() => setInfoLoading(false));
   }, [holding, activeTab]);
+
+  useEffect(() => {
+    if (!holding || activeTab !== 'news') return;
+    if (newsText) return;
+    setNewsLoading(true);
+    setNewsError('');
+    fetch('/api/ai-analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        stockName: holding.stock_name,
+        ticker: holding.ticker,
+        market: holding.currency === 'USD' ? 'US' : 'KR',
+      }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) setNewsError(data.error);
+        else setNewsText(data.news || '');
+      })
+      .catch(() => setNewsError('뉴스를 가져오는 중 오류가 발생했습니다'))
+      .finally(() => setNewsLoading(false));
+  }, [holding, activeTab]);
+
 
 
   if (!holding) return null;
@@ -367,120 +391,40 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
           {/* 뉴스 탭 */}
           {activeTab === 'news' && (
             <div className="p-6" style={{minHeight: '420px'}}>
-              {holding.currency === 'USD' ? (
-                <div className="flex flex-col items-center justify-center h-48 text-[#999999]">
-                  <Newspaper className="w-8 h-8 mb-3 opacity-30" />
-                  <p className="text-sm">해외 종목은 뉴스를 제공하지 않습니다</p>
+              {newsLoading ? (
+                <div className="flex flex-col items-center justify-center h-48 gap-3 text-[#999999]">
+                  <Newspaper className="w-8 h-8 opacity-30 animate-pulse" />
+                  <p className="text-sm">최신 뉴스 검색 중...</p>
+                  <p className="text-xs">Google Search로 실시간 검색 중입니다</p>
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-48 text-[#999999]">
-                  <Newspaper className="w-8 h-8 mb-3 opacity-30" />
-                  <p className="text-sm">뉴스 기능은 준비 중입니다</p>
+              ) : newsError ? (
+                <div className="flex flex-col items-center justify-center h-48 gap-3 text-[#999999]">
+                  <p className="text-sm text-red-500">{newsError}</p>
+                  <button onClick={() => { setNewsText(''); setNewsError(''); setNewsLoading(true);
+                    fetch('/api/ai-analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ stockName: holding.stock_name, ticker: holding.ticker, market: holding.currency === 'USD' ? 'US' : 'KR' }) })
+                      .then(r => r.json()).then(d => setNewsText(d.news || '')).catch(() => setNewsError('오류')).finally(() => setNewsLoading(false));
+                  }} className="text-xs border border-gray-200 rounded px-3 py-1.5 hover:bg-gray-50">다시 시도</button>
                 </div>
-              )}
+              ) : newsText ? (
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-sm font-medium text-[#1a1a1a]">최신 뉴스</span>
+                    <button onClick={() => { setNewsText(''); }}
+                      className="text-xs text-[#999999] border border-gray-200 rounded px-2 py-1 hover:text-[#1a1a1a]">새로고침</button>
+                  </div>
+                  <div className="text-sm text-[#1a1a1a] leading-relaxed whitespace-pre-wrap overflow-y-auto"
+                    style={{maxHeight: '380px'}}>
+                    {newsText}
+                  </div>
+                  <p className="text-xs text-[#999999] mt-4 pt-3 border-t border-gray-200">
+                    Google Search 기반 실시간 뉴스 · Gemini AI 요약
+                  </p>
+                </div>
+              ) : null}
             </div>
           )}
 
-          {/* AI 분석 탭 */}
-          {activeTab === 'ai' && (
-            <div className="flex" style={{minHeight: '420px'}}>
-              <div className="flex-1 p-6 border-r border-gray-200">
-                {!aiAnalysis && !aiLoading && (
-                  <div className="flex flex-col items-center justify-center h-64 gap-4">
-                    <span className="text-5xl opacity-20">✦</span>
-                    <div className="text-sm font-medium text-[#1a1a1a]">AI 투자 분석</div>
-                    <div className="text-sm text-[#999999] text-center leading-relaxed max-w-xs">
-                      Google Search 기반 실시간 정보를 검색하여<br/>밸류에이션·업황·리스크·기회 요인을 분석합니다
-                    </div>
-                    <div className="text-xs text-[#999999] bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
-                      분석 데이터: 재무지표 · 최신 뉴스 · 업황 동향 · 보유 현황
-                    </div>
-                    {aiError && <p className="text-sm text-red-500">{aiError}</p>}
-                    <button
-                      onClick={async () => {
-                        setAiLoading(true);
-                        setAiError('');
-                        setAiAnalysis('');
-                        try {
-                          const res = await fetch('/api/ai-analyze', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              stockName: holding.stock_name,
-                              ticker: holding.ticker,
-                              market: holding.currency === 'USD' ? 'US' : 'KR',
-                              info: stockInfo,
-                              holding: {
-                                quantity: holding.quantity,
-                                avg_price: holding.avg_price,
-                                curr_price: holding.curr_price,
-                                return_rate: holding.return_rate,
-                              },
-                            }),
-                          });
-                          const data = await res.json();
-                          if (data.error) setAiError(data.error);
-                          else setAiAnalysis(data.analysis);
-                        } catch {
-                          setAiError('분석 중 오류가 발생했습니다');
-                        } finally {
-                          setAiLoading(false);
-                        }
-                      }}
-                      className="mt-2 px-6 py-2 text-sm font-medium bg-[#1a1a1a] text-white rounded-lg hover:bg-[#333333] transition-colors">
-                      ✦ 분석 실행
-                    </button>
-                  </div>
-                )}
-                {aiLoading && (
-                  <div className="flex flex-col items-center justify-center h-64 gap-4">
-                    <span className="text-4xl animate-pulse">✦</span>
-                    <p className="text-sm text-[#999999]">Google Search로 최신 정보 검색 중...</p>
-                    <p className="text-xs text-[#999999]">30초~1분 정도 소요됩니다</p>
-                  </div>
-                )}
-                {aiAnalysis && !aiLoading && (
-                  <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-sm font-medium text-[#1a1a1a]">✦ AI 분석 결과</span>
-                      <button
-                        onClick={() => { setAiAnalysis(''); setAiError(''); }}
-                        className="text-xs text-[#999999] border border-gray-200 rounded px-2 py-1 hover:text-[#1a1a1a]">
-                        재분석
-                      </button>
-                    </div>
-                    <div className="text-sm text-[#1a1a1a] leading-relaxed whitespace-pre-wrap overflow-y-auto"
-                      style={{maxHeight: '360px'}}>
-                      {aiAnalysis}
-                    </div>
-                    <p className="text-xs text-[#999999] mt-4 pt-3 border-t border-gray-200">
-                      ※ AI 분석은 참고용이며 투자 권유가 아닙니다. 최종 투자 결정은 본인 판단에 따라 하세요.
-                    </p>
-                  </div>
-                )}
-              </div>
-              <div className="w-56 p-6 flex-shrink-0">
-                <div className="text-xs text-[#999999] tracking-wider mb-4">분석에 사용할 데이터</div>
-                <div className="space-y-2">
-                  {[
-                    { label: '현재가', value: formatCurrency(holding.curr_price, holding.currency) },
-                    { label: '수익률', value: formatPercent(holding.return_rate) },
-                    { label: '시가총액', value: stockInfo?.mktCap || '-' },
-                    { label: 'PER', value: stockInfo?.per || '-' },
-                    { label: 'PBR', value: stockInfo?.pbr || '-' },
-                    { label: 'ROE', value: stockInfo?.roe || '-' },
-                    { label: '부채비율', value: stockInfo?.debtRate || '-' },
-                    { label: '매출성장률', value: stockInfo?.salesGrowth || '-' },
-                  ].map(item => (
-                    <div key={item.label} className="flex justify-between items-center text-xs">
-                      <span className="text-[#999999]">{item.label}</span>
-                      <span className="text-[#1a1a1a]">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
 
         </div>
       </div>
