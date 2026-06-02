@@ -280,15 +280,10 @@ export default function TabletPage() {
           )}
         </div>
 
-      </div>{/* 가운데 영역 끝 */}
-
-      {/* 전체 하단 합계 */}
-      <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', background: 'white', flexShrink: 0 }}>
-        <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 4px' }}>선택 합계 · {holdings.length}종목 + 현금</p>
-        <p style={{ fontSize: 18, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
-      </div>
-
       </div>{/* 왼쪽 패널 끝 */}
+
+
+
 
       {/* 오른쪽 패널 */}
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -441,6 +436,13 @@ export default function TabletPage() {
             <p>종목을 선택해주세요</p>
           </div>
         )}
+      </div>
+      </div>{/* 가운데 영역 끝 */}
+
+      {/* 전체 하단 합계 */}
+      <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', background: 'white', flexShrink: 0 }}>
+        <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 4px' }}>선택 합계 · {holdings.length}종목 + 현금</p>
+        <p style={{ fontSize: 18, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
       </div>
     </div>
   );
