@@ -47,6 +47,9 @@ export default function TabletPage() {
   const [chartLoading, setChartLoading] = useState(false);
   const [period, setPeriod] = useState('1M');
   const [stockInfo, setStockInfo] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const touchStartX = useRef<number>(0);
+  const [targetValue, setTargetValue] = useState(200000000);
   const [viewMode, setViewMode] = useState<'시세' | '평가'>('시세');
   const [profitIdx, setProfitIdx] = useState(0);
   const PROFIT_LABELS = ['누적', '연', '월', '일'];
