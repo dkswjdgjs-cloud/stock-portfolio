@@ -397,7 +397,7 @@ export default function TabletPage() {
               </div>
             </div>
 
-            </div></div>
+            </div>
             {/* 거래 내역 - 흰색 박스 */}
             <div style={{ margin: '0 8px 8px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px 24px' }}>
               <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 12px' }}>
