@@ -41,6 +41,7 @@ export default function TabletPage() {
   const [accountFilter, setAccountFilter] = useState('전체');
   const [selectedHolding, setSelectedHolding] = useState<AccountHolding | null>(null);
   const [summary, setSummary] = useState<any>({});
+  const [snapshots, setSnapshots] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [period, setPeriod] = useState('1M');
@@ -99,12 +100,21 @@ export default function TabletPage() {
       const [transRes, incomeRes, balanceRes] = await Promise.all([
         fetch('/api/transactions'), fetch('/api/cash-income'), fetch('/api/cash-balance'),
       ]);
-      const [transData, incomeData, balanceData] = await Promise.all([
-        transRes.json(), incomeRes.json(), balanceRes.json(),
+      const [transRes2, snapRes] = await Promise.all([
+        fetch('/api/snapshot'),
+        Promise.resolve(null),
+      ]);
+      const [transData, incomeData, balanceData, snapshotData] = await Promise.all([
+        transRes.json(), incomeRes.json(), balanceRes.json(), fetch('/api/snapshot').then(r => r.json()),
       ]);
       setTransactions(transData);
       setCashIncomes(incomeData);
       setCashBalances(balanceData);
+      setSnapshots(snapshotData || []);
+      const calcedSummary = calcSummary(transData, snapshotData || []);
+      const cashIncomeTotal = incomeData.reduce((s: number, c: any) => s + c.amount, 0);
+      calcedSummary.cumulativeProfit += cashIncomeTotal;
+      setSummary(calcedSummary);
       const base = calcHoldings(transData, '전체');
       const withPrices = await fetchPrices(base);
       allHoldings.current = withPrices;
@@ -198,17 +208,21 @@ export default function TabletPage() {
             <p style={{ fontSize: 24, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
           </div>
           <div style={{ textAlign: 'right', cursor: 'pointer', userSelect: 'none' }} onClick={() => setProfitIdx(i => (i + 1) % 4)}>
-            <p style={{ fontSize: 13, color: '#E24B4A', margin: 0 }}>
-              {(() => {
-                const totalP = holdings.reduce((s,h) => s+h.profit, 0);
-                const totalV = holdings.reduce((s,h) => s+h.valuation, 0);
-                const r = totalV > 0 ? (totalP / totalV * 100) : 0;
-                return `+${r.toFixed(1)}%`;
-              })()}
-            </p>
-            <p style={{ fontSize: 20, fontWeight: 600, color: '#E24B4A', margin: '2px 0 0' }}>
-              +{formatWFull(holdings.reduce((s,h) => s+h.profit, 0))}
-            </p>
+            {(() => {
+              const profits = [
+                { profit: summary.cumulativeProfit || 0, rate: summary.cumulativeReturn || 0 },
+                { profit: summary.annualProfit || 0, rate: summary.annualReturn || 0 },
+                { profit: summary.monthlyProfit || 0, rate: summary.monthlyReturn || 0 },
+                { profit: summary.dailyProfit || 0, rate: summary.dailyReturn || 0 },
+              ];
+              const cur = profits[profitIdx];
+              return (
+                <>
+                  <p style={{ fontSize: 13, color: pos(cur.profit), margin: 0 }}>{cur.rate >= 0 ? '+' : ''}{cur.rate.toFixed(1)}%</p>
+                  <p style={{ fontSize: 20, fontWeight: 600, color: pos(cur.profit), margin: '2px 0 0' }}>{cur.profit >= 0 ? '+' : ''}{formatWFull(cur.profit)}</p>
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>
