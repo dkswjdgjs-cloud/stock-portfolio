@@ -175,37 +175,38 @@ export default function TabletPage() {
   const formatDate = (d: string) => d ? `${d.slice(4,6)}.${d.slice(6,8)}` : '';
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f8fafc', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#f8fafc', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
+
+      {/* 전체 상단 헤더 */}
+      <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '12px 20px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 12, color: '#9ca3af', letterSpacing: '0.08em' }}>WEALTHFLOW</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#f0fdf4', borderRadius: 20, padding: '3px 10px' }}>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981' }} />
+              <span style={{ color: '#10b981', fontSize: 9 }}>LIVE</span>
+            </div>
+            <button onClick={loadAll} style={{ background: '#f3f4f6', border: 'none', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontSize: 14 }}>🔄</button>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>누적 수익금</p>
+            <p style={{ fontSize: 13, color: '#E24B4A', margin: 0 }}>{pct(holdings.reduce((s,h) => s+(h.return_rate||0)*h.valuation, 0) / Math.max(holdings.reduce((s,h) => s+h.valuation, 0), 1))}</p>
+            <p style={{ fontSize: 18, fontWeight: 600, color: '#E24B4A', margin: '2px 0 0' }}>
+              +{formatWFull(holdings.reduce((s,h) => s+h.profit, 0))}
+            </p>
+          </div>
+        </div>
+        <div>
+          <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>현재 평가액</p>
+          <p style={{ fontSize: 26, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
+        </div>
+      </div>
+
+      {/* 가운데 영역 */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
       {/* 왼쪽 패널 */}
       <div style={{ width: 400, borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', background: 'white', flexShrink: 0 }}>
-
-        {/* 헤더 */}
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 12, color: '#9ca3af', letterSpacing: '0.08em' }}>WEALTHFLOW</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#f0fdf4', borderRadius: 20, padding: '3px 10px' }}>
-                <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981' }} />
-                <span style={{ color: '#10b981', fontSize: 9 }}>LIVE</span>
-              </div>
-              <button onClick={loadAll} style={{ background: '#f3f4f6', border: 'none', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontSize: 14 }}>🔄</button>
-            </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <div>
-              <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>현재 평가액</p>
-              <p style={{ fontSize: 26, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>누적 수익금</p>
-              <p style={{ fontSize: 13, color: '#E24B4A', margin: 0 }}>+136.95%</p>
-              <p style={{ fontSize: 18, fontWeight: 600, color: '#E24B4A', margin: '2px 0 0' }}>
-                {formatWFull(holdings.reduce((s,h) => s+h.profit, 0))}
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* 계좌 필터 */}
         <div style={{ padding: '10px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -279,12 +280,15 @@ export default function TabletPage() {
           )}
         </div>
 
-        {/* 하단 합계 */}
-        <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}>
-          <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 4px' }}>선택 합계 · {holdings.length}종목 + 현금</p>
-          <p style={{ fontSize: 18, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
-        </div>
+      </div>{/* 가운데 영역 끝 */}
+
+      {/* 전체 하단 합계 */}
+      <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', background: 'white', flexShrink: 0 }}>
+        <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 4px' }}>선택 합계 · {holdings.length}종목 + 현금</p>
+        <p style={{ fontSize: 18, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
       </div>
+
+      </div>{/* 왼쪽 패널 끝 */}
 
       {/* 오른쪽 패널 */}
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
