@@ -286,21 +286,21 @@ export default function TabletPage() {
 
 
       {/* 오른쪽 패널 */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '8px 8px 8px 0', gap: 4, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '8px 8px 8px 0', gap: 8, overflow: 'hidden' }}>
         {selectedHolding ? (
           <>
-            {/* 상단 블럭 - 종목헤더 + 차트 + 종목정보 */}
+            {/* 상단 블럭 - flex:1 */}
             <div style={{ flex: 1, overflow: 'hidden', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
               {/* 종목 헤더 */}
-              <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <span style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{selectedHolding.stock_name}</span>
                   <span style={{ fontSize: 11, color: '#9ca3af', background: '#f3f4f6', padding: '2px 8px', borderRadius: 6 }}>{selectedHolding.ticker} · {selectedHolding.currency === 'USD' ? '해외' : '국내'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                      <span style={{ fontSize: 26, fontWeight: 600, color: '#111827' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                      <span style={{ fontSize: 24, fontWeight: 600, color: '#111827' }}>
                         {selectedHolding.currency === 'USD' ? `$${selectedHolding.curr_price.toFixed(2)}` : `${selectedHolding.curr_price.toLocaleString('ko-KR')}원`}
                       </span>
                       <span style={{ fontSize: 13, color: pos(selectedHolding.daily_change), fontWeight: 500 }}>
@@ -310,71 +310,72 @@ export default function TabletPage() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>평가손익</p>
-                    <p style={{ fontSize: 26, fontWeight: 600, color: pos(selectedHolding.profit), margin: 0 }}>{pct(selectedHolding.return_rate)}</p>
-                    <p style={{ fontSize: 13, color: pos(selectedHolding.profit), margin: '2px 0 0' }}>{selectedHolding.profit >= 0 ? '+' : ''}{formatWFull(selectedHolding.profit)}</p>
+                    <p style={{ fontSize: 24, fontWeight: 600, color: pos(selectedHolding.profit), margin: 0 }}>{pct(selectedHolding.return_rate)}</p>
+                    <p style={{ fontSize: 12, color: pos(selectedHolding.profit), margin: '2px 0 0' }}>{selectedHolding.profit >= 0 ? '+' : ''}{formatWFull(selectedHolding.profit)}</p>
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, flex: 1, overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
-              {/* 차트 */}
-                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                  {PERIODS.map(p => (
-                    <button key={p.value} onClick={() => setPeriod(p.value)}
-                      style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6,
-                        border: period === p.value ? '1px solid #3b82f6' : '1px solid #e5e7eb',
-                        background: period === p.value ? '#eff6ff' : 'white',
-                        color: period === p.value ? '#3b82f6' : '#6b7280', cursor: 'pointer' }}>
-                      {p.label}
-                    </button>
-                  ))}
+              {/* 차트 + 종목정보 - flex:1 */}
+              <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', flex: 1, overflow: 'hidden' }}>
+                {/* 왼쪽: 기간버튼 + 차트 + 시가고가저가거래량 */}
+                <div style={{ padding: '12px 16px', borderRight: '1px solid #f3f4f6', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexShrink: 0 }}>
+                    {PERIODS.map(p => (
+                      <button key={p.value} onClick={() => setPeriod(p.value)}
+                        style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6,
+                          border: period === p.value ? '1px solid #3b82f6' : '1px solid #e5e7eb',
+                          background: period === p.value ? '#eff6ff' : 'white',
+                          color: period === p.value ? '#3b82f6' : '#6b7280', cursor: 'pointer' }}>
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ flex: 1, minHeight: 0 }}>
+                    {chartLoading ? (
+                      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 13 }}>로딩 중...</div>
+                    ) : chartData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                          <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#9ca3af' }}
+                            tickFormatter={formatDate} interval={Math.floor(chartData.length / 4)} />
+                          <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} width={45}
+                            domain={[minClose * 0.98, maxClose * 1.02]}
+                            tickFormatter={v => selectedHolding.currency === 'USD' ? `$${v.toFixed(0)}` : `${(v/1000).toFixed(0)}k`} />
+                          <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '8px' }}
+                            formatter={(v: any) => [selectedHolding.currency === 'USD' ? `$${Number(v).toFixed(2)}` : `${Number(v).toLocaleString('ko-KR')}원`, '종가']}
+                            labelFormatter={(d: any) => String(d)} />
+                          <Line type="monotone" dataKey="close" stroke={isChartPos ? '#E24B4A' : '#378ADD'}
+                            strokeWidth={2} dot={false} isAnimationActive={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 13 }}>데이터 없음</div>
+                    )}
+                  </div>
+                  {/* 시가/고가/저가/거래량 */}
+                  {chartData.length > 0 && (() => {
+                    const last = chartData[chartData.length - 1];
+                    return (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginTop: 8, flexShrink: 0 }}>
+                        {[
+                          { label: '시가', value: last.open?.toLocaleString('ko-KR') },
+                          { label: '고가', value: last.high?.toLocaleString('ko-KR') },
+                          { label: '저가', value: last.low?.toLocaleString('ko-KR') },
+                          { label: '거래량', value: last.volume?.toLocaleString('ko-KR') },
+                        ].map(item => (
+                          <div key={item.label} style={{ background: '#f9fafb', borderRadius: 8, padding: '6px 8px' }}>
+                            <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 2px' }}>{item.label}</p>
+                            <p style={{ fontSize: 12, fontWeight: 500, color: '#111827', margin: 0 }}>{item.value || '-'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
-                {chartLoading ? (
-                  <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 13 }}>로딩 중...</div>
-                ) : chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={160}>
-                    <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9ca3af' }}
-                        tickFormatter={formatDate} interval={Math.floor(chartData.length / 4)} />
-                      <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }}
-                        domain={[minClose * 0.98, maxClose * 1.02]}
-                        tickFormatter={v => selectedHolding.currency === 'USD' ? `$${v.toFixed(0)}` : `${(v/1000).toFixed(0)}k`} />
-                      <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '8px' }}
-                        formatter={(v: any) => [selectedHolding.currency === 'USD' ? `$${Number(v).toFixed(2)}` : `${Number(v).toLocaleString('ko-KR')}원`, '종가']}
-                        labelFormatter={(d: any) => String(d)} />
-                      <Line type="monotone" dataKey="close" stroke={isChartPos ? '#E24B4A' : '#378ADD'}
-                        strokeWidth={2} dot={false} isAnimationActive={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 13 }}>데이터 없음</div>
-                )}
-                {/* 시가/고가/저가/거래량 */}
-                {chartData.length > 0 && (() => {
-                  const last = chartData[chartData.length - 1];
-                  return (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginTop: 12 }}>
-                      {[
-                        { label: '시가', value: last.open?.toLocaleString('ko-KR') },
-                        { label: '고가', value: last.high?.toLocaleString('ko-KR') },
-                        { label: '저가', value: last.low?.toLocaleString('ko-KR') },
-                        { label: '거래량', value: last.volume?.toLocaleString('ko-KR') },
-                      ].map(item => (
-                        <div key={item.label} style={{ background: '#f9fafb', borderRadius: 8, padding: '8px 10px' }}>
-                          <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 4px' }}>{item.label}</p>
-                          <p style={{ fontSize: 13, fontWeight: 500, color: '#111827', margin: 0 }}>{item.value || '-'}</p>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* 종목 정보 */}
-              <div style={{ padding: '12px 16px', overflowY: 'auto' }}>
-                <p style={{ fontSize: 12, color: '#9ca3af', marginBottom: 12, margin: '0 0 12px' }}>종목 정보</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {/* 오른쪽: 종목정보 리스트 */}
+                <div style={{ padding: '12px 16px', overflowY: 'auto' }}>
+                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 8px', fontWeight: 500 }}>종목 정보</p>
                   {[
                     { label: '보유 수량', value: `${selectedHolding.quantity}주` },
                     { label: '평균 단가', value: selectedHolding.currency === 'USD' ? `$${selectedHolding.avg_price.toFixed(2)}` : `${selectedHolding.avg_price.toLocaleString('ko-KR')}원` },
@@ -385,47 +386,46 @@ export default function TabletPage() {
                     { label: 'EPS', value: stockInfo?.eps || '-' },
                     { label: '거래량(평균)', value: stockInfo?.avgVol || '-' },
                   ].map(item => (
-                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
-                      <span style={{ fontSize: 13, color: '#9ca3af' }}>{item.label}</span>
-                      <span style={{ fontSize: 13, color: '#111827', fontWeight: 500 }}>{item.value}</span>
+                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #f3f4f6' }}>
+                      <span style={{ fontSize: 12, color: '#9ca3af' }}>{item.label}</span>
+                      <span style={{ fontSize: 12, color: '#111827', fontWeight: 500 }}>{item.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-            </div>
-            {/* 거래 내역 - 흰색 박스 */}
-            <div style={{ flexShrink: 0, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '12px 18px' }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 12px' }}>
+            {/* 거래 내역 - 고정 높이 박스 */}
+            <div style={{ height: 220, flexShrink: 0, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '12px 16px', display: 'flex', flexDirection: 'column' }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: '0 0 8px', flexShrink: 0 }}>
                 {selectedHolding.stock_name} 거래 내역
                 {accountFilter !== '전체' && ` · ${accountFilter}`}
               </p>
               {stockTransactions.length === 0 ? (
-                <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center', padding: '16px 0' }}>거래 내역이 없습니다</p>
+                <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', padding: '16px 0' }}>거래 내역이 없습니다</p>
               ) : (
-                <div style={{ maxHeight: 200, overflowY: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-                      {['날짜', '계좌', '구분', '수량', '단가', '손익', '수익률'].map(h => (
-                        <th key={h} style={{ textAlign: 'left', padding: '8px 6px', color: '#9ca3af', fontWeight: 500 }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stockTransactions.map((t, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                        <td style={{ padding: '8px 6px', color: '#6b7280' }}>{t.trade_date}</td>
-                        <td style={{ padding: '8px 6px', color: '#6b7280' }}>{t.account}</td>
-                        <td style={{ padding: '8px 6px', color: t.trade_type === '매수' ? '#E24B4A' : '#378ADD', fontWeight: 500 }}>{t.trade_type}</td>
-                        <td style={{ padding: '8px 6px', color: '#111827' }}>{t.quantity}주</td>
-                        <td style={{ padding: '8px 6px', color: '#111827' }}>{t.trade_type === '매수' ? `${(t.buy_price || 0).toLocaleString('ko-KR')}원` : `${(t.sell_price || 0).toLocaleString('ko-KR')}원`}</td>
-                        <td style={{ padding: '8px 6px', color: pos(t.profit_loss || 0) }}>{t.profit_loss ? formatWFull(t.profit_loss) : '-'}</td>
-                        <td style={{ padding: '8px 6px', color: pos(t.profit_rate || 0) }}>{t.profit_rate ? pct(t.profit_rate) : '-'}</td>
+                <div style={{ overflowY: 'auto', flex: 1 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                    <thead style={{ position: 'sticky', top: 0, background: 'white' }}>
+                      <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                        {['날짜', '계좌', '구분', '수량', '단가', '손익', '수익률'].map(h => (
+                          <th key={h} style={{ textAlign: 'left', padding: '6px 6px', color: '#9ca3af', fontWeight: 500 }}>{h}</th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {stockTransactions.map((t, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                          <td style={{ padding: '6px 6px', color: '#6b7280' }}>{t.trade_date}</td>
+                          <td style={{ padding: '6px 6px', color: '#6b7280' }}>{t.account}</td>
+                          <td style={{ padding: '6px 6px', color: t.trade_type === '매수' ? '#E24B4A' : '#378ADD', fontWeight: 500 }}>{t.trade_type}</td>
+                          <td style={{ padding: '6px 6px', color: '#111827' }}>{t.quantity}주</td>
+                          <td style={{ padding: '6px 6px', color: '#111827' }}>{t.trade_type === '매수' ? `${(t.buy_price || 0).toLocaleString('ko-KR')}원` : `${(t.sell_price || 0).toLocaleString('ko-KR')}원`}</td>
+                          <td style={{ padding: '6px 6px', color: pos(t.profit_loss || 0) }}>{t.profit_loss ? formatWFull(t.profit_loss) : '-'}</td>
+                          <td style={{ padding: '6px 6px', color: pos(t.profit_rate || 0) }}>{t.profit_rate ? pct(t.profit_rate) : '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
