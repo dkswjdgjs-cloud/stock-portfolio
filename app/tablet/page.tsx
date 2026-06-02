@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { AccountHolding, Transaction, CashIncome, CashBalance } from '@/types';
 import { calcHoldings } from '@/lib/calcHoldings';
 import { calcSummary } from '@/lib/dataService';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
 
 const COLORS = ['#6366f1','#22d3ee','#3b82f6','#a78bfa','#2dd4bf','#f59e0b','#ec4899','#10b981'];
 const ACCOUNTS = ['전체', 'ISA', 'IRP', '연금저축', 'DC형 연금', '일반직투1', '일반직투2'];
@@ -53,6 +53,10 @@ export default function TabletPage() {
   const [viewMode, setViewMode] = useState<'시세' | '평가'>('시세');
   const [showAccountView, setShowAccountView] = useState(true);
   const [pieFilter, setPieFilter] = useState('종목별');
+  const [profitMode, setProfitMode] = useState('cumulative');
+  const [graphFilter, setGraphFilter] = useState('daily');
+  const [snapshotSearch, setSnapshotSearch] = useState('');
+  const [highlightDate, setHighlightDate] = useState('');
   const [profitIdx, setProfitIdx] = useState(0);
   const PROFIT_LABELS = ['누적', '연', '월', '일'];
   const allHoldings = useRef<AccountHolding[]>([]);
@@ -628,9 +632,166 @@ export default function TabletPage() {
       </div>
           </div>{/* 1페이지 끝 */}
 
-          {/* 2페이지: 종합 내역 */}
-          <div style={{ width: '50%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>
-            <p>준비 중</p>
+          {/* 2페이지: 일일 결산 */}
+          <div style={{ width: '50%', height: '100%', display: 'flex', flexDirection: 'column', padding: '8px', gap: 8, overflow: 'hidden' }}>
+            {/* 그래프 박스 */}
+            <div style={{ flexShrink: 0, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '14px 16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ fontSize: 12, color: '#1a1a1a', fontWeight: 500 }}>성과 추이 MATRIX</span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <select value={profitMode} onChange={e => setProfitMode(e.target.value)}
+                    style={{ fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 6, padding: '3px 8px', color: '#1a1a1a', background: 'white', outline: 'none' }}>
+                    <option value="cumulative">누적</option>
+                    <option value="yearly">년도별</option>
+                    <option value="monthly">월별</option>
+                    <option value="daily">일별</option>
+                  </select>
+                  {profitMode === 'cumulative' && (
+                    <select value={graphFilter} onChange={e => setGraphFilter(e.target.value)}
+                      style={{ fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 6, padding: '3px 8px', color: '#1a1a1a', background: 'white', outline: 'none' }}>
+                      <option value="daily">일별</option>
+                      <option value="monthly">월별</option>
+                      <option value="quarterly">분기별</option>
+                      <option value="yearly">년도별</option>
+                    </select>
+                  )}
+                </div>
+              </div>
+              {(() => {
+                const sorted = [...snapshots].sort((a,b) => a.snapshot_date.localeCompare(b.snapshot_date));
+                const calcProfitData = () => {
+                  if (profitMode === 'yearly') {
+                    const years = [...new Set(sorted.map((s:any) => s.snapshot_date.slice(0,4)))];
+                    return years.map((year:any, yi:number) => {
+                      const yearSnaps = sorted.filter((s:any) => s.snapshot_date.startsWith(year));
+                      const last = yearSnaps[yearSnaps.length-1] as any;
+                      const prevYearSnaps = yi === 0 ? [] : sorted.filter((s:any) => s.snapshot_date.startsWith((years as any)[yi-1]));
+                      const prevLast = prevYearSnaps.length ? prevYearSnaps[prevYearSnaps.length-1] as any : null;
+                      const prevVal = prevLast ? prevLast.total_valuation||0 : 0;
+                      const prevInv = prevLast ? prevLast.total_invested||0 : 0;
+                      const profit = (last.total_valuation||0) - prevVal - ((last.total_invested||0) - prevInv);
+                      return { label: `${year}년`, profit };
+                    });
+                  }
+                  if (profitMode === 'monthly') {
+                    const months = [...new Set(sorted.map((s:any) => s.snapshot_date.slice(0,7)))];
+                    return months.map((month:any, mi:number) => {
+                      const monthSnaps = sorted.filter((s:any) => s.snapshot_date.startsWith(month));
+                      const last = monthSnaps[monthSnaps.length-1] as any;
+                      const prevMonthSnaps = mi === 0 ? [] : sorted.filter((s:any) => s.snapshot_date.startsWith((months as any)[mi-1]));
+                      const prevLast = prevMonthSnaps.length ? prevMonthSnaps[prevMonthSnaps.length-1] as any : null;
+                      const prevVal = prevLast ? prevLast.total_valuation||0 : 0;
+                      const prevInv = prevLast ? prevLast.total_invested||0 : 0;
+                      const profit = (last.total_valuation||0) - prevVal - ((last.total_invested||0) - prevInv);
+                      return { label: month, profit };
+                    });
+                  }
+                  if (profitMode === 'daily') {
+                    return sorted.map((s:any, i:number) => {
+                      const prev = i === 0 ? null : sorted[i-1] as any;
+                      const prevVal = prev ? prev.total_valuation||0 : 0;
+                      const prevInv = prev ? prev.total_invested||0 : 0;
+                      const profit = (s.total_valuation||0) - prevVal - ((s.total_invested||0) - prevInv);
+                      return { label: s.snapshot_date, profit };
+                    });
+                  }
+                  return [];
+                };
+                if (profitMode !== 'cumulative') {
+                  const profitData = calcProfitData();
+                  return (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart data={profitData} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 9 }} interval={profitMode === 'daily' ? 30 : 0} />
+                        <YAxis tick={{ fill: '#64748b', fontSize: 9 }} tickFormatter={(v:any) => `${(v/1000000).toFixed(0)}M`} />
+                        <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4 2" />
+                        <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }}
+                          formatter={(v:any) => [<span style={{ color: Number(v) >= 0 ? '#E24B4A' : '#378ADD' }}>{formatWFull(Number(v))}</span>, '수익금']} />
+                        <Bar dataKey="profit" name="수익금" isAnimationActive={false} fill="#E24B4A" label={false}>
+                          {profitData.map((d:any, i:number) => (
+                            <Cell key={i} fill={d.profit >= 0 ? '#E24B4A' : '#378ADD'} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  );
+                }
+                const filterSnapshots = () => {
+                  if (graphFilter === 'daily') return snapshots;
+                  const map = new Map<string, any>();
+                  snapshots.forEach((s:any) => {
+                    const d = new Date(s.snapshot_date);
+                    let key = '';
+                    if (graphFilter === 'monthly') key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                    else if (graphFilter === 'quarterly') { const q = Math.floor(d.getMonth()/3); key = `${d.getFullYear()}-Q${q+1}`; }
+                    else if (graphFilter === 'yearly') key = `${d.getFullYear()}`;
+                    if (!map.has(key) || s.snapshot_date > map.get(key).snapshot_date) map.set(key, s);
+                  });
+                  return Array.from(map.values()).sort((a,b) => a.snapshot_date.localeCompare(b.snapshot_date));
+                };
+                const filtered = filterSnapshots();
+                const xInterval = graphFilter === 'daily' ? 30 : 0;
+                const xFormatter = (v:string) => {
+                  if (graphFilter === 'yearly') return v?.slice(0,4);
+                  return v?.slice(0,7);
+                };
+                return (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <AreaChart data={filtered} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="snapshot_date" tick={{ fill: '#64748b', fontSize: 9 }} interval={xInterval} tickFormatter={xFormatter} />
+                      <YAxis tick={{ fill: '#64748b', fontSize: 9 }} tickFormatter={(v:any) => `${(v/1000000).toFixed(0)}M`}
+                        domain={[-10000000, (dataMax: number) => Math.ceil(dataMax * 1.05 / 10000000) * 10000000]} />
+                      <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4 2" />
+                      <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }}
+                        formatter={(v:any) => formatWFull(Number(v))} />
+                      <Area isAnimationActive={false} type="monotone" dataKey="total_valuation" name="평가액" stroke="#3b82f6" fill="#3b82f620" strokeWidth={2} />
+                      <Area isAnimationActive={false} type="monotone" dataKey="total_invested" name="투자금" stroke="#10b981" fill="#10b98120" strokeWidth={2} />
+                      <Area isAnimationActive={false} type="monotone" dataKey="total_profit" name="누적수익금" stroke="#f59e0b" fill="#f59e0b20" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                );
+              })()}
+            </div>
+            {/* 결산 데이터 박스 */}
+            <div style={{ flex: 1, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '12px 16px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexShrink: 0 }}>
+                <span style={{ fontSize: 12, color: '#1a1a1a', fontWeight: 500 }}>결산 데이터</span>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <input type="date" value={snapshotSearch}
+                    onChange={e => { setSnapshotSearch(e.target.value); setHighlightDate(e.target.value); }}
+                    style={{ fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 6, padding: '3px 8px', color: '#1a1a1a', outline: 'none' }} />
+                  <button onClick={() => { setSnapshotSearch(''); setHighlightDate(''); }}
+                    style={{ fontSize: 11, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}>초기화</button>
+                </div>
+              </div>
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead style={{ position: 'sticky', top: 0, background: 'white' }}>
+                    <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      {['날짜', '평가액', '누적투자금', '누적수익금'].map(h => (
+                        <th key={h} style={{ textAlign: 'left', padding: '6px 8px', color: '#9ca3af', fontWeight: 500 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...snapshots]
+                      .filter((s:any) => !snapshotSearch || s.snapshot_date.includes(snapshotSearch))
+                      .sort((a:any, b:any) => b.snapshot_date.localeCompare(a.snapshot_date))
+                      .map((s:any, i:number) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                          <td style={{ padding: '6px 8px', color: highlightDate === s.snapshot_date ? '#3b82f6' : '#6b7280', fontWeight: highlightDate === s.snapshot_date ? 600 : 400 }}>{s.snapshot_date}</td>
+                          <td style={{ padding: '6px 8px', color: '#111827' }}>{formatWFull(s.total_valuation || 0)}</td>
+                          <td style={{ padding: '6px 8px', color: '#111827' }}>{formatWFull(s.total_invested || 0)}</td>
+                          <td style={{ padding: '6px 8px', color: pos(s.total_profit || 0) }}>{formatWFull(s.total_profit || 0)}</td>
+                        </tr>
+                      ))
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>{/* 2페이지 끝 */}
 
         </div>{/* 슬라이드 컨테이너 끝 */}
