@@ -106,11 +106,6 @@ export default function Home() {
       setDailySettlement(calcDailySettlement(transData));
 
       const baseHoldingsAll = calcHoldings(transData, '전체');
-      // 현재가 없이 먼저 화면 표시
-      if (accountFilterRef.current === '전체') {
-        setHoldings(applyFilter(baseHoldingsAll, '전체'));
-      }
-      // 현재가 백그라운드 업데이트
       const holdingsAllWithPrices = await fetchPrices(baseHoldingsAll, forceRefresh);
       allHoldingsRef.current = holdingsAllWithPrices;
 
