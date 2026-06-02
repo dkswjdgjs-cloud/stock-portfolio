@@ -183,8 +183,8 @@ export default function TabletPage() {
         {/* 헤더 */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: '#9ca3af', letterSpacing: '0.08em' }}>WEALTHFLOW</span>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 12, color: '#9ca3af', letterSpacing: '0.08em' }}>WEALTHFLOW</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#f0fdf4', borderRadius: 20, padding: '3px 10px' }}>
                 <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981' }} />
                 <span style={{ color: '#10b981', fontSize: 9 }}>LIVE</span>
@@ -192,9 +192,18 @@ export default function TabletPage() {
               <button onClick={loadAll} style={{ background: '#f3f4f6', border: 'none', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontSize: 14 }}>🔄</button>
             </div>
           </div>
-          <div>
-            <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>현재 평가액</p>
-            <p style={{ fontSize: 26, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div>
+              <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>현재 평가액</p>
+              <p style={{ fontSize: 26, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>누적 수익금</p>
+              <p style={{ fontSize: 13, color: '#E24B4A', margin: 0 }}>+136.95%</p>
+              <p style={{ fontSize: 18, fontWeight: 600, color: '#E24B4A', margin: '2px 0 0' }}>
+                {formatWFull(holdings.reduce((s,h) => s+h.profit, 0))}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -237,7 +246,11 @@ export default function TabletPage() {
                         {h.currency === 'USD' ? `${h.curr_price.toFixed(2)}$` : h.curr_price.toLocaleString('ko-KR')}
                       </p>
                       <p style={{ fontSize: 12, color: pos(h.daily_change), margin: '2px 0 0' }}>
-                        {pct((h as any).daily_change_rate || 0)}
+                        {(() => {
+                          const dailyProfit = h.daily_change * h.quantity;
+                          const rate = (h as any).daily_change_rate || 0;
+                          return `${dailyProfit >= 0 ? '+' : ''}${Math.round(dailyProfit).toLocaleString('ko-KR')}원(${pct(rate)})`;
+                        })()}
                       </p>
                     </>
                   ) : (
@@ -303,8 +316,9 @@ export default function TabletPage() {
               </div>
             </div>
 
-            {/* 시세 + 종목정보 */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, background: 'white', borderBottom: '1px solid #e5e7eb' }}>
+            {/* 시세 + 종목정보 - 흰색 박스 하나 */}
+            <div style={{ margin: '8px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
               {/* 차트 */}
               <div style={{ padding: '16px 24px', borderRight: '1px solid #e5e7eb' }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
@@ -383,8 +397,9 @@ export default function TabletPage() {
               </div>
             </div>
 
-            {/* 거래 내역 */}
-            <div style={{ flex: 1, padding: '16px 24px', background: 'white', marginTop: 8 }}>
+            </div></div>
+            {/* 거래 내역 - 흰색 박스 */}
+            <div style={{ margin: '0 8px 8px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px 24px' }}>
               <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 12px' }}>
                 {selectedHolding.stock_name} 거래 내역
                 {accountFilter !== '전체' && ` · ${accountFilter}`}
