@@ -700,7 +700,7 @@ export default function TabletPage() {
                 if (profitMode !== 'cumulative') {
                   const profitData = calcProfitData();
                   return (
-                    <ResponsiveContainer width="100%" height={280}>
+                    <ResponsiveContainer width="100%" height={380}>
                       <BarChart data={profitData} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                         <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 9 }} interval={profitMode === 'daily' ? 30 : 0} />
@@ -737,7 +737,7 @@ export default function TabletPage() {
                   return v?.slice(0,7);
                 };
                 return (
-                  <ResponsiveContainer width="100%" height={280}>
+                  <ResponsiveContainer width="100%" height={380}>
                     <AreaChart data={filtered} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                       <XAxis dataKey="snapshot_date" tick={{ fill: '#64748b', fontSize: 9 }} interval={xInterval} tickFormatter={xFormatter} />
