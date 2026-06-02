@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, startTransition } from 'react';
 import Dashboard from '@/components/Dashboard';
 import { Transaction, AccountHolding, SummaryData, DailySettlement, CashIncome, CashBalance } from '@/types';
 import { calcSummary, calcDailySettlement } from '@/lib/dataService';

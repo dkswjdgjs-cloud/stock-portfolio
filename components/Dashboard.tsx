@@ -271,7 +271,7 @@ export default function Dashboard({
 
 
   return (
-    <div className="min-h-screen bg-gray-50 text-[#1a1a1a] ">
+    <div className="min-h-screen bg-gray-50 text-[#1a1a1a]" style={{transition: "all 0.3s ease"}}>
       {/* 헤더 */}
       <div className="sticky top-0 z-10 bg-white backdrop-blur-sm border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -321,7 +321,7 @@ export default function Dashboard({
               {/* 박스1: 현재 평가액 + 전월 평가액 */}
               <div className="bg-white border border-gray-200 rounded-md p-5">
                 <p className="text-sm text-[#555555] tracking-wider mb-2">현재 평가액</p>
-                <p className="text-3xl font-semibold text-[#1a1a1a]">{formatCurrency(summary.currMonthValue)}</p>
+                <p className="text-3xl font-semibold text-[#1a1a1a]" style={{transition: "all 0.4s ease"}}>{formatCurrency(summary.currMonthValue)}</p>
                 <div className="mt-2 pt-2 border-t border-gray-200">
                   <p className="text-sm text-[#555555]">전월 평가액</p>
                   <p className="text-base text-[#1a1a1a]">{formatCurrency(summary.prevMonthValue)}</p>
