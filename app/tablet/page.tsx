@@ -290,10 +290,10 @@ export default function TabletPage() {
         {selectedHolding ? (
           <>
             {/* 상단 블럭 - flex:1 */}
-            <div style={{ flex: 1, overflow: 'hidden', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flexShrink: 0, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
               {/* 종목 헤더 */}
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <div style={{ padding: '8px 16px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <span style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{selectedHolding.stock_name}</span>
                   <span style={{ fontSize: 11, color: '#9ca3af', background: '#f3f4f6', padding: '2px 8px', borderRadius: 6 }}>{selectedHolding.ticker} · {selectedHolding.currency === 'USD' ? '해외' : '국내'}</span>
                 </div>
@@ -330,7 +330,7 @@ export default function TabletPage() {
                       </button>
                     ))}
                   </div>
-                  <div style={{ flex: 1, minHeight: 0 }}>
+                  <div style={{ height: 180, minHeight: 0 }}>
                     {chartLoading ? (
                       <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 13 }}>로딩 중...</div>
                     ) : chartData.length > 0 ? (
@@ -395,7 +395,7 @@ export default function TabletPage() {
               </div>
             </div>
             {/* 거래 내역 - 고정 높이 박스 */}
-            <div style={{ height: 220, flexShrink: 0, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '12px 16px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flex: 1, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '12px 16px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: '0 0 8px', flexShrink: 0 }}>
                 {selectedHolding.stock_name} 거래 내역
                 {accountFilter !== '전체' && ` · ${accountFilter}`}
