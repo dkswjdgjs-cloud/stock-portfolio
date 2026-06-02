@@ -428,11 +428,11 @@ export default function TabletPage() {
                 <div style={{ flex: 1, overflowY: 'auto', maxHeight: 220 }}>
                   {getPieData().map((d, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #f3f4f6' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
-                        <span style={{ fontSize: 12, color: '#111827' }}>{d.name}</span>
+                        <span style={{ fontSize: 12, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
+                      <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
                         <p style={{ fontSize: 12, color: '#111827', margin: 0 }}>{formatWFull(d.value)}</p>
                         <p style={{ fontSize: 11, color: '#10b981', margin: 0 }}>{totalEval > 0 ? (d.value / totalEval * 100).toFixed(2) : 0}%</p>
                       </div>
@@ -461,10 +461,10 @@ export default function TabletPage() {
                       .sort((a, b) => b.trade_date.localeCompare(a.trade_date))
                       .map((t, i) => (
                         <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                          <td style={{ padding: '6px 6px', color: '#6b7280' }}>{t.trade_date}</td>
-                          <td style={{ padding: '6px 6px', color: '#6b7280' }}>{t.account}</td>
+                          <td style={{ padding: '6px 6px', color: '#6b7280', whiteSpace: 'nowrap' }}>{t.trade_date}</td>
+                          <td style={{ padding: '6px 6px', color: '#6b7280', whiteSpace: 'nowrap', maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.account}</td>
                           <td style={{ padding: '6px 6px', color: t.trade_type === '매수' ? '#E24B4A' : t.trade_type === '매도' ? '#378ADD' : '#6b7280', fontWeight: 500 }}>{t.trade_type || t.account_transfer || '-'}</td>
-                          <td style={{ padding: '6px 6px', color: '#111827' }}>{t.stock_name || '-'}</td>
+                          <td style={{ padding: '6px 6px', color: '#111827', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.stock_name || '-'}</td>
                           <td style={{ padding: '6px 6px', color: '#111827' }}>{t.quantity ? `${t.quantity}주` : '-'}</td>
                           <td style={{ padding: '6px 6px', color: '#111827' }}>{t.buy_price ? `${t.buy_price.toLocaleString('ko-KR')}원` : t.sell_price ? `${t.sell_price.toLocaleString('ko-KR')}원` : t.transfer_amount ? `${t.transfer_amount.toLocaleString('ko-KR')}원` : '-'}</td>
                           <td style={{ padding: '6px 6px', color: pos(t.profit_loss || 0) }}>{t.profit_loss ? formatWFull(t.profit_loss) : '-'}</td>
@@ -605,8 +605,8 @@ export default function TabletPage() {
                     <tbody>
                       {stockTransactions.map((t, i) => (
                         <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                          <td style={{ padding: '6px 6px', color: '#6b7280' }}>{t.trade_date}</td>
-                          <td style={{ padding: '6px 6px', color: '#6b7280' }}>{t.account}</td>
+                          <td style={{ padding: '6px 6px', color: '#6b7280', whiteSpace: 'nowrap' }}>{t.trade_date}</td>
+                          <td style={{ padding: '6px 6px', color: '#6b7280', whiteSpace: 'nowrap', maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.account}</td>
                           <td style={{ padding: '6px 6px', color: t.trade_type === '매수' ? '#E24B4A' : '#378ADD', fontWeight: 500 }}>{t.trade_type}</td>
                           <td style={{ padding: '6px 6px', color: '#111827' }}>{t.quantity}주</td>
                           <td style={{ padding: '6px 6px', color: '#111827' }}>{t.trade_type === '매수' ? `${(t.buy_price || 0).toLocaleString('ko-KR')}원` : `${(t.sell_price || 0).toLocaleString('ko-KR')}원`}</td>
