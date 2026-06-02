@@ -629,6 +629,9 @@ export default function MobilePage() {
             <button onClick={() => setDarkMode(d => !d)} style={{ background: D ? '#334155' : '#f3f4f6', border: 'none', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontSize: 14 }}>
               {D ? '☀️' : '🌙'}
             </button>
+            <button onClick={() => loadAll()} style={{ background: D ? '#334155' : '#f3f4f6', border: 'none', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontSize: 14 }}>
+              🔄
+            </button>
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: 12 }}>
