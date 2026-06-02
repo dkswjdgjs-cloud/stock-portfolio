@@ -5,6 +5,7 @@ import { calcHoldings } from '@/lib/calcHoldings';
 import { calcSummary } from '@/lib/dataService';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
+const COLORS = ['#6366f1','#22d3ee','#3b82f6','#a78bfa','#2dd4bf','#f59e0b','#ec4899','#10b981'];
 const ACCOUNTS = ['전체', 'ISA', 'IRP', '연금저축', 'DC형 연금', '일반직투1', '일반직투2'];
 
 function getIcon(ticker: string, name: string) {
@@ -268,7 +269,20 @@ export default function TabletPage() {
       </div>
 
       {/* 가운데 영역 */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      {/* 스와이프 영역 */}
+      <div
+        style={{ flex: 1, overflow: 'hidden', position: 'relative' }}
+        onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
+        onTouchEnd={e => {
+          const diff = touchStartX.current - e.changedTouches[0].clientX;
+          if (diff > 50 && currentPage < 1) setCurrentPage(1);
+          if (diff < -50 && currentPage > 0) setCurrentPage(0);
+        }}
+      >
+        <div style={{ display: 'flex', width: '200%', height: '100%', transform: `translateX(${currentPage === 0 ? 0 : -50}%)`, transition: 'transform 0.3s ease' }}>
+
+          {/* 1페이지: 계좌 내역 */}
+          <div style={{ width: '50%', height: '100%', display: 'flex', overflow: 'hidden' }}>
 
       {/* 왼쪽 패널 */}
       <div style={{ width: 400, display: 'flex', flexDirection: 'column', flexShrink: 0, padding: '8px', gap: 4 }}>
@@ -503,8 +517,127 @@ export default function TabletPage() {
           </div>
         )}
       </div>
-      </div>{/* 가운데 영역 끝 */}
+          </div>{/* 1페이지 끝 */}
 
+          {/* 2페이지: 종합 내역 */}
+          <div style={{ width: '50%', height: '100%', overflowY: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {/* CAGR / MDD / 목표 */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, flexShrink: 0 }}>
+              {/* CAGR */}
+              {(() => {
+                const firstSnap = [...snapshots].sort((a,b) => a.snapshot_date.localeCompare(b.snapshot_date))[0];
+                let cagr = 0;
+                if (firstSnap && summary.totalInvested > 0) {
+                  const years = (Date.now() - new Date(firstSnap.snapshot_date).getTime()) / (1000*60*60*24*365.25);
+                  if (years > 0) cagr = (Math.pow(summary.currMonthValue / summary.totalInvested, 1/years) - 1) * 100;
+                }
+                return (
+                  <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px' }}>
+                    <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 8px' }}>CAGR (연평균 수익률)</p>
+                    <p style={{ fontSize: 24, fontWeight: 600, color: cagr >= 0 ? '#E24B4A' : '#378ADD', margin: 0 }}>{cagr.toFixed(2)}%</p>
+                    <p style={{ fontSize: 11, color: '#9ca3af', margin: '6px 0 0' }}>{firstSnap?.snapshot_date || '-'} ~ 현재</p>
+                  </div>
+                );
+              })()}
+              {/* MDD */}
+              {(() => {
+                let peak = 0, mdd = 0, mddDate = '', peakDate = '';
+                [...snapshots].sort((a,b) => a.snapshot_date.localeCompare(b.snapshot_date)).forEach(s => {
+                  const val = s.total_valuation || 0;
+                  if (val > peak) { peak = val; peakDate = s.snapshot_date; }
+                  if (peak > 0) {
+                    const drawdown = (val - peak) / peak * 100;
+                    if (drawdown < mdd) { mdd = drawdown; mddDate = s.snapshot_date; }
+                  }
+                });
+                return (
+                  <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px' }}>
+                    <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 8px' }}>MDD (최대낙폭)</p>
+                    <p style={{ fontSize: 24, fontWeight: 600, color: '#378ADD', margin: 0 }}>{mdd.toFixed(2)}%</p>
+                    <p style={{ fontSize: 11, color: '#9ca3af', margin: '6px 0 0' }}>고점 대비 최대 하락폭</p>
+                    {mddDate && <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{peakDate} → {mddDate}</p>}
+                  </div>
+                );
+              })()}
+              {/* 목표 평가액 */}
+              <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px' }}>
+                <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 8px' }}>목표 평가액</p>
+                <p style={{ fontSize: 22, fontWeight: 600, color: '#3b82f6', margin: 0 }}>{targetValue > 0 ? `${((summary.currMonthValue||0)/targetValue*100).toFixed(1)}%` : '-'}</p>
+                <p style={{ fontSize: 11, color: '#9ca3af', margin: '6px 0 0' }}>목표: {formatWFull(targetValue)}</p>
+                <div style={{ background: '#e5e7eb', borderRadius: 4, height: 6, marginTop: 8 }}>
+                  <div style={{ background: '#3b82f6', borderRadius: 4, height: 6, width: `${Math.min((summary.currMonthValue||0)/targetValue*100, 100)}%` }} />
+                </div>
+              </div>
+            </div>
+
+            {/* 파이차트 + 종목 브레이크다운 */}
+            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {/* 파이차트 */}
+              <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 12px', alignSelf: 'flex-start' }}>ASSET ALLOCATION</p>
+                {(() => {
+                  const total = holdings.reduce((s,h) => s+h.valuation, 0) + totalCash;
+                  const data = [
+                    ...holdings.map(h => ({ name: h.stock_name, value: h.valuation })),
+                    ...(totalCash > 0 ? [{ name: '현금', value: totalCash }] : []),
+                  ];
+                  const radius = 80;
+                  let startAngle = -Math.PI/2;
+                  return (
+                    <svg width="200" height="200" viewBox="0 0 200 200">
+                      {data.map((d, i) => {
+                        const angle = (d.value / total) * 2 * Math.PI;
+                        const x1 = 100 + radius * Math.cos(startAngle);
+                        const y1 = 100 + radius * Math.sin(startAngle);
+                        const x2 = 100 + radius * Math.cos(startAngle + angle);
+                        const y2 = 100 + radius * Math.sin(startAngle + angle);
+                        const largeArc = angle > Math.PI ? 1 : 0;
+                        const path = `M 100 100 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+                        startAngle += angle;
+                        return <path key={i} d={path} fill={COLORS[i % COLORS.length]} stroke="white" strokeWidth="2" />;
+                      })}
+                      <circle cx="100" cy="100" r="50" fill="white" />
+                      <text x="100" y="95" textAnchor="middle" fontSize="9" fill="#9ca3af">MARKET VALUE</text>
+                      <text x="100" y="112" textAnchor="middle" fontSize="11" fontWeight="600" fill="#111827">{formatWFull(Math.round(total))}</text>
+                    </svg>
+                  );
+                })()}
+              </div>
+              {/* ALL HOLDINGS BREAKDOWN */}
+              <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px', overflowY: 'auto' }}>
+                <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 12px' }}>ALL HOLDINGS BREAKDOWN</p>
+                {holdings.map((h, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
+                      <span style={{ fontSize: 11, color: '#6b7280', width: 50 }}>{h.ticker}</span>
+                      <span style={{ fontSize: 12, color: '#111827' }}>{h.stock_name}</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: 12, color: '#111827', margin: 0 }}>{formatWFull(h.valuation)}</p>
+                      <p style={{ fontSize: 11, color: '#10b981', margin: 0 }}>{h.weight?.toFixed(2)}%</p>
+                    </div>
+                  </div>
+                ))}
+                {totalCash > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[holdings.length % COLORS.length], flexShrink: 0 }} />
+                      <span style={{ fontSize: 11, color: '#6b7280', width: 50 }}>CASH</span>
+                      <span style={{ fontSize: 12, color: '#111827' }}>현금성 자산</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: 12, color: '#111827', margin: 0 }}>{formatWFull(totalCash)}</p>
+                      <p style={{ fontSize: 11, color: '#10b981', margin: 0 }}>{totalEval > 0 ? (totalCash/totalEval*100).toFixed(2) : 0}%</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>{/* 2페이지 끝 */}
+
+        </div>{/* 슬라이드 컨테이너 끝 */}
+      </div>{/* 스와이프 영역 끝 */}
       {/* 전체 하단 합계 */}
       <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', background: 'white', flexShrink: 0, marginTop: 'auto' }}>
         <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 4px' }}>선택 합계 · {holdings.length}종목 + 현금</p>
