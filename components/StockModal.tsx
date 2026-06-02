@@ -37,9 +37,6 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
   const [isEtf, setIsEtf] = useState(false);
   const [etfComponents, setEtfComponents] = useState<any[]>([]);
   const [infoLoading, setInfoLoading] = useState(false);
-  const [newsText, setNewsText] = useState('');
-  const [newsLoading, setNewsLoading] = useState(false);
-  const [newsError, setNewsError] = useState('');
 
   const isPos = (v: number) => v >= 0;
 
@@ -78,29 +75,6 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
         setEtfComponents(data.etfComponents || []);
       })
       .finally(() => setInfoLoading(false));
-  }, [holding, activeTab]);
-
-  useEffect(() => {
-    if (!holding || activeTab !== 'news') return;
-    if (newsText) return;
-    setNewsLoading(true);
-    setNewsError('');
-    fetch('/api/ai-analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        stockName: holding.stock_name,
-        ticker: holding.ticker,
-        market: holding.currency === 'USD' ? 'US' : 'KR',
-      }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.error) setNewsError(data.error);
-        else setNewsText(data.news || '');
-      })
-      .catch(() => setNewsError('뉴스를 가져오는 중 오류가 발생했습니다'))
-      .finally(() => setNewsLoading(false));
   }, [holding, activeTab]);
 
 
@@ -391,37 +365,10 @@ export default function StockModal({ holding, onClose }: StockModalProps) {
           {/* 뉴스 탭 */}
           {activeTab === 'news' && (
             <div className="p-6" style={{minHeight: '420px'}}>
-              {newsLoading ? (
-                <div className="flex flex-col items-center justify-center h-48 gap-3 text-[#999999]">
-                  <Newspaper className="w-8 h-8 opacity-30 animate-pulse" />
-                  <p className="text-sm">최신 뉴스 검색 중...</p>
-                  <p className="text-xs">Google Search로 실시간 검색 중입니다</p>
-                </div>
-              ) : newsError ? (
-                <div className="flex flex-col items-center justify-center h-48 gap-3 text-[#999999]">
-                  <p className="text-sm text-red-500">{newsError}</p>
-                  <button onClick={() => { setNewsText(''); setNewsError(''); setNewsLoading(true);
-                    fetch('/api/ai-analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ stockName: holding.stock_name, ticker: holding.ticker, market: holding.currency === 'USD' ? 'US' : 'KR' }) })
-                      .then(r => r.json()).then(d => setNewsText(d.news || '')).catch(() => setNewsError('오류')).finally(() => setNewsLoading(false));
-                  }} className="text-xs border border-gray-200 rounded px-3 py-1.5 hover:bg-gray-50">다시 시도</button>
-                </div>
-              ) : newsText ? (
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-sm font-medium text-[#1a1a1a]">최신 뉴스</span>
-                    <button onClick={() => { setNewsText(''); }}
-                      className="text-xs text-[#999999] border border-gray-200 rounded px-2 py-1 hover:text-[#1a1a1a]">새로고침</button>
-                  </div>
-                  <div className="text-sm text-[#1a1a1a] leading-relaxed whitespace-pre-wrap overflow-y-auto"
-                    style={{maxHeight: '380px'}}>
-                    {newsText}
-                  </div>
-                  <p className="text-xs text-[#999999] mt-4 pt-3 border-t border-gray-200">
-                    Google Search 기반 실시간 뉴스 · Gemini AI 요약
-                  </p>
-                </div>
-              ) : null}
+              <div className="flex flex-col items-center justify-center h-48 text-[#999999]">
+                <Newspaper className="w-8 h-8 mb-3 opacity-30" />
+                <p className="text-sm">뉴스 기능은 준비 중입니다</p>
+              </div>
             </div>
           )}
 
