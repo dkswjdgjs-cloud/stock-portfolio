@@ -289,37 +289,35 @@ export default function TabletPage() {
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
         {selectedHolding ? (
           <>
-            {/* 종목 헤더 */}
-            <div style={{ padding: '20px 24px', background: 'white', borderBottom: '1px solid #e5e7eb' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <span style={{ fontSize: 18, fontWeight: 600, color: '#111827' }}>{selectedHolding.stock_name}</span>
-                    <span style={{ fontSize: 11, color: '#9ca3af', background: '#f3f4f6', padding: '2px 8px', borderRadius: 6 }}>{selectedHolding.ticker} · {selectedHolding.currency === 'USD' ? '해외' : '국내'}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                    <span style={{ fontSize: 28, fontWeight: 600, color: '#111827' }}>
-                      {selectedHolding.currency === 'USD' ? `$${selectedHolding.curr_price.toFixed(2)}` : `${selectedHolding.curr_price.toLocaleString('ko-KR')}원`}
-                    </span>
-                    <span style={{ fontSize: 14, color: pos(selectedHolding.daily_change), fontWeight: 500 }}>
-                      {selectedHolding.daily_change >= 0 ? '▲' : '▼'} {pct((selectedHolding as any).daily_change_rate || 0)}
-                    </span>
-                  </div>
+            {/* 상단 블럭 - 종목헤더 + 차트 + 종목정보 */}
+            <div style={{ margin: '8px 8px 4px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+              {/* 종목 헤더 */}
+              <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{selectedHolding.stock_name}</span>
+                  <span style={{ fontSize: 11, color: '#9ca3af', background: '#f3f4f6', padding: '2px 8px', borderRadius: 6 }}>{selectedHolding.ticker} · {selectedHolding.currency === 'USD' ? '해외' : '국내'}</span>
                 </div>
-                {/* 보유 현황 */}
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 4px' }}>평가손익</p>
-                  <p style={{ fontSize: 28, fontWeight: 600, color: pos(selectedHolding.profit), margin: 0 }}>{pct(selectedHolding.return_rate)}</p>
-                  <p style={{ fontSize: 14, color: pos(selectedHolding.profit), margin: '4px 0 0' }}>{formatWFull(selectedHolding.profit)}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                      <span style={{ fontSize: 26, fontWeight: 600, color: '#111827' }}>
+                        {selectedHolding.currency === 'USD' ? `$${selectedHolding.curr_price.toFixed(2)}` : `${selectedHolding.curr_price.toLocaleString('ko-KR')}원`}
+                      </span>
+                      <span style={{ fontSize: 13, color: pos(selectedHolding.daily_change), fontWeight: 500 }}>
+                        {selectedHolding.daily_change >= 0 ? '▲' : '▼'} {pct((selectedHolding as any).daily_change_rate || 0)}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>평가손익</p>
+                    <p style={{ fontSize: 26, fontWeight: 600, color: pos(selectedHolding.profit), margin: 0 }}>{pct(selectedHolding.return_rate)}</p>
+                    <p style={{ fontSize: 13, color: pos(selectedHolding.profit), margin: '2px 0 0' }}>{selectedHolding.profit >= 0 ? '+' : ''}{formatWFull(selectedHolding.profit)}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* 시세 + 종목정보 - 흰색 박스 하나 */}
-            <div style={{ margin: '8px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
               {/* 차트 */}
-              <div style={{ padding: '16px 24px', borderRight: '1px solid #e5e7eb' }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                   {PERIODS.map(p => (
                     <button key={p.value} onClick={() => setPeriod(p.value)}
@@ -395,7 +393,6 @@ export default function TabletPage() {
                 </div>
               </div>
             </div>
-
             </div>
             {/* 거래 내역 - 흰색 박스 */}
             <div style={{ margin: '0 8px 8px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px 24px' }}>
