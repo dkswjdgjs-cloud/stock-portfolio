@@ -45,6 +45,7 @@ export default function TabletPage() {
   const [chartLoading, setChartLoading] = useState(false);
   const [period, setPeriod] = useState('1M');
   const [stockInfo, setStockInfo] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'시세' | '평가'>('시세');
   const allHoldings = useRef<AccountHolding[]>([]);
   const priceCache = useRef<Map<string, any>>(new Map());
   const isLoadingRef = useRef(false);
@@ -132,12 +133,27 @@ export default function TabletPage() {
       .then(d => setStockInfo(d.info || null));
   }, [selectedHolding]);
 
-  const handleAccountFilter = (filter: string) => {
+  const handleAccountFilter = useCallback((filter: string) => {
     setAccountFilter(filter);
-    const filtered = applyFilter(allHoldings.current, filter);
-    setHoldings(filtered);
-    if (filtered.length > 0) setSelectedHolding(filtered[0]);
-  };
+    if (filter === '전체') {
+      const filtered = applyFilter(allHoldings.current, '전체');
+      setHoldings(filtered);
+      if (filtered.length > 0) setSelectedHolding(filtered[0]);
+    } else {
+      // 특정 계좌는 해당 계좌 transactions으로 재계산
+      fetch('/api/transactions')
+        .then(r => r.json())
+        .then(async transData => {
+          const base = calcHoldings(transData, filter);
+          const withPrices = await fetchPrices(base);
+          const total = withPrices.reduce((s, h) => s + h.valuation, 0);
+          const filtered = withPrices.map(h => ({ ...h, weight: total > 0 ? (h.valuation / total) * 100 : 0 }));
+          setHoldings(filtered);
+          if (filtered.length > 0) setSelectedHolding(filtered[0]);
+          else setSelectedHolding(null);
+        });
+    }
+  }, [fetchPrices, applyFilter]);
 
   const totalVal = holdings.reduce((s, h) => s + h.valuation, 0);
   const totalCash = cashBalances.reduce((s, b) => s + b.balance, 0);
@@ -178,14 +194,22 @@ export default function TabletPage() {
           </div>
           <div>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>현재 평가액</p>
-            <p style={{ fontSize: 26, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(totalEval)}</p>
+            <p style={{ fontSize: 26, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
           </div>
         </div>
 
         {/* 계좌 필터 */}
-        <div style={{ padding: '10px 20px', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ padding: '10px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 18, padding: 2, flexShrink: 0 }}>
+            {(['시세', '평가'] as const).map(m => (
+              <button key={m} onClick={() => setViewMode(m)}
+                style={{ fontSize: 12, padding: '4px 12px', borderRadius: 16, border: 'none', cursor: 'pointer',
+                  background: viewMode === m ? '#111827' : 'transparent',
+                  color: viewMode === m ? 'white' : '#9ca3af', fontWeight: viewMode === m ? 600 : 500 }}>{m}</button>
+            ))}
+          </div>
           <select value={accountFilter} onChange={e => handleAccountFilter(e.target.value)}
-            style={{ width: '100%', fontSize: 13, border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 10px', color: '#111827', background: 'white', outline: 'none' }}>
+            style={{ flex: 1, fontSize: 13, border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 10px', color: '#111827', background: 'white', outline: 'none' }}>
             {ACCOUNTS.map(a => <option key={a}>{a}</option>)}
           </select>
         </div>
@@ -207,12 +231,25 @@ export default function TabletPage() {
                   <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>평균 {h.avg_price.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}{h.currency === 'KRW' ? '원' : '$'}</p>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>
-                    {h.currency === 'USD' ? `${h.curr_price.toFixed(2)}$` : h.curr_price.toLocaleString('ko-KR')}
-                  </p>
-                  <p style={{ fontSize: 12, color: pos(h.profit), margin: '2px 0 0' }}>
-                    {pct(h.return_rate)}
-                  </p>
+                  {viewMode === '시세' ? (
+                    <>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>
+                        {h.currency === 'USD' ? `${h.curr_price.toFixed(2)}$` : h.curr_price.toLocaleString('ko-KR')}
+                      </p>
+                      <p style={{ fontSize: 12, color: pos(h.daily_change), margin: '2px 0 0' }}>
+                        {pct((h as any).daily_change_rate || 0)}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>
+                        {formatWFull(h.valuation)}
+                      </p>
+                      <p style={{ fontSize: 12, color: pos(h.profit), margin: '2px 0 0' }}>
+                        {pct(h.return_rate)}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             );
@@ -232,7 +269,7 @@ export default function TabletPage() {
         {/* 하단 합계 */}
         <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}>
           <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 4px' }}>선택 합계 · {holdings.length}종목 + 현금</p>
-          <p style={{ fontSize: 18, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(totalEval)}</p>
+          <p style={{ fontSize: 18, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
         </div>
       </div>
 
@@ -258,10 +295,10 @@ export default function TabletPage() {
                   </div>
                 </div>
                 {/* 보유 현황 */}
-                <div style={{ textAlign: 'right' }}>
+                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                   <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 4px' }}>평가손익</p>
-                  <p style={{ fontSize: 20, fontWeight: 600, color: pos(selectedHolding.profit), margin: 0 }}>{pct(selectedHolding.return_rate)}</p>
-                  <p style={{ fontSize: 13, color: pos(selectedHolding.profit), margin: '2px 0 0' }}>{formatWFull(selectedHolding.profit)}</p>
+                  <p style={{ fontSize: 28, fontWeight: 600, color: pos(selectedHolding.profit), margin: 0 }}>{pct(selectedHolding.return_rate)}</p>
+                  <p style={{ fontSize: 14, color: pos(selectedHolding.profit), margin: '4px 0 0' }}>{formatWFull(selectedHolding.profit)}</p>
                 </div>
               </div>
             </div>
