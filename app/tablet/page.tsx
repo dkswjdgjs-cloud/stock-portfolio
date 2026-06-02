@@ -107,16 +107,36 @@ export default function TabletPage() {
       setCashIncomes(incomeData);
       setCashBalances(balanceData);
       setSnapshots(snapshotData || []);
-      const calcedSummary = calcSummary(transData, snapshotData || []);
-      const cashIncomeTotal = incomeData.reduce((s: number, c: any) => s + c.amount, 0);
-      calcedSummary.cumulativeProfit += cashIncomeTotal;
-      setSummary(calcedSummary);
       const base = calcHoldings(transData, '전체');
       const withPrices = await fetchPrices(base);
       allHoldings.current = withPrices;
       const filtered = applyFilter(withPrices, accountFilter);
       setHoldings(filtered);
       if (!selectedHolding && filtered.length > 0) setSelectedHolding(filtered[0]);
+
+      // 현재가 반영 후 summary 계산
+      const totalValAll = withPrices.reduce((s: number, h: any) => s + h.valuation, 0);
+      const cashTotal = balanceData.reduce((s: number, b: any) => s + b.balance, 0);
+      const currMonthValue = totalValAll + cashTotal;
+      const totalInvested = transData
+        .filter((t: any) => t.account_transfer)
+        .reduce((sum: number, t: any) => t.account_transfer === '입금' ? sum + (t.transfer_amount || 0) : sum - (t.transfer_amount || 0), 0);
+      const cashIncomeTotal = incomeData.reduce((s: number, c: any) => s + c.amount, 0);
+      const calcedSummary = calcSummary(transData, snapshotData || []);
+      calcedSummary.cumulativeProfit += cashIncomeTotal;
+      const cumulativeProfit = currMonthValue - totalInvested + cashIncomeTotal;
+      const cumulativeReturn = totalInvested > 0 ? (cumulativeProfit / totalInvested) * 100 : 0;
+      const dailyProfit = withPrices.reduce((sum: number, h: any) => sum + (h.daily_change || 0) * (h.quantity || 0), 0);
+      const dailyReturn = currMonthValue > 0 ? (dailyProfit / (currMonthValue - dailyProfit)) * 100 : 0;
+      setSummary({
+        ...calcedSummary,
+        currMonthValue,
+        totalInvested,
+        cumulativeProfit,
+        cumulativeReturn,
+        dailyProfit,
+        dailyReturn,
+      });
     } finally {
       isLoadingRef.current = false;
     }
