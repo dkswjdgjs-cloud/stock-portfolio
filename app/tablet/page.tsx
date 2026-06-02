@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { AccountHolding, Transaction, CashIncome, CashBalance } from '@/types';
 import { calcHoldings } from '@/lib/calcHoldings';
 import { calcSummary } from '@/lib/dataService';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
 
 const COLORS = ['#6366f1','#22d3ee','#3b82f6','#a78bfa','#2dd4bf','#f59e0b','#ec4899','#10b981'];
 const ACCOUNTS = ['전체', 'ISA', 'IRP', '연금저축', 'DC형 연금', '일반직투1', '일반직투2'];
@@ -51,6 +51,8 @@ export default function TabletPage() {
   const touchStartX = useRef<number>(0);
   const [targetValue, setTargetValue] = useState(200000000);
   const [viewMode, setViewMode] = useState<'시세' | '평가'>('시세');
+  const [showAccountView, setShowAccountView] = useState(true);
+  const [pieFilter, setPieFilter] = useState('종목별');
   const [profitIdx, setProfitIdx] = useState(0);
   const PROFIT_LABELS = ['누적', '연', '월', '일'];
   const allHoldings = useRef<AccountHolding[]>([]);
@@ -224,6 +226,28 @@ export default function TabletPage() {
       ).sort((a, b) => b.trade_date.localeCompare(a.trade_date))
     : [];
 
+  const getPieData = () => {
+    if (pieFilter === '종목별') {
+      const data = holdings.map(h => ({ name: h.stock_name, ticker: h.ticker, value: h.valuation }));
+      if (totalCash > 0) data.push({ name: '현금성 자산', ticker: 'CASH', value: totalCash });
+      return data;
+    }
+    if (pieFilter === '섹터별') {
+      const map = new Map<string, number>();
+      holdings.forEach(h => map.set(h.sector || '기타', (map.get(h.sector || '기타') || 0) + h.valuation));
+      return Array.from(map.entries()).map(([name, value]) => ({ name, ticker: '', value }));
+    }
+    if (pieFilter === '국가별') {
+      const map = new Map<string, number>();
+      holdings.forEach(h => {
+        const country = h.currency === 'USD' ? '해외' : '국내';
+        map.set(country, (map.get(country) || 0) + h.valuation);
+      });
+      return Array.from(map.entries()).map(([name, value]) => ({ name, ticker: '', value }));
+    }
+    return [];
+  };
+
   const minClose = chartData.length > 0 ? Math.min(...chartData.map(d => d.close)) : 0;
   const maxClose = chartData.length > 0 ? Math.max(...chartData.map(d => d.close)) : 0;
   const isChartPos = chartData.length > 1
@@ -293,17 +317,21 @@ export default function TabletPage() {
         {/* 필터 + 종목 리스트 하나의 박스 */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
           {/* 계좌 필터 */}
-          <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
+          <div style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
             <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 16, padding: 2, flexShrink: 0 }}>
               {(['시세', '평가'] as const).map(m => (
                 <button key={m} onClick={() => setViewMode(m)}
-                  style={{ fontSize: 11, padding: '3px 10px', borderRadius: 14, border: 'none', cursor: 'pointer',
+                  style={{ fontSize: 11, padding: '3px 8px', borderRadius: 14, border: 'none', cursor: 'pointer',
                     background: viewMode === m ? '#111827' : 'transparent',
                     color: viewMode === m ? 'white' : '#9ca3af', fontWeight: viewMode === m ? 600 : 500 }}>{m}</button>
               ))}
             </div>
+            <button onClick={() => { setShowAccountView(true); setSelectedHolding(null); }}
+              style={{ fontSize: 11, padding: '3px 8px', borderRadius: 14, border: 'none', cursor: 'pointer',
+                background: showAccountView ? '#3b82f6' : '#f3f4f6',
+                color: showAccountView ? 'white' : '#9ca3af', fontWeight: showAccountView ? 600 : 500, flexShrink: 0 }}>계좌</button>
             <select value={accountFilter} onChange={e => handleAccountFilter(e.target.value)}
-              style={{ flex: 1, fontSize: 12, border: '1px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: '#111827', background: 'white', outline: 'none' }}>
+              style={{ flex: 1, fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 7, padding: '3px 6px', color: '#111827', background: 'white', outline: 'none' }}>
               {ACCOUNTS.map(a => <option key={a}>{a}</option>)}
             </select>
           </div>
@@ -313,7 +341,7 @@ export default function TabletPage() {
             const ic = getIcon(h.ticker, h.stock_name);
             const isSelected = selectedHolding?.ticker === h.ticker;
             return (
-              <div key={i} onClick={() => setSelectedHolding(h)}
+              <div key={i} onClick={() => { setSelectedHolding(h); setShowAccountView(false); }}
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', cursor: 'pointer',
                   background: isSelected ? '#f0f9ff' : 'white',
                   borderBottom: '1px solid #f3f4f6',
@@ -371,7 +399,85 @@ export default function TabletPage() {
 
       {/* 오른쪽 패널 */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '8px 8px 8px 0', gap: 8, overflow: 'hidden' }}>
-        {selectedHolding ? (
+        {showAccountView ? (
+          /* 계좌 뷰 */
+          <>
+            {/* 상단: 파이차트 + 구성비율 */}
+            <div style={{ flexShrink: 0, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>ASSET ALLOCATION</span>
+                <select value={pieFilter} onChange={e => setPieFilter(e.target.value)}
+                  style={{ fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 7, padding: '3px 8px', color: '#111827', background: 'white', outline: 'none' }}>
+                  {['종목별', '섹터별', '국가별'].map(f => <option key={f}>{f}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                {/* 파이차트 */}
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <PieChart width={240} height={240}>
+                    <Pie data={getPieData()} cx={115} cy={115} innerRadius={65} outerRadius={110} dataKey="value" strokeWidth={0}>
+                      {getPieData().map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    </Pie>
+                  </PieChart>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                    <p style={{ fontSize: 9, color: '#9ca3af', margin: '0 0 2px', letterSpacing: '0.05em' }}>MARKET VALUE</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
+                  </div>
+                </div>
+                {/* 구성비율 리스트 */}
+                <div style={{ flex: 1, overflowY: 'auto', maxHeight: 220 }}>
+                  {getPieData().map((d, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #f3f4f6' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
+                        <span style={{ fontSize: 12, color: '#111827' }}>{d.name}</span>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <p style={{ fontSize: 12, color: '#111827', margin: 0 }}>{formatWFull(d.value)}</p>
+                        <p style={{ fontSize: 11, color: '#10b981', margin: 0 }}>{totalEval > 0 ? (d.value / totalEval * 100).toFixed(2) : 0}%</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {/* 하단: 전체 거래내역 */}
+            <div style={{ flex: 1, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '12px 16px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: '0 0 8px', flexShrink: 0 }}>
+                {accountFilter === '전체' ? '전체' : accountFilter} 거래 내역
+              </p>
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead style={{ position: 'sticky', top: 0, background: 'white' }}>
+                    <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      {['날짜', '계좌', '구분', '종목', '수량', '단가', '손익', '수익률'].map(h => (
+                        <th key={h} style={{ textAlign: 'left', padding: '6px 6px', color: '#9ca3af', fontWeight: 500 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...transactions]
+                      .filter(t => accountFilter === '전체' || t.account === accountFilter)
+                      .sort((a, b) => b.trade_date.localeCompare(a.trade_date))
+                      .map((t, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                          <td style={{ padding: '6px 6px', color: '#6b7280' }}>{t.trade_date}</td>
+                          <td style={{ padding: '6px 6px', color: '#6b7280' }}>{t.account}</td>
+                          <td style={{ padding: '6px 6px', color: t.trade_type === '매수' ? '#E24B4A' : t.trade_type === '매도' ? '#378ADD' : '#6b7280', fontWeight: 500 }}>{t.trade_type || t.account_transfer || '-'}</td>
+                          <td style={{ padding: '6px 6px', color: '#111827' }}>{t.stock_name || '-'}</td>
+                          <td style={{ padding: '6px 6px', color: '#111827' }}>{t.quantity ? `${t.quantity}주` : '-'}</td>
+                          <td style={{ padding: '6px 6px', color: '#111827' }}>{t.buy_price ? `${t.buy_price.toLocaleString('ko-KR')}원` : t.sell_price ? `${t.sell_price.toLocaleString('ko-KR')}원` : t.transfer_amount ? `${t.transfer_amount.toLocaleString('ko-KR')}원` : '-'}</td>
+                          <td style={{ padding: '6px 6px', color: pos(t.profit_loss || 0) }}>{t.profit_loss ? formatWFull(t.profit_loss) : '-'}</td>
+                          <td style={{ padding: '6px 6px', color: pos(t.profit_rate || 0) }}>{t.profit_rate ? pct(t.profit_rate) : '-'}</td>
+                        </tr>
+                      ))
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        ) : selectedHolding ? (
           <>
             {/* 상단 블럭 - flex:1 */}
             <div style={{ flexShrink: 0, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
