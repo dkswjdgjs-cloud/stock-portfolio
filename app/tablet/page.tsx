@@ -290,6 +290,7 @@ export default function TabletPage() {
               <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(totalCash)}</p>
             </div>
           )}
+          </div>
         </div>
 
       </div>{/* 왼쪽 패널 끝 */}
