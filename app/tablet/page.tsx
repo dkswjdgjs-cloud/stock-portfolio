@@ -46,6 +46,8 @@ export default function TabletPage() {
   const [period, setPeriod] = useState('1M');
   const [stockInfo, setStockInfo] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'시세' | '평가'>('시세');
+  const [profitIdx, setProfitIdx] = useState(0);
+  const PROFIT_LABELS = ['누적', '연', '월', '일'];
   const allHoldings = useRef<AccountHolding[]>([]);
   const priceCache = useRef<Map<string, any>>(new Map());
   const isLoadingRef = useRef(false);
@@ -188,16 +190,25 @@ export default function TabletPage() {
             </div>
             <button onClick={loadAll} style={{ background: '#f3f4f6', border: 'none', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontSize: 14 }}>🔄</button>
           </div>
-          <div style={{ fontSize: 11, color: '#9ca3af' }}>누적 수익금</div>
+          <div style={{ fontSize: 11, color: '#9ca3af' }}>{PROFIT_LABELS[profitIdx]} 수익금</div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>현재 평가액</p>
             <p style={{ fontSize: 24, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: 13, color: '#E24B4A', margin: 0 }}>{pct(holdings.reduce((s,h) => s+(h.return_rate||0)*h.valuation, 0) / Math.max(holdings.reduce((s,h) => s+h.valuation, 0), 1))}</p>
-            <p style={{ fontSize: 20, fontWeight: 600, color: '#E24B4A', margin: '2px 0 0' }}>+{formatWFull(holdings.reduce((s,h) => s+h.profit, 0))}</p>
+          <div style={{ textAlign: 'right', cursor: 'pointer', userSelect: 'none' }} onClick={() => setProfitIdx(i => (i + 1) % 4)}>
+            <p style={{ fontSize: 13, color: '#E24B4A', margin: 0 }}>
+              {(() => {
+                const totalP = holdings.reduce((s,h) => s+h.profit, 0);
+                const totalV = holdings.reduce((s,h) => s+h.valuation, 0);
+                const r = totalV > 0 ? (totalP / totalV * 100) : 0;
+                return `+${r.toFixed(1)}%`;
+              })()}
+            </p>
+            <p style={{ fontSize: 20, fontWeight: 600, color: '#E24B4A', margin: '2px 0 0' }}>
+              +{formatWFull(holdings.reduce((s,h) => s+h.profit, 0))}
+            </p>
           </div>
         </div>
       </div>
@@ -208,24 +219,25 @@ export default function TabletPage() {
       {/* 왼쪽 패널 */}
       <div style={{ width: 400, display: 'flex', flexDirection: 'column', flexShrink: 0, padding: '8px', gap: 4 }}>
 
-        {/* 계좌 필터 */}
-        <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, background: 'white', borderRadius: 10, border: '1px solid #e5e7eb' }}>
-          <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 16, padding: 2, flexShrink: 0 }}>
-            {(['시세', '평가'] as const).map(m => (
-              <button key={m} onClick={() => setViewMode(m)}
-                style={{ fontSize: 11, padding: '3px 10px', borderRadius: 14, border: 'none', cursor: 'pointer',
-                  background: viewMode === m ? '#111827' : 'transparent',
-                  color: viewMode === m ? 'white' : '#9ca3af', fontWeight: viewMode === m ? 600 : 500 }}>{m}</button>
-            ))}
+        {/* 필터 + 종목 리스트 하나의 박스 */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+          {/* 계좌 필터 */}
+          <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
+            <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 16, padding: 2, flexShrink: 0 }}>
+              {(['시세', '평가'] as const).map(m => (
+                <button key={m} onClick={() => setViewMode(m)}
+                  style={{ fontSize: 11, padding: '3px 10px', borderRadius: 14, border: 'none', cursor: 'pointer',
+                    background: viewMode === m ? '#111827' : 'transparent',
+                    color: viewMode === m ? 'white' : '#9ca3af', fontWeight: viewMode === m ? 600 : 500 }}>{m}</button>
+              ))}
+            </div>
+            <select value={accountFilter} onChange={e => handleAccountFilter(e.target.value)}
+              style={{ flex: 1, fontSize: 12, border: '1px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: '#111827', background: 'white', outline: 'none' }}>
+              {ACCOUNTS.map(a => <option key={a}>{a}</option>)}
+            </select>
           </div>
-          <select value={accountFilter} onChange={e => handleAccountFilter(e.target.value)}
-            style={{ flex: 1, fontSize: 12, border: '1px solid #e5e7eb', borderRadius: 7, padding: '4px 8px', color: '#111827', background: 'white', outline: 'none' }}>
-            {ACCOUNTS.map(a => <option key={a}>{a}</option>)}
-          </select>
-        </div>
-
-        {/* 종목 리스트 */}
-        <div style={{ flex: 1, overflowY: 'auto', background: 'white', borderRadius: 10, border: '1px solid #e5e7eb' }}>
+          {/* 종목 리스트 */}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
           {holdings.map((h, i) => {
             const ic = getIcon(h.ticker, h.stock_name);
             const isSelected = selectedHolding?.ticker === h.ticker;
