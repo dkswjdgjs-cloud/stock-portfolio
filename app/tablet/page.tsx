@@ -371,7 +371,7 @@ export default function TabletPage() {
                         {formatWFull(h.valuation)}
                       </p>
                       <p style={{ fontSize: 12, color: pos(h.profit), margin: '2px 0 0' }}>
-                        {pct(h.return_rate)} {h.profit >= 0 ? '+' : ''}{formatWFull(Math.round(h.profit))}
+                        {h.profit >= 0 ? '+' : ''}{formatWFull(Math.round(h.profit))}({pct(h.return_rate)})
                       </p>
                     </>
                   )}
