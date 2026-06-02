@@ -5,7 +5,7 @@ import { calcHoldings } from '@/lib/calcHoldings';
 import { calcSummary } from '@/lib/dataService';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
 
-const COLORS = ['#6366f1','#22d3ee','#3b82f6','#a78bfa','#2dd4bf','#f59e0b','#ec4899','#10b981'];
+const COLORS = ['#6366f1','#22d3ee','#3b82f6','#a78bfa','#2dd4bf','#64748b','#8b5cf6','#06b6d4'];
 const ACCOUNTS = ['전체', 'ISA', 'IRP', '연금저축', 'DC형 연금', '일반직투1', '일반직투2'];
 
 function getIcon(ticker: string, name: string) {
@@ -796,10 +796,9 @@ export default function TabletPage() {
 
         </div>{/* 슬라이드 컨테이너 끝 */}
       </div>{/* 스와이프 영역 끝 */}
-      {/* 전체 하단 합계 */}
-      <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', background: 'white', flexShrink: 0, marginTop: 'auto' }}>
-        <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 4px' }}>선택 합계 · {holdings.length}종목 + 현금</p>
-        <p style={{ fontSize: 18, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
+      {/* 전체 하단 바 */}
+      <div style={{ padding: '10px 20px', borderTop: '1px solid #e5e7eb', background: 'white', flexShrink: 0 }}>
+        <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>선택 합계 · {holdings.length}종목 + 현금</p>
       </div>
     </div>
   );
