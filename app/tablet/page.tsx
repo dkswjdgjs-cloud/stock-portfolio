@@ -286,11 +286,11 @@ export default function TabletPage() {
 
 
       {/* 오른쪽 패널 */}
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '0 8px 0 0' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '8px 8px 8px 0', gap: 4, overflow: 'hidden' }}>
         {selectedHolding ? (
           <>
             {/* 상단 블럭 - 종목헤더 + 차트 + 종목정보 */}
-            <div style={{ margin: '8px 0 4px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+            <div style={{ flex: 1, overflow: 'hidden', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
               {/* 종목 헤더 */}
               <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -315,7 +315,7 @@ export default function TabletPage() {
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, flex: 1, overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
               {/* 차트 */}
                 <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
@@ -372,7 +372,7 @@ export default function TabletPage() {
               </div>
 
               {/* 종목 정보 */}
-              <div style={{ padding: '16px 24px' }}>
+              <div style={{ padding: '12px 16px', overflowY: 'auto' }}>
                 <p style={{ fontSize: 12, color: '#9ca3af', marginBottom: 12, margin: '0 0 12px' }}>종목 정보</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                   {[
@@ -395,15 +395,16 @@ export default function TabletPage() {
             </div>
             </div>
             {/* 거래 내역 - 흰색 박스 */}
-            <div style={{ margin: '0 0 8px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '14px 18px' }}>
+            <div style={{ flexShrink: 0, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '12px 18px' }}>
               <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 12px' }}>
                 {selectedHolding.stock_name} 거래 내역
                 {accountFilter !== '전체' && ` · ${accountFilter}`}
               </p>
               {stockTransactions.length === 0 ? (
-                <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center', padding: '20px 0' }}>거래 내역이 없습니다</p>
+                <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center', padding: '16px 0' }}>거래 내역이 없습니다</p>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
                       {['날짜', '계좌', '구분', '수량', '단가', '손익', '수익률'].map(h => (
@@ -425,6 +426,7 @@ export default function TabletPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
           </>
