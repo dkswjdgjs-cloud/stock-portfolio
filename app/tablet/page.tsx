@@ -97,15 +97,11 @@ export default function TabletPage() {
     if (isLoadingRef.current) return;
     isLoadingRef.current = true;
     try {
-      const [transRes, incomeRes, balanceRes] = await Promise.all([
-        fetch('/api/transactions'), fetch('/api/cash-income'), fetch('/api/cash-balance'),
-      ]);
-      const [transRes2, snapRes] = await Promise.all([
-        fetch('/api/snapshot'),
-        Promise.resolve(null),
+      const [transRes, incomeRes, balanceRes, snapRes] = await Promise.all([
+        fetch('/api/transactions'), fetch('/api/cash-income'), fetch('/api/cash-balance'), fetch('/api/snapshot'),
       ]);
       const [transData, incomeData, balanceData, snapshotData] = await Promise.all([
-        transRes.json(), incomeRes.json(), balanceRes.json(), fetch('/api/snapshot').then(r => r.json()),
+        transRes.json(), incomeRes.json(), balanceRes.json(), snapRes.json(),
       ]);
       setTransactions(transData);
       setCashIncomes(incomeData);
