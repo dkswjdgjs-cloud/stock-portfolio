@@ -407,7 +407,7 @@ export default function TabletPage() {
           /* 계좌 뷰 */
           <>
             {/* 상단: 파이차트 + 구성비율 */}
-            <div style={{ flexShrink: 0, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flexShrink: 0, height: 480, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>ASSET ALLOCATION</span>
                 <select value={pieFilter} onChange={e => setPieFilter(e.target.value)}
@@ -484,7 +484,7 @@ export default function TabletPage() {
         ) : selectedHolding ? (
           <>
             {/* 상단 블럭 - flex:1 */}
-            <div style={{ flexShrink: 0, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flexShrink: 0, height: 480, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {/* 종목 헤더 */}
               <div style={{ padding: '8px 16px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
