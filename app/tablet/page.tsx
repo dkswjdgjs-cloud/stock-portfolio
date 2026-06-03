@@ -407,7 +407,7 @@ export default function TabletPage() {
           /* 계좌 뷰 */
           <>
             {/* 상단: 파이차트 + 구성비율 */}
-            <div style={{ flexShrink: 0, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flex: 1, overflow: 'hidden', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>ASSET ALLOCATION</span>
                 <select value={pieFilter} onChange={e => setPieFilter(e.target.value)}
@@ -418,18 +418,18 @@ export default function TabletPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 {/* 파이차트 */}
                 <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <PieChart width={240} height={240}>
-                    <Pie data={getPieData()} cx={115} cy={115} innerRadius={65} outerRadius={110} dataKey="value" strokeWidth={0}>
+                  <PieChart width={300} height={300}>
+                    <Pie data={getPieData()} cx={145} cy={145} innerRadius={80} outerRadius={135} dataKey="value" strokeWidth={0}>
                       {getPieData().map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                     </Pie>
                   </PieChart>
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', width: 120 }}>
                     <p style={{ fontSize: 9, color: '#9ca3af', margin: '0 0 2px', letterSpacing: '0.05em' }}>MARKET VALUE</p>
                     <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
                   </div>
                 </div>
                 {/* 구성비율 리스트 */}
-                <div style={{ flex: 1, overflowY: 'auto', maxHeight: 220 }}>
+                <div style={{ flex: 1, overflowY: 'auto' }}>
                   {getPieData().map((d, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #f3f4f6' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
