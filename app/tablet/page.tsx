@@ -259,7 +259,7 @@ export default function TabletPage() {
   const formatDate = (d: string) => d ? `${d.slice(4,6)}.${d.slice(6,8)}` : '';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#f8fafc', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#f8fafc', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif' }}>
 
       {/* 전체 상단 헤더 */}
       <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '10px 20px', flexShrink: 0 }}>
