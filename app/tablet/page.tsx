@@ -407,7 +407,7 @@ export default function TabletPage() {
           /* 계좌 뷰 */
           <>
             {/* 상단: 파이차트 + 구성비율 */}
-            <div style={{ flex: 1, overflow: 'hidden', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flexShrink: 0, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '16px', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>ASSET ALLOCATION</span>
                 <select value={pieFilter} onChange={e => setPieFilter(e.target.value)}
