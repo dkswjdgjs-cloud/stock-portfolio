@@ -52,6 +52,7 @@ export default function TabletPage() {
   const [targetValue, setTargetValue] = useState(200000000);
   const [viewMode, setViewMode] = useState<'시세' | '평가'>('시세');
   const [showAccountView, setShowAccountView] = useState(true);
+  const [showTradePanel, setShowTradePanel] = useState(false);
   const [pieFilter, setPieFilter] = useState('종목별');
   const [profitMode, setProfitMode] = useState('cumulative');
   const [graphFilter, setGraphFilter] = useState('daily');
@@ -473,10 +474,101 @@ export default function TabletPage() {
                 );
               })()}
             </div>
-            {/* 하단: 전체 거래내역 */}
+            {/* 하단: 전체 필터일 때 계좌별 성과 바, 특정 계좌일 때 거래내역 */}
+            {accountFilter === '전체' ? (
+              <>
+                {/* 계좌별 성과 바 */}
+                <div style={{ flex: 1, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '14px 16px', overflow: 'hidden', position: 'relative' }}>
+                  <p style={{ fontSize: 11, color: '#9ca3af', fontWeight: 500, margin: '0 0 14px' }}>계좌별 성과</p>
+                  {(() => {
+                    const acctList = ACCOUNTS.filter(a => a !== '전체');
+                    return acctList.map(acct => {
+                      const acctHoldings = allHoldings.current.filter(h => h.account === acct);
+                      const acctVal = acctHoldings.reduce((s, h) => s + h.valuation, 0);
+                      const acctCash = cashBalances.find(b => b.account === acct)?.balance || 0;
+                      const acctTotalVal = acctVal + acctCash;
+                      if (acctTotalVal === 0) return null;
+                      const acctInvested = transactions
+                        .filter(t => t.account === acct && t.account_transfer)
+                        .reduce((s, t) => t.account_transfer === '입금' ? s + (t.transfer_amount || 0) : s - (t.transfer_amount || 0), 0);
+                      const acctProfit = acctTotalVal - acctInvested;
+                      const acctReturn = acctInvested > 0 ? (acctProfit / acctInvested) * 100 : 0;
+                      const maxReturn = 500;
+                      const barWidth = Math.min(Math.abs(acctReturn) / maxReturn * 100, 100);
+                      const isPos = acctReturn >= 0;
+                      return (
+                        <div key={acct} style={{ marginBottom: 12 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 4 }}>
+                            <span style={{ fontSize: 12, fontWeight: 500, color: '#111827' }}>{acct}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <span style={{ fontSize: 11, color: '#6b7280' }}>{formatWFull(Math.round(acctTotalVal))}</span>
+                              <span style={{ fontSize: 13, fontWeight: 600, color: pos(acctReturn) }}>{acctReturn >= 0 ? '+' : ''}{acctReturn.toFixed(1)}%</span>
+                            </div>
+                          </div>
+                          <div style={{ background: '#f3f4f6', borderRadius: 4, height: 7, overflow: 'hidden' }}>
+                            <div style={{ width: `${barWidth}%`, height: '100%', borderRadius: 4, background: isPos ? '#E24B4A' : '#378ADD', transition: 'width 0.6s ease' }} />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+                            <span style={{ fontSize: 10, color: '#9ca3af' }}>투입 {formatWFull(Math.round(acctInvested))}</span>
+                            <span style={{ fontSize: 10, color: pos(acctProfit) }}>{acctProfit >= 0 ? '+' : ''}{formatWFull(Math.round(acctProfit))}</span>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                  {/* 슬라이드업 거래내역 패널 */}
+                  <div style={{
+                    position: 'absolute', left: 0, right: 0, bottom: 0,
+                    height: showTradePanel ? '100%' : '44px',
+                    background: 'white', borderRadius: 12, border: '1px solid #e5e7eb',
+                    transition: 'height 0.25s ease',
+                    display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                  }}>
+                    <div
+                      onClick={() => setShowTradePanel(v => !v)}
+                      style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', flexShrink: 0, borderBottom: showTradePanel ? '1px solid #f3f4f6' : 'none' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>전체 거래 내역</span>
+                      <span style={{ fontSize: 11, color: '#9ca3af', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {showTradePanel ? '↓ 닫기' : '↑ 터치하여 열기'}
+                      </span>
+                    </div>
+                    {showTradePanel && (
+                      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                          <thead style={{ position: 'sticky', top: 0, background: 'white' }}>
+                            <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                              {['날짜', '계좌', '구분', '종목', '수량', '단가', '손익', '수익률'].map(h => (
+                                <th key={h} style={{ textAlign: 'left', padding: '6px 5px', color: '#9ca3af', fontWeight: 500 }}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[...transactions]
+                              .sort((a, b) => b.trade_date.localeCompare(a.trade_date))
+                              .map((t, i) => (
+                                <tr key={i} style={{ borderBottom: '1px solid #f9fafb' }}>
+                                  <td style={{ padding: '5px 5px', color: '#6b7280', whiteSpace: 'nowrap' }}>{t.trade_date}</td>
+                                  <td style={{ padding: '5px 5px', color: '#6b7280', whiteSpace: 'nowrap', maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.account}</td>
+                                  <td style={{ padding: '5px 5px', color: t.trade_type === '매수' ? '#E24B4A' : t.trade_type === '매도' ? '#378ADD' : '#6b7280', fontWeight: 500 }}>{t.trade_type || t.account_transfer || '-'}</td>
+                                  <td style={{ padding: '5px 5px', color: '#111827', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.stock_name || '-'}</td>
+                                  <td style={{ padding: '5px 5px', color: '#111827' }}>{t.quantity ? `${t.quantity}주` : '-'}</td>
+                                  <td style={{ padding: '5px 5px', color: '#111827' }}>{t.buy_price ? `${(t.buy_price).toLocaleString('ko-KR')}원` : t.sell_price ? `${(t.sell_price).toLocaleString('ko-KR')}원` : t.transfer_amount ? `${(t.transfer_amount).toLocaleString('ko-KR')}원` : '-'}</td>
+                                  <td style={{ padding: '5px 5px', color: pos(t.profit_loss || 0) }}>{t.profit_loss ? formatWFull(t.profit_loss) : '-'}</td>
+                                  <td style={{ padding: '5px 5px', color: pos(t.profit_rate || 0) }}>{t.profit_rate ? pct(t.profit_rate) : '-'}</td>
+                                </tr>
+                              ))
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
             <div style={{ flex: 1, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '12px 16px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: '0 0 8px', flexShrink: 0 }}>
-                {accountFilter === '전체' ? '전체' : accountFilter} 거래 내역
+                {accountFilter} 거래 내역
               </p>
               <div style={{ overflowY: 'auto', flex: 1 }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -508,6 +600,7 @@ export default function TabletPage() {
                 </table>
               </div>
             </div>
+            )}
           </>
         ) : selectedHolding ? (
           <>
