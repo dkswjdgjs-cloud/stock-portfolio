@@ -60,6 +60,7 @@ export default function TabletPage() {
   const [profitIdx, setProfitIdx] = useState(0);
   const PROFIT_LABELS = ['누적', '연', '월', '일'];
   const allHoldings = useRef<AccountHolding[]>([]);
+  const accountFilterRef = useRef('전체');
   const priceCache = useRef<Map<string, any>>(new Map());
   const isLoadingRef = useRef(false);
 
@@ -120,7 +121,7 @@ export default function TabletPage() {
       const base = calcHoldings(transData, '전체');
       const withPrices = await fetchPrices(base);
       allHoldings.current = withPrices;
-      const filtered = applyFilter(withPrices, accountFilter);
+      const filtered = applyFilter(withPrices, accountFilterRef.current);
       setHoldings(filtered);
       if (!selectedHolding && filtered.length > 0) setSelectedHolding(filtered[0]);
 
@@ -174,7 +175,7 @@ export default function TabletPage() {
     } finally {
       isLoadingRef.current = false;
     }
-  }, [fetchPrices, applyFilter, accountFilter, selectedHolding]);
+  }, [fetchPrices, applyFilter, selectedHolding]);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -197,6 +198,7 @@ export default function TabletPage() {
 
   const handleAccountFilter = useCallback((filter: string) => {
     setAccountFilter(filter);
+    accountFilterRef.current = filter;
     if (filter === '전체') {
       const filtered = applyFilter(allHoldings.current, '전체');
       setHoldings(filtered);
