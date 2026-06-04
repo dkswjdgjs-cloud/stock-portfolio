@@ -481,36 +481,57 @@ export default function TabletPage() {
                 <div style={{ flex: 1, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: '14px 16px', overflow: 'hidden', position: 'relative' }}>
                   <p style={{ fontSize: 11, color: '#9ca3af', fontWeight: 500, margin: '0 0 14px' }}>계좌별 성과</p>
                   {(() => {
+                    const priceMap = new Map<string, number>();
+                    allHoldings.current.forEach(h => priceMap.set(h.ticker, h.curr_price || h.avg_price));
                     const acctList = ACCOUNTS.filter(a => a !== '전체');
+                    const maxReturn = acctList.reduce((max, acct) => {
+                      const invested = transactions.filter(t => t.account === acct && t.account_transfer)
+                        .reduce((s, t) => t.account_transfer === '입금' ? s + (t.transfer_amount||0) : s - (t.transfer_amount||0), 0);
+                      if (invested <= 0) return max;
+                      const qty = new Map<string, number>();
+                      transactions.filter(t => t.account === acct && t.trade_type && t.ticker).forEach(t => {
+                        const cur = qty.get(t.ticker!)||0;
+                        qty.set(t.ticker!, t.trade_type === '매수' ? cur + (t.quantity||0) : cur - (t.quantity||0));
+                      });
+                      let val = 0;
+                      qty.forEach((q, ticker) => { if (q > 0) val += q * (priceMap.get(ticker)||0); });
+                      val += cashBalances.find(b => b.account === acct)?.balance||0;
+                      const r = Math.abs((val - invested) / invested * 100);
+                      return Math.max(max, r);
+                    }, 100);
+
                     return acctList.map(acct => {
-                      const acctHoldings = allHoldings.current.filter(h => h.account === acct);
-                      const acctVal = acctHoldings.reduce((s, h) => s + h.valuation, 0);
-                      const acctCash = cashBalances.find(b => b.account === acct)?.balance || 0;
+                      const acctInvested = transactions.filter(t => t.account === acct && t.account_transfer)
+                        .reduce((s, t) => t.account_transfer === '입금' ? s + (t.transfer_amount||0) : s - (t.transfer_amount||0), 0);
+                      if (acctInvested <= 0) return null;
+                      const qty = new Map<string, number>();
+                      transactions.filter(t => t.account === acct && t.trade_type && t.ticker).forEach(t => {
+                        const cur = qty.get(t.ticker!)||0;
+                        qty.set(t.ticker!, t.trade_type === '매수' ? cur + (t.quantity||0) : cur - (t.quantity||0));
+                      });
+                      let acctVal = 0;
+                      qty.forEach((q, ticker) => { if (q > 0) acctVal += q * (priceMap.get(ticker)||0); });
+                      const acctCash = cashBalances.find(b => b.account === acct)?.balance||0;
                       const acctTotalVal = acctVal + acctCash;
-                      if (acctTotalVal === 0) return null;
-                      const acctInvested = transactions
-                        .filter(t => t.account === acct && t.account_transfer)
-                        .reduce((s, t) => t.account_transfer === '입금' ? s + (t.transfer_amount || 0) : s - (t.transfer_amount || 0), 0);
                       const acctProfit = acctTotalVal - acctInvested;
                       const acctReturn = acctInvested > 0 ? (acctProfit / acctInvested) * 100 : 0;
-                      const maxReturn = 500;
                       const barWidth = Math.min(Math.abs(acctReturn) / maxReturn * 100, 100);
                       const isPos = acctReturn >= 0;
                       return (
-                        <div key={acct} style={{ marginBottom: 12 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 4 }}>
-                            <span style={{ fontSize: 12, fontWeight: 500, color: '#111827' }}>{acct}</span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div key={acct} style={{ marginBottom: 14 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 5 }}>
+                            <span style={{ fontSize: 13, fontWeight: 500, color: '#111827' }}>{acct}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                               <span style={{ fontSize: 11, color: '#6b7280' }}>{formatWFull(Math.round(acctTotalVal))}</span>
-                              <span style={{ fontSize: 13, fontWeight: 600, color: pos(acctReturn) }}>{acctReturn >= 0 ? '+' : ''}{acctReturn.toFixed(1)}%</span>
+                              <span style={{ fontSize: 14, fontWeight: 600, color: isPos ? '#E24B4A' : '#378ADD' }}>{acctReturn >= 0 ? '+' : ''}{acctReturn.toFixed(1)}%</span>
                             </div>
                           </div>
-                          <div style={{ background: '#f3f4f6', borderRadius: 4, height: 7, overflow: 'hidden' }}>
+                          <div style={{ background: '#f3f4f6', borderRadius: 4, height: 8, overflow: 'hidden' }}>
                             <div style={{ width: `${barWidth}%`, height: '100%', borderRadius: 4, background: isPos ? '#E24B4A' : '#378ADD', transition: 'width 0.6s ease' }} />
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
                             <span style={{ fontSize: 10, color: '#9ca3af' }}>투입 {formatWFull(Math.round(acctInvested))}</span>
-                            <span style={{ fontSize: 10, color: pos(acctProfit) }}>{acctProfit >= 0 ? '+' : ''}{formatWFull(Math.round(acctProfit))}</span>
+                            <span style={{ fontSize: 11, fontWeight: 500, color: isPos ? '#E24B4A' : '#378ADD' }}>{acctProfit >= 0 ? '+' : ''}{formatWFull(Math.round(acctProfit))}</span>
                           </div>
                         </div>
                       );
