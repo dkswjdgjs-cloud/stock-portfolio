@@ -455,7 +455,7 @@ export default function TabletPage() {
                 const acctProfit = acctTotalVal - acctInvested;
                 const acctReturn = acctInvested > 0 ? (acctProfit / acctInvested) * 100 : 0;
                 return (
-                  <div style={{ marginTop: 12, padding: '12px 16px', background: '#f9fafb', borderRadius: 8, flexShrink: 0, borderTop: '1px solid #f3f4f6' }}>
+                  <div style={{ marginTop: 12, padding: '12px 16px', background: '#f9fafb', borderRadius: 8, flexShrink: 0, borderTop: '1px solid #f3f4f6', width: 300 }}>
                     <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 8px' }}>{accountFilter} 누적 성과</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
