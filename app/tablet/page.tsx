@@ -265,22 +265,29 @@ export default function TabletPage() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#f8fafc', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif' }}>
 
       {/* 전체 상단 헤더 */}
-      <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '10px 20px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, color: '#9ca3af', letterSpacing: '0.08em' }}>WEALTHFLOW</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#f0fdf4', borderRadius: 20, padding: '3px 10px' }}>
+      <div style={{ flexShrink: 0 }}>
+        {/* 다크 상단 바 */}
+        <div style={{ background: '#111827', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* GLOW 로고 */}
+            <svg width="110" height="28" viewBox="0 0 130 34">
+              <polyline points="2,26 10,14 18,18 26,4" fill="none" stroke="#E24B4A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <polygon points="26,0 33,12 19,12" fill="#E24B4A"/>
+              <text x="42" y="25" fontSize="20" fontWeight="600" fill="white" letterSpacing="2">GLOW</text>
+            </svg>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: 'transparent' }}>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981' }} />
               <span style={{ color: '#10b981', fontSize: 9 }}>LIVE</span>
             </div>
-            <button onClick={loadAll} style={{ background: '#f3f4f6', border: 'none', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontSize: 14 }}>🔄</button>
+            <button onClick={loadAll} style={{ background: '#374151', border: 'none', borderRadius: 8, padding: '3px 10px', cursor: 'pointer', fontSize: 13, color: '#9ca3af' }}>🔄</button>
           </div>
-          <div style={{ fontSize: 11, color: '#9ca3af' }}>{PROFIT_LABELS[profitIdx]} 수익금</div>
+          <span style={{ fontSize: 10, color: '#64748b', cursor: 'pointer' }} onClick={() => setProfitIdx(i => (i + 1) % 4)}>{PROFIT_LABELS[profitIdx]} 수익금 ↻</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        {/* 숫자 바디 */}
+        <div style={{ background: '#1e2433', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>현재 평가액</p>
-            <p style={{ fontSize: 24, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
+            <p style={{ fontSize: 10, color: '#64748b', margin: '0 0 2px' }}>현재 평가액</p>
+            <p style={{ fontSize: 24, fontWeight: 600, color: '#f1f5f9', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
           </div>
           <div style={{ textAlign: 'right', cursor: 'pointer', userSelect: 'none' }} onClick={() => setProfitIdx(i => (i + 1) % 4)}>
             {(() => {
@@ -294,14 +301,13 @@ export default function TabletPage() {
               return (
                 <>
                   <p style={{ fontSize: 13, color: pos(cur.profit), margin: 0 }}>{cur.rate >= 0 ? '+' : ''}{cur.rate.toFixed(1)}%</p>
-                  <p style={{ fontSize: 20, fontWeight: 600, color: pos(cur.profit), margin: '2px 0 0' }}>{cur.profit >= 0 ? '+' : ''}{formatWFull(Math.round(cur.profit))}</p>
+                  <p style={{ fontSize: 22, fontWeight: 600, color: pos(cur.profit), margin: '2px 0 0' }}>{cur.profit >= 0 ? '+' : ''}{formatWFull(Math.round(cur.profit))}</p>
                 </>
               );
             })()}
           </div>
         </div>
       </div>
-
       {/* 가운데 영역 */}
       {/* 스와이프 영역 */}
       <div
