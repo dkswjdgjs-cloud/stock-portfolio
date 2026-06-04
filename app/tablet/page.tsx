@@ -428,20 +428,49 @@ export default function TabletPage() {
                     <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{formatWFull(Math.round(totalEval))}</p>
                   </div>
                 </div>
-                {/* 구성비율 리스트 */}
-                <div style={{ flex: 1, overflowY: 'auto' }}>
-                  {getPieData().map((d, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #f3f4f6' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
-                        <span style={{ fontSize: 12, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
+                {/* 구성비율 리스트 + 계좌별 수익 */}
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  <div style={{ flex: 1, overflowY: 'auto' }}>
+                    {getPieData().map((d, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #f3f4f6' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
+                          <span style={{ fontSize: 12, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
+                          <p style={{ fontSize: 12, color: '#111827', margin: 0 }}>{formatWFull(d.value)}</p>
+                          <p style={{ fontSize: 11, color: '#10b981', margin: 0 }}>{totalEval > 0 ? (d.value / totalEval * 100).toFixed(2) : 0}%</p>
+                        </div>
                       </div>
-                      <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
-                        <p style={{ fontSize: 12, color: '#111827', margin: 0 }}>{formatWFull(d.value)}</p>
-                        <p style={{ fontSize: 11, color: '#10b981', margin: 0 }}>{totalEval > 0 ? (d.value / totalEval * 100).toFixed(2) : 0}%</p>
+                    ))}
+                  </div>
+                  {/* 계좌별 누적수익 */}
+                  {accountFilter !== '전체' && (() => {
+                    const acctHoldings = holdings;
+                    const acctVal = acctHoldings.reduce((s, h) => s + h.valuation, 0);
+                    const acctCash = cashBalances.find(b => b.account === accountFilter)?.balance || 0;
+                    const acctTotalVal = acctVal + acctCash;
+                    const acctInvested = transactions
+                      .filter(t => t.account === accountFilter && t.account_transfer)
+                      .reduce((s, t) => t.account_transfer === '입금' ? s + (t.transfer_amount || 0) : s - (t.transfer_amount || 0), 0);
+                    const acctProfit = acctTotalVal - acctInvested;
+                    const acctReturn = acctInvested > 0 ? (acctProfit / acctInvested) * 100 : 0;
+                    return (
+                      <div style={{ marginTop: 12, padding: '12px', background: '#f9fafb', borderRadius: 8, flexShrink: 0 }}>
+                        <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 8px' }}>{accountFilter} 누적 성과</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>누적수익금</p>
+                            <p style={{ fontSize: 16, fontWeight: 600, color: pos(acctProfit), margin: 0 }}>{acctProfit >= 0 ? '+' : ''}{formatWFull(Math.round(acctProfit))}</p>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 2px' }}>누적수익률</p>
+                            <p style={{ fontSize: 16, fontWeight: 600, color: pos(acctReturn), margin: 0 }}>{acctReturn >= 0 ? '+' : ''}{acctReturn.toFixed(1)}%</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })()}
                 </div>
               </div>
             </div>
