@@ -837,13 +837,13 @@ export default function Dashboard({
       </div>
 
       <StockModal holding={selectedHolding} onClose={()=>setSelectedHolding(null)} />
-      <style>{\`
+      <style>{`
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
         *{box-sizing:border-box}
         ::-webkit-scrollbar{width:5px;height:5px}
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:10px}
-      \`}</style>
+      `}</style>
     </div>
   );
 }
