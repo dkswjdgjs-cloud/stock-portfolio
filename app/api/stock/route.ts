@@ -1,33 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Redis } from '@upstash/redis';
 
 const KIS_APP_KEY = process.env.KIS_APP_KEY!;
 const KIS_APP_SECRET = process.env.KIS_APP_SECRET!;
 const KIS_BASE_URL = 'https://openapi.koreainvestment.com:9443';
 
-let tokenCache: { token: string; expires: number } | null = null;
-let exchangeRateCache: { rate: number; expires: number } | null = null;
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+});
+
 const exchangeCache = new Map<string, string>();
 
 async function getAccessToken() {
-  if (tokenCache && Date.now() < tokenCache.expires) return tokenCache.token;
+  const cached = await redis.get<string>('kis_token');
+  if (cached) return cached;
+
   const res = await fetch(`${KIS_BASE_URL}/oauth2/tokenP`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ grant_type: 'client_credentials', appkey: KIS_APP_KEY, appsecret: KIS_APP_SECRET }),
   });
   const data = await res.json();
-  tokenCache = { token: data.access_token, expires: Date.now() + (data.expires_in - 60) * 1000 };
-  return tokenCache.token;
+  const token = data.access_token;
+  const ttl = (data.expires_in || 86400) - 60;
+  await redis.set('kis_token', token, { ex: ttl });
+  return token;
 }
 
 async function getUSDKRWRate(): Promise<number> {
-  if (exchangeRateCache && Date.now() < exchangeRateCache.expires) return exchangeRateCache.rate;
+  const cached = await redis.get<number>('usd_krw_rate');
+  if (cached) return cached;
+
   try {
     const res = await fetch('https://open.er-api.com/v6/latest/USD');
     const data = await res.json();
     const rate = data.rates?.KRW;
     if (rate > 0) {
-      exchangeRateCache = { rate, expires: Date.now() + 60 * 60 * 1000 };
+      await redis.set('usd_krw_rate', rate, { ex: 3600 });
       return rate;
     }
   } catch {}
@@ -82,6 +92,7 @@ export async function GET(request: NextRequest) {
         }
       }
     }
+
     return NextResponse.json({ ticker, price, dailyChange, exchangeRate, market });
   } catch (error) {
     console.error('KIS API error:', error);
