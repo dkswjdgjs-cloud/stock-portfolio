@@ -159,15 +159,13 @@ export default function Home() {
     }
   }, [fetchPrices, loadSnapshots, applyFilter]);
 
-  useEffect(() => { loadAllRef.current = loadAll; }, [loadAll]);
-
   useEffect(() => {
     if (!mounted) return;
-    loadAllRef.current?.();
-    const interval = setInterval(() => loadAllRef.current?.(), 60000);
+    loadAll();
+    const interval = setInterval(() => loadAll(), 60000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted]);
+  }, [mounted, loadAll]);
 
   const handleRefresh = async () => { setIsRefreshing(true); await loadAll(true); setIsRefreshing(false); };
   const handleAddTransaction = async (t: Omit<Transaction, 'id' | 'created_at' | 'profit_loss' | 'profit_rate'>) => {
