@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { C, NUM } from "@/lib/glow-theme";
-import { fmtEok, makeSeries, type AcctPerf, type MockStock, type PerfPoint, type ProfitBar } from "@/lib/tabletV2Mock";
+import { fmtEok, makeSeries, type AcctPerf, type MockStock, type PerfPoint, type ProfitBar } from "@/lib/tabletV2Helpers";
 
 export interface DonutItem {
   key: string;

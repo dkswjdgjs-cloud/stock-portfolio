@@ -1,6 +1,6 @@
 "use client";
 import { C, NUM } from "@/lib/glow-theme";
-import { fmtAvg, fmtN, fmtPrice, fmtW, type PortfolioView } from "@/lib/tabletV2Mock";
+import { fmtAvg, fmtN, fmtPrice, fmtW, type PortfolioView } from "@/lib/tabletV2Helpers";
 import { AcctDropdown, Badge, Segment } from "./ui";
 
 export default function Sidebar({

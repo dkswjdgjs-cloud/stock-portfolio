@@ -3,7 +3,7 @@ import { useState, type ReactNode } from "react";
 import { C, NUM } from "@/lib/glow-theme";
 import {
   fmtAvg, fmtN, fmtPrice, fmtW, type HoldingView, type MockStock,
-} from "@/lib/tabletV2Mock";
+} from "@/lib/tabletV2Helpers";
 import { PriceChart } from "./charts";
 import { Badge, Segment } from "./ui";
 

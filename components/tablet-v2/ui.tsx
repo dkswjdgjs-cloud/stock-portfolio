@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { C, FONT, NUM } from "@/lib/glow-theme";
-import { ACCT_LIST } from "@/lib/tabletV2Mock";
+import { ACCT_LIST } from "@/lib/tabletV2Helpers";
 
 // ===== 등락률 배지 =====
 export function Badge({ pct, size = 15 }: { pct: number; size?: number }) {

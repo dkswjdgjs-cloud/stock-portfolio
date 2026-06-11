@@ -2,8 +2,9 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { C, COUNTRY_COLOR, NUM, SECTOR_COLOR } from "@/lib/glow-theme";
 import {
-  ACCOUNTS, PL_FACTOR, PL_MODES, allTradesOf, fmtW, type PortfolioView,
-} from "@/lib/tabletV2Mock";
+  PL_FACTOR, PL_MODES, allTradesOf, fmtW,
+  type AcctPerf, type MockStock, type PortfolioView,
+} from "@/lib/tabletV2Helpers";
 import { AcctBar, Donut, type DonutItem } from "./charts";
 import { Segment } from "./ui";
 
@@ -14,21 +15,24 @@ function todayLabel() {
 }
 
 export default function PortfolioPage({
-  view, acctSel, sbOpen, topLeft,
+  view, acctSel, sbOpen, topLeft, stocks, accounts, onRefresh, refreshing,
 }: {
   view: PortfolioView;
   acctSel: string;
   sbOpen: boolean;
   topLeft: ReactNode;
+  stocks: MockStock[];
+  accounts: AcctPerf[];
+  onRefresh: () => void;
+  refreshing: boolean;
 }) {
-  const [pieMode, setPieMode] = useState("종목별"); // 종목별 | 섹터별 | 국가별
+  const [pieMode, setPieMode] = useState("종목별");
   const [pieActive, setPieActive] = useState<string | null>(null);
-  const [plMode, setPlMode] = useState(0); // 0누적 1연 2월 3일
-  const [showTrades, setShowTrades] = useState(false); // 슬라이드업 시트
-  const [tradesOpen, setTradesOpen] = useState(false); // 확장 레이아웃 거래 내역 (기본 접힘)
+  const [plMode, setPlMode] = useState(0);
+  const [showTrades, setShowTrades] = useState(false);
+  const [tradesOpen, setTradesOpen] = useState(false);
   const [spin, setSpin] = useState(false);
 
-  // 파이차트 그룹 데이터 (계좌 필터 + 모드 연동)
   const pieItems: DonutItem[] = useMemo(() => {
     if (pieMode === "종목별") {
       return [
@@ -43,7 +47,7 @@ export default function PortfolioPage({
       const g = r.stock[groupKey];
       map[g] = (map[g] || 0) + r.h.value;
     });
-    if (view.cash) map["현금"] = (map["현금"] || 0) + view.cash;
+    if (view.cash) map[pieMode === "섹터별" ? "현금" : "현금"] = (map["현금"] || 0) + view.cash;
     return Object.entries(map)
       .sort((a, b) => b[1] - a[1])
       .map(([g, v]) => ({ key: g, label: g, value: v, color: colors[g] || C.gray }));
@@ -51,9 +55,12 @@ export default function PortfolioPage({
 
   const pieTotal = pieItems.reduce((s, it) => s + it.value, 0) || 1;
 
-  const allTrades = useMemo(() => allTradesOf(acctSel), [acctSel]);
-  const maxPct = Math.max(...ACCOUNTS.map((a) => a.pct));
-  const acctCards = acctSel === "전체" ? ACCOUNTS : ACCOUNTS.filter((a) => a.name === acctSel);
+  // 전체 거래 내역 (계좌 필터 적용)
+  const allTrades = useMemo(() => allTradesOf(stocks, acctSel), [stocks, acctSel]);
+
+  // 계좌별 성과: 전체 보기일 땐 모두, 특정 계좌 선택 시 그 계좌만
+  const acctCards = acctSel === "전체" ? accounts : accounts.filter((a) => a.name === acctSel);
+  const maxPct = acctCards.length ? Math.max(...acctCards.map((a) => Math.abs(a.pct)), 1) : 1;
 
   const mode = PL_MODES[plMode];
   const f = PL_FACTOR[mode];
@@ -61,14 +68,21 @@ export default function PortfolioPage({
   const plPct = view.totalPlPct * f;
   const plCol = plAmt >= 0 ? C.red : C.blue;
 
+  const handleRefresh = () => {
+    setSpin(true);
+    onRefresh();
+    setTimeout(() => setSpin(false), 700);
+  };
+
   return (
     <>
       <main style={{ height: "100%", overflowY: "auto", padding: "20px 28px 40px", boxSizing: "border-box" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 4 }}>
           {topLeft}
           <div style={{ display: "flex", gap: 12 }}>
-            <button onClick={() => { setSpin(true); setTimeout(() => setSpin(false), 700); }}
-              style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: C.fill, color: C.blue, fontSize: 17, cursor: "pointer", transform: spin ? "rotate(360deg)" : "none", transition: "transform .7s" }}>↻</button>
+            <button onClick={handleRefresh} disabled={refreshing}
+              style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: C.fill, color: C.blue, fontSize: 17, cursor: refreshing ? "wait" : "pointer", transform: spin ? "rotate(360deg)" : "none", transition: "transform .7s", opacity: refreshing ? 0.6 : 1 }}
+              title="새로고침">↻</button>
             <button style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: C.fill, color: C.blue, fontSize: 17, cursor: "pointer" }}>↑</button>
           </div>
         </div>
@@ -142,22 +156,29 @@ export default function PortfolioPage({
         {sbOpen ? (
           <>
             <h2 style={{ margin: "0 0 10px", fontSize: 22, fontWeight: 700 }}>계좌별 성과</h2>
-            <div style={{ background: C.card, borderRadius: 16, padding: "8px 22px 10px", marginBottom: 26, height: 330, overflowY: "auto" }}>
-              {acctCards.map((a, i) => <AcctBar key={a.name + acctSel} a={a} max={maxPct} delay={i * 80} />)}
+            <div style={{ background: C.card, borderRadius: 16, padding: "8px 22px 10px", marginBottom: 26, minHeight: 80, maxHeight: 330, overflowY: "auto" }}>
+              {acctCards.length === 0 ? (
+                <p style={{ padding: "20px 0", fontSize: 14, color: C.sec, textAlign: "center" }}>계좌 데이터가 없습니다.</p>
+              ) : (
+                acctCards.map((a, i) => <AcctBar key={a.name + acctSel} a={a} max={maxPct} delay={i * 80} />)
+              )}
             </div>
 
             <button onClick={() => setShowTrades(true)}
               style={{ display: "block", width: "100%", textAlign: "center", background: C.card, borderRadius: 10, padding: 13, fontSize: 17, color: C.blue, border: "none", cursor: "pointer", fontFamily: "inherit" }}>
-              전체 거래 내역 보기
+              전체 거래 내역 보기 · {allTrades.length}건
             </button>
           </>
         ) : (
-          /* 사이드바 숨김: 넓어진 폭을 활용한 2열 레이아웃 */
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
             <div>
               <h2 style={{ margin: "0 0 10px", fontSize: 22, fontWeight: 700 }}>계좌별 성과</h2>
               <div style={{ background: C.card, borderRadius: 16, padding: "8px 22px 10px", height: 384, overflowY: "auto", boxSizing: "border-box" }}>
-                {acctCards.map((a, i) => <AcctBar key={a.name + acctSel + "w"} a={a} max={maxPct} delay={i * 80} />)}
+                {acctCards.length === 0 ? (
+                  <p style={{ padding: "20px 0", fontSize: 14, color: C.sec, textAlign: "center" }}>계좌 데이터가 없습니다.</p>
+                ) : (
+                  acctCards.map((a, i) => <AcctBar key={a.name + acctSel + "w"} a={a} max={maxPct} delay={i * 80} />)
+                )}
               </div>
             </div>
             <div>
@@ -168,7 +189,6 @@ export default function PortfolioPage({
                   height: tradesOpen ? 384 : 46, transition: "height .36s cubic-bezier(.32,.72,.25,1)",
                   display: "flex", flexDirection: "column", boxSizing: "border-box",
                 }}>
-                {/* 접기/펼치기 헤더 */}
                 <div onClick={() => setTradesOpen((o) => !o)}
                   style={{ height: 46, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 18px", cursor: "pointer", userSelect: "none" }}>
                   <span style={{ fontSize: 15, fontWeight: 600, color: tradesOpen ? C.label : C.blue }}>
@@ -201,7 +221,7 @@ export default function PortfolioPage({
         )}
       </main>
 
-      {/* ===== 거래 내역 슬라이드업 시트 (페이지 영역 기준 오버레이) ===== */}
+      {/* 슬라이드업 거래 내역 시트 */}
       <div onClick={() => setShowTrades(false)}
         style={{
           position: "absolute", inset: 0, background: "rgba(0,0,0,0.25)", zIndex: 90,
