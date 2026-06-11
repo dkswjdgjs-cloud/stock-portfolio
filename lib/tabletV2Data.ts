@@ -141,6 +141,10 @@ export function useTabletV2Data(): TabletV2DataResult {
             s.price = price;
             const prev = price - dayChg;
             s.dayPct = prev > 0 ? (dayChg / prev) * 100 : 0;
+            // USD 종목: KIS 응답의 실시간 환율 보관 (없으면 FX 폴백)
+            if (s.currency === "USD" && d.exchangeRate) {
+              s.exchangeRate = Number(d.exchangeRate);
+            }
           } catch {
             // 가격 실패 시 0으로 두고 다음 종목 진행
           }
@@ -189,7 +193,7 @@ export function useTabletV2Data(): TabletV2DataResult {
         for (const s of stocksArr) {
           const h = s.holdings[acct];
           if (!h) continue;
-          val += s.currency === "USD" ? h.qty * s.price * FX : h.qty * s.price;
+          val += s.currency === "USD" ? h.qty * s.price * (s.exchangeRate || FX) : h.qty * s.price;
         }
         val += cashMap[acct] || 0;
         const invested = transactions

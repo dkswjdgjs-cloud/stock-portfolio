@@ -27,6 +27,7 @@ export interface MockStock {
   holdings: Record<string, { qty: number; avg: number }>;
   stats: Record<string, string>;
   trades: StockTrade[];
+  exchangeRate?: number; // USD 종목용 실시간 환율 (없으면 FX 폴백)
 }
 
 export interface HoldingView {
@@ -71,7 +72,8 @@ export const fmtN = (n: number) => n.toLocaleString("ko-KR");
 export const fmtPrice = (s: MockStock) => (s.currency === "USD" ? "$" + s.price.toFixed(2) : fmtN(s.price));
 export const fmtAvg = (s: MockStock, avg: number) =>
   s.currency === "USD" ? "$" + avg.toFixed(2) : fmtN(Math.round(avg * 100) / 100) + "원";
-export const toKRW = (s: MockStock, units: number) => (s.currency === "USD" ? units * FX : units);
+export const toKRW = (s: MockStock, units: number) =>
+  s.currency === "USD" ? units * (s.exchangeRate || FX) : units;
 
 export const fmtEok = (n: number) => {
   const sign = n < 0 ? "-" : "";
