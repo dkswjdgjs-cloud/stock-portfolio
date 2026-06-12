@@ -1,0 +1,45 @@
+/* ===== GLOW iPadOS 디자인 토큰 (tablet-v2 전용) ===== */
+.glow-v2 {
+  /* Backgrounds */
+  --glow-bg-grouped: #f2f2f7;
+  --glow-bg-sidebar: #f7f7f9;
+  --glow-card: #ffffff;
+
+  /* Labels */
+  --glow-label: #000000;
+  --glow-label-sec: rgba(60, 60, 67, 0.6);
+  --glow-label-ter: rgba(60, 60, 67, 0.3);
+
+  /* Separators / Fills */
+  --glow-sep: rgba(60, 60, 67, 0.29);
+  --glow-fill: rgba(120, 120, 128, 0.08);
+  --glow-fill-strong: rgba(120, 120, 128, 0.12);
+
+  /* Semantic (국내 관례: 빨강=수익 / 파랑=손실) */
+  --glow-red: #ff3b30;
+  --glow-blue: #007aff;
+  --glow-green: #34c759;
+  --glow-gray: #8e8e93;
+  --glow-orange: #ff9500;
+
+  /* Motion */
+  --glow-ease: cubic-bezier(0.32, 0.72, 0.25, 1);
+
+  -webkit-font-smoothing: antialiased;
+}
+
+/* globals.css의 다크 스크롤바를 라이트 톤으로 덮어쓰기 (tablet-v2 내부 한정) */
+.glow-v2 ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.glow-v2 ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.glow-v2 ::-webkit-scrollbar-thumb {
+  background: rgba(60, 60, 67, 0.2);
+  border-radius: 3px;
+}
+.glow-v2 ::-webkit-scrollbar-thumb:hover {
+  background: rgba(60, 60, 67, 0.35);
+}
