@@ -11,23 +11,28 @@ import PerfPage from "@/components/tablet-v2/PerfPage";
 import StockDetail from "@/components/tablet-v2/StockDetail";
 import { SidebarToggle } from "@/components/tablet-v2/ui";
 
-interface DragState {
-  x: number;
-  y: number;
-  active: boolean;
-  captured: boolean;
-  id: number;
-  el: HTMLDivElement;
-}
-
 export default function TabletV2Page() {
   const [tab, setTab] = useState("시세");
   const [acctSel, setAcctSel] = useState("전체");
   const [selected, setSelected] = useState<string | null>(null);
   const [page, setPage] = useState(0);
-  const [drag, setDrag] = useState(0);
-  const dragRef = useRef<DragState | null>(null);
   const [sbOpen, setSbOpen] = useState(true);
+  const [theme, setTheme] = useState<"auto"|"light"|"dark">("auto");
+
+  // 다크모드 localStorage 저장/로드
+  useEffect(() => {
+    const saved = localStorage.getItem("glow-theme");
+    if (saved === "light" || saved === "dark") setTheme(saved);
+  }, []);
+  const cycleTheme = () => {
+    setTheme((t) => {
+      const next = t === "auto" ? "dark" : t === "dark" ? "light" : "auto";
+      if (next === "auto") localStorage.removeItem("glow-theme");
+      else localStorage.setItem("glow-theme", next);
+      return next;
+    });
+  };
+  const themeAttr = theme === "auto" ? undefined : theme;
 
   // ===== 검색 + 즐겨찾기 =====
   const [query, setQuery] = useState("");
@@ -47,7 +52,7 @@ export default function TabletV2Page() {
   }, []);
 
   // ===== 실데이터 fetch =====
-  const { stocks, cash, perfDays, agg, accounts, summary, loading, error, refresh } = useTabletV2Data();
+  const { stocks, cash, perfDays, agg, accounts, allTrades, summary, loading, error, refresh } = useTabletV2Data();
 
   // 즐겨찾기 중 미보유 종목 가격 fetch
   useEffect(() => {
@@ -123,6 +128,7 @@ export default function TabletV2Page() {
   return (
     <div
       className="glow-v2"
+      data-theme={themeAttr}
       style={{
         height: "100dvh", display: "flex", overflow: "hidden",
         fontFamily: FONT, background: C.bgGrouped, color: C.label,
@@ -187,49 +193,31 @@ export default function TabletV2Page() {
           </div>
         </div>
       ) : (
-        <div
-          style={{ position: "relative", overflow: "hidden", flex: 1, minWidth: 0, height: "100%" }}
-          onPointerDown={(e) => {
-            dragRef.current = { x: e.clientX, y: e.clientY, active: true, captured: false, id: e.pointerId, el: e.currentTarget };
-          }}
-          onPointerMove={(e) => {
-            const d = dragRef.current;
-            if (!d?.active) return;
-            const dx = e.clientX - d.x;
-            const dy = e.clientY - d.y;
-            if (!d.captured && Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy)) {
-              d.captured = true;
-              try { d.el.setPointerCapture(d.id); } catch {}
-            }
-            if (d.captured) setDrag(Math.max(-200, Math.min(200, dx)));
-          }}
-          onPointerUp={() => {
-            if (drag < -70 && page === 0) setPage(1);
-            else if (drag > 70 && page === 1) setPage(0);
-            setDrag(0);
-            dragRef.current = null;
-          }}
-          onPointerCancel={() => { setDrag(0); dragRef.current = null; }}
-        >
-          <div style={{ position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 7, zIndex: 30 }}>
-            {[0, 1].map((p) => (
-              <span key={p} onClick={() => setPage(p)}
-                style={{
-                  width: 7, height: 7, borderRadius: "50%", cursor: "pointer",
-                  background: page === p ? "rgba(60,60,67,0.65)" : "rgba(60,60,67,0.22)",
-                  transition: "background .2s",
-                }} />
-            ))}
+        <div style={{ flex: 1, minWidth: 0, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px 0", flexShrink: 0 }}>
+            {sbBtn}
+            <div style={{ display: "inline-flex", background: "rgba(120,120,128,0.12)", borderRadius: 9, padding: 2 }}>
+              {["포트폴리오", "성과 추이"].map((label, p) => (
+                <button key={label} onClick={() => setPage(p)}
+                  style={{
+                    border: "none", padding: "5px 20px", borderRadius: 7, fontSize: 13,
+                    fontFamily: "inherit", fontWeight: page === p ? 600 : 500, cursor: "pointer",
+                    background: page === p ? "#fff" : "transparent",
+                    boxShadow: page === p ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
+                    color: "#000", transition: "all .15s",
+                  }}>{label}</button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={cycleTheme} title={theme === "auto" ? "시스템 테마" : theme === "dark" ? "다크 모드" : "라이트 모드"}
+                style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: C.fill, color: C.blue, fontSize: 17, cursor: "pointer" }}>
+                {theme === "dark" ? "🌙" : theme === "light" ? "☀️" : "🌓"}
+              </button>
+              <button onClick={refresh} style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: C.fill, color: C.blue, fontSize: 17, cursor: "pointer" }} title="새로고침">↻</button>
+            </div>
           </div>
-
-          <div
-            style={{
-              display: "flex", width: "200%", height: "100%",
-              transform: `translateX(calc(${page * -50}% + ${drag}px))`,
-              transition: drag !== 0 ? "none" : "transform .38s cubic-bezier(.32,.72,.25,1)",
-              touchAction: "pan-y",
-            }}>
-            <div style={{ width: "50%", flexShrink: 0, height: "100%", position: "relative", overflow: "hidden" }}>
+          {page === 0 ? (
+            <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
               <PortfolioPage
                 view={view}
                 acctSel={acctSel}
@@ -237,19 +225,21 @@ export default function TabletV2Page() {
                 topLeft={sbBtn}
                 stocks={stocks}
                 accounts={accounts}
+                allTrades={allTrades}
                 summary={summary}
                 onRefresh={refresh}
                 refreshing={loading}
               />
             </div>
-            <div style={{ width: "50%", flexShrink: 0, height: "100%", overflowY: "auto" }}>
+          ) : (
+            <div style={{ flex: 1, overflowY: "auto" }}>
               <PerfPage
                 topLeft={sbBtn}
                 perfDays={perfDays}
                 agg={agg}
               />
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

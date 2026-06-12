@@ -74,7 +74,7 @@ export default function Sidebar({
         style={{
           display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", cursor: "pointer",
           borderTop: idx ? `0.5px solid ${C.sep}` : "none",
-          background: selected === s.id ? "#E4E4E9" : "transparent",
+          background: selected === s.id ? "var(--glow-selected)" : "transparent",
           transition: "background .15s",
         }}>
         {opts.showStar && <StarButton active={isFav(s.code)} onClick={() => onToggleFav(s)} size={20} />}
@@ -96,7 +96,7 @@ export default function Sidebar({
           )}
           <div style={{ marginTop: 3, height: 27, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
             {opts.subType === "holding" && h && tab === "평가" ? (
-              <span style={{ ...NUM, fontSize: 12, fontWeight: 600, color: h.pl >= 0 ? C.red : C.blue }}>
+              <span style={{ ...NUM, fontSize: 14, fontWeight: 600, color: h.pl >= 0 ? C.red : C.blue }}>
                 {h.pl >= 0 ? "+" : ""}{fmtW(h.pl)} ({h.pl >= 0 ? "+" : ""}{h.plPct.toFixed(1)}%)
               </span>
             ) : (

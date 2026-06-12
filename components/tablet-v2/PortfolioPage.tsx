@@ -2,7 +2,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { C, COUNTRY_COLOR, NUM, SECTOR_COLOR } from "@/lib/glow-theme";
 import {
-  PL_MODES, allTradesOf, fmtW,
+  PL_MODES, fmtW,
   type AcctPerf, type MockStock, type PortfolioSummary, type PortfolioView,
 } from "@/lib/tabletV2Helpers";
 import { AcctBar, Donut, type DonutItem } from "./charts";
@@ -15,12 +15,13 @@ function todayLabel() {
 }
 
 export default function PortfolioPage({
-  view, acctSel, sbOpen, topLeft, stocks, accounts, summary, onRefresh, refreshing,
+  view, acctSel, sbOpen, topLeft, allTrades, stocks, accounts, summary, onRefresh, refreshing,
 }: {
   view: PortfolioView;
   acctSel: string;
   sbOpen: boolean;
   topLeft: ReactNode;
+  allTrades: import("@/lib/tabletV2Helpers").TradeRow[];
   stocks: MockStock[];
   accounts: AcctPerf[];
   summary: PortfolioSummary;
@@ -32,6 +33,7 @@ export default function PortfolioPage({
   const [plMode, setPlMode] = useState(0);
   const [showTrades, setShowTrades] = useState(false);
   const [tradesOpen, setTradesOpen] = useState(false);
+  const [tradeTap, setTradeTap] = useState<number | null>(null);
   const [spin, setSpin] = useState(false);
 
   const pieItems: DonutItem[] = useMemo(() => {
@@ -57,7 +59,7 @@ export default function PortfolioPage({
   const pieTotal = pieItems.reduce((s, it) => s + it.value, 0) || 1;
 
   // 전체 거래 내역 (계좌 필터 적용)
-  const allTrades = useMemo(() => allTradesOf(stocks, acctSel), [stocks, acctSel]);
+  const filteredTrades = useMemo(() => acctSel === "전체" ? allTrades : allTrades.filter((t) => t.acct === acctSel), [allTrades, acctSel]);
 
   // 계좌별 성과: 전체 보기일 땐 모두, 특정 계좌 선택 시 그 계좌만
   const acctCards = acctSel === "전체" ? accounts : accounts.filter((a) => a.name === acctSel);
@@ -83,15 +85,7 @@ export default function PortfolioPage({
   return (
     <>
       <main style={{ height: "100%", overflowY: "auto", padding: "20px 28px 40px", boxSizing: "border-box" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 4 }}>
-          {topLeft}
-          <div style={{ display: "flex", gap: 12 }}>
-            <button onClick={handleRefresh} disabled={refreshing}
-              style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: C.fill, color: C.blue, fontSize: 17, cursor: refreshing ? "wait" : "pointer", transform: spin ? "rotate(360deg)" : "none", transition: "transform .7s", opacity: refreshing ? 0.6 : 1 }}
-              title="새로고침">↻</button>
-            <button style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: C.fill, color: C.blue, fontSize: 17, cursor: "pointer" }}>↑</button>
-          </div>
-        </div>
+
 
         <h1 style={{ margin: 0, fontSize: 34, fontWeight: 700, letterSpacing: "-0.026em" }}>
           포트폴리오{acctSel !== "전체" ? ` · ${acctSel}` : ""}
@@ -149,8 +143,7 @@ export default function PortfolioPage({
                   }}>
                   <span style={{ width: 10, height: 10, borderRadius: "50%", background: it.color, flexShrink: 0 }} />
                   <span style={{ flex: 1, fontSize: 15 }}>{it.label}</span>
-                  <span style={{ ...NUM, fontSize: 15, fontWeight: 600 }}>{fmtW(it.value)}</span>
-                  <span style={{ ...NUM, fontSize: 13, color: C.sec, width: 58, textAlign: "right" }}>
+                  <span style={{ ...NUM, fontSize: 15, fontWeight: 600 }}>
                     {((it.value / pieTotal) * 100).toFixed(2)}%
                   </span>
                 </div>
@@ -172,7 +165,7 @@ export default function PortfolioPage({
 
             <button onClick={() => setShowTrades(true)}
               style={{ display: "block", width: "100%", textAlign: "center", background: C.card, borderRadius: 10, padding: 13, fontSize: 17, color: C.blue, border: "none", cursor: "pointer", fontFamily: "inherit" }}>
-              전체 거래 내역 보기 · {allTrades.length}건
+              전체 거래 내역 보기 · {filteredTrades.length}건
             </button>
           </>
         ) : (
@@ -210,16 +203,16 @@ export default function PortfolioPage({
                   ))}
                 </div>
                 <div style={{ flex: 1, overflowY: "auto", padding: "0 18px 10px" }}>
-                  {allTrades.map((t, i) => (
+                  {filteredTrades.map((t, i) => (
                     <div key={i} style={{ display: "grid", gridTemplateColumns: "88px 1fr 44px 52px 86px", gap: 8, alignItems: "center", padding: "10px 0", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
                       <span style={{ ...NUM, fontSize: 12.5 }}>{t.date}</span>
                       <span style={{ fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.stockName}</span>
-                      <span style={{ fontSize: 11, fontWeight: 600, textAlign: "center", padding: "2px 0", borderRadius: 5, color: t.type === "매수" ? C.red : C.blue, background: t.type === "매수" ? "rgba(255,59,48,0.10)" : "rgba(0,122,255,0.10)" }}>{t.type}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, textAlign: "center", padding: "2px 0", borderRadius: 5, color: t.type === "매수" ? C.red : t.type === "매도" ? C.blue : t.type === "입금" ? C.green : C.sec, background: t.type === "매수" ? "rgba(255,59,48,0.10)" : t.type === "매도" ? "rgba(0,122,255,0.10)" : t.type === "입금" ? "rgba(52,199,89,0.10)" : "rgba(142,142,147,0.10)" }}>{t.type}</span>
                       <span style={{ ...NUM, fontSize: 12.5, textAlign: "right" }}>{t.qty}주</span>
                       <span style={{ ...NUM, fontSize: 12.5, textAlign: "right" }}>{t.unit}</span>
                     </div>
                   ))}
-                  {allTrades.length === 0 && <p style={{ padding: "14px 0", fontSize: 14, color: C.sec }}>거래 내역이 없습니다.</p>}
+                  {filteredTrades.length === 0 && <p style={{ padding: "14px 0", fontSize: 14, color: C.sec }}>거래 내역이 없습니다.</p>}
                 </div>
               </div>
             </div>
@@ -255,17 +248,33 @@ export default function PortfolioPage({
           ))}
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "0 24px 20px" }}>
-          {allTrades.map((t, i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "104px 1fr 110px 58px 64px 104px", gap: 8, alignItems: "center", padding: "12px 0", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
+          {filteredTrades.map((t, i) => (
+            <div key={i} onClick={() => (t.type === "매도" && t.profitLoss != null) ? setTradeTap(tradeTap === i ? null : i) : null}
+              style={{ cursor: t.type === "매도" ? "pointer" : "default" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "104px 1fr 110px 58px 64px 104px", gap: 8, alignItems: "center", padding: "12px 0", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
               <span style={{ ...NUM, fontSize: 14 }}>{t.date}</span>
               <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.stockName}</span>
               <span style={{ fontSize: 14 }}>{t.acct}</span>
-              <span style={{ fontSize: 12, fontWeight: 600, textAlign: "center", padding: "2px 0", borderRadius: 5, color: t.type === "매수" ? C.red : C.blue, background: t.type === "매수" ? "rgba(255,59,48,0.10)" : "rgba(0,122,255,0.10)" }}>{t.type}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, textAlign: "center", padding: "2px 0", borderRadius: 5, color: t.type === "매수" ? C.red : t.type === "매도" ? C.blue : t.type === "입금" ? C.green : C.sec, background: t.type === "매수" ? "rgba(255,59,48,0.10)" : t.type === "매도" ? "rgba(0,122,255,0.10)" : t.type === "입금" ? "rgba(52,199,89,0.10)" : "rgba(142,142,147,0.10)" }}>{t.type}</span>
               <span style={{ ...NUM, fontSize: 14, textAlign: "right" }}>{t.qty}주</span>
               <span style={{ ...NUM, fontSize: 14, textAlign: "right" }}>{t.unit}</span>
+              </div>
+              {tradeTap === i && t.profitLoss != null && (
+                <div style={{ display: "flex", gap: 16, padding: "8px 14px 10px", background: C.fill, borderRadius: 8, margin: "4px 0 2px", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, color: C.sec }}>매도 손익</span>
+                  <span style={{ ...NUM, fontSize: 14, fontWeight: 700, color: (t.profitLoss ?? 0) >= 0 ? C.red : C.blue }}>
+                    {(t.profitLoss ?? 0) >= 0 ? "+" : ""}{"₩"}{Math.round(Math.abs(t.profitLoss ?? 0)).toLocaleString("ko-KR")}
+                  </span>
+                  {t.profitRate != null && (
+                    <span style={{ ...NUM, fontSize: 13, fontWeight: 600, color: (t.profitRate ?? 0) >= 0 ? C.red : C.blue }}>
+                      ({(t.profitRate ?? 0) >= 0 ? "+" : ""}{(t.profitRate ?? 0).toFixed(2)}%)
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           ))}
-          {allTrades.length === 0 && <p style={{ padding: "18px 0", fontSize: 15, color: C.sec }}>거래 내역이 없습니다.</p>}
+          {filteredTrades.length === 0 && <p style={{ padding: "18px 0", fontSize: 15, color: C.sec }}>거래 내역이 없습니다.</p>}
         </div>
       </div>
     </>

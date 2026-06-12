@@ -51,7 +51,6 @@ export default function PerfPage({
 
   return (
     <main style={{ padding: "20px 28px 40px" }}>
-      <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 4 }}>{topLeft}</div>
       <h1 style={{ margin: 0, fontSize: 34, fontWeight: 700, letterSpacing: "-0.026em" }}>성과 추이</h1>
       {last ? (
         <p style={{ margin: "3px 0 0", fontSize: 15, color: C.sec }}>
