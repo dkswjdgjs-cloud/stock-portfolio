@@ -16,6 +16,7 @@ import {
   type AggUnit,
   type MockStock,
   type PerfPoint,
+  type PortfolioSummary,
 } from "./tabletV2Helpers";
 
 // ===== 색 팔레트 (iOS 차트 톤) =====
@@ -44,6 +45,7 @@ export interface TabletV2DataResult {
   perfDays: PerfPoint[];
   agg: Record<AggUnit, () => PerfPoint[]>;
   accounts: AcctPerf[];
+  summary: PortfolioSummary;
   loading: boolean;
   error: string | null;
   refresh: () => void;
@@ -75,11 +77,23 @@ interface RawSnapshot {
   total_profit?: number | null;
 }
 
+interface RawCashIncome {
+  account?: string;
+  amount: number;
+}
+
 export function useTabletV2Data(): TabletV2DataResult {
   const [stocks, setStocks] = useState<MockStock[]>([]);
   const [cash, setCash] = useState<Record<string, number>>({});
   const [perfDays, setPerfDays] = useState<PerfPoint[]>([]);
   const [accounts, setAccounts] = useState<AcctPerf[]>([]);
+  const [summary, setSummary] = useState<PortfolioSummary>({
+    currValue: 0, totalInvested: 0,
+    cumulativeProfit: 0, cumulativeReturn: 0,
+    annualProfit: 0, annualReturn: 0,
+    monthlyProfit: 0, monthlyReturn: 0,
+    dailyProfit: 0, dailyReturn: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,16 +101,18 @@ export function useTabletV2Data(): TabletV2DataResult {
     setLoading(true);
     setError(null);
     try {
-      const [txRes, balRes, snapRes] = await Promise.all([
+      const [txRes, balRes, snapRes, incRes] = await Promise.all([
         fetch("/api/transactions"),
         fetch("/api/cash-balance"),
         fetch("/api/snapshot"),
+        fetch("/api/cash-income"),
       ]);
-      const [transactions, cashBalances, snapshots] = (await Promise.all([
+      const [transactions, cashBalances, snapshots, cashIncomes] = (await Promise.all([
         txRes.json(),
         balRes.json(),
         snapRes.json(),
-      ])) as [RawTx[], RawCashBalance[], RawSnapshot[]];
+        incRes.json(),
+      ])) as [RawTx[], RawCashBalance[], RawSnapshot[], RawCashIncome[]];
 
       // 1. 계좌별 calcHoldings로 종목별 보유 추출 (같은 ticker는 holdings에 계좌 키로 누적)
       const stocksMap = new Map<string, MockStock>();
@@ -114,6 +130,7 @@ export function useTabletV2Data(): TabletV2DataResult {
               currency: h.currency,
               price: 0,
               dayPct: 0,
+              dailyChangeKRW: 0,
               sector: h.sector || "기타",
               country: h.currency === "USD" ? "미국" : "한국",
               color: colorFor(h.ticker),
@@ -145,6 +162,9 @@ export function useTabletV2Data(): TabletV2DataResult {
             if (s.currency === "USD" && d.exchangeRate) {
               s.exchangeRate = Number(d.exchangeRate);
             }
+            // 일일 등락 금액 (KRW 환산)
+            const rate = s.exchangeRate || FX;
+            s.dailyChangeKRW = s.currency === "USD" ? dayChg * rate : dayChg;
           } catch {
             // 가격 실패 시 0으로 두고 다음 종목 진행
           }
@@ -223,6 +243,52 @@ export function useTabletV2Data(): TabletV2DataResult {
         // 수익률 내림차순
         .sort((a, b) => b.pct - a.pct);
 
+      // 7. 정확한 수익금 계산 (snapshot 기반)
+      const totalCash = Object.values(cashMap).reduce((a, b) => a + b, 0);
+      let totalVal = 0;
+      let totalDailyProfit = 0;
+      for (const st of stocksArr) {
+        const totalQty = Object.values(st.holdings).reduce((sum, h) => sum + h.qty, 0);
+        const priceKRW = st.currency === "USD" ? st.price * (st.exchangeRate || FX) : st.price;
+        totalVal += priceKRW * totalQty;
+        totalDailyProfit += st.dailyChangeKRW * totalQty;
+      }
+      const currValue = totalVal + totalCash;
+      const totalInvested = transactions
+        .filter((t) => t.account_transfer)
+        .reduce((sum, t) => t.account_transfer === "입금" ? sum + (t.transfer_amount || 0) : sum - (t.transfer_amount || 0), 0);
+      const cashIncomeTotal = cashIncomes.reduce((sum: number, c: RawCashIncome) => sum + c.amount, 0);
+      const cumulativeProfit = currValue - totalInvested + cashIncomeTotal;
+      const cumulativeReturn = totalInvested > 0 ? (cumulativeProfit / totalInvested) * 100 : 0;
+
+      // 연/월 수익: snapshot 기반
+      const thisYear = new Date().getFullYear();
+      const thisMonth = new Date().getMonth() + 1;
+      const prevYearSnap = [...sortedSnaps].filter((sp) => sp.snapshot_date.startsWith(`${thisYear - 1}`)).pop();
+      const prevMonthStr = thisMonth === 1 ? `${thisYear - 1}-12` : `${thisYear}-${String(thisMonth - 1).padStart(2, "0")}`;
+      const prevMonthSnap = [...sortedSnaps].filter((sp) => sp.snapshot_date.startsWith(prevMonthStr)).pop();
+
+      const prevYearVal = prevYearSnap?.total_valuation || 0;
+      const prevYearInv = prevYearSnap?.total_invested || 0;
+      const prevMonthVal = prevMonthSnap?.total_valuation || 0;
+      const prevMonthInv = prevMonthSnap?.total_invested || 0;
+
+      const annualProfit = currValue - prevYearVal - (totalInvested - prevYearInv);
+      const annualBase = prevYearVal + (totalInvested - prevYearInv);
+      const annualReturn = annualBase > 0 ? (annualProfit / annualBase) * 100 : 0;
+      const monthlyProfit = currValue - prevMonthVal - (totalInvested - prevMonthInv);
+      const monthlyBase = prevMonthVal + (totalInvested - prevMonthInv);
+      const monthlyReturn = monthlyBase > 0 ? (monthlyProfit / monthlyBase) * 100 : 0;
+      const dailyReturn = currValue > 0 ? (totalDailyProfit / (currValue - totalDailyProfit)) * 100 : 0;
+
+      setSummary({
+        currValue, totalInvested,
+        cumulativeProfit, cumulativeReturn,
+        annualProfit, annualReturn,
+        monthlyProfit, monthlyReturn,
+        dailyProfit: totalDailyProfit, dailyReturn,
+      });
+
       setStocks(stocksArr);
       setCash(cashMap);
       setPerfDays(perf);
@@ -245,6 +311,7 @@ export function useTabletV2Data(): TabletV2DataResult {
     perfDays,
     agg: buildAgg(perfDays),
     accounts,
+    summary,
     loading,
     error,
     refresh: load,

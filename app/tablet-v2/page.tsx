@@ -29,7 +29,7 @@ export default function TabletV2Page() {
   const [sbOpen, setSbOpen] = useState(true);
 
   // ===== 실데이터 fetch =====
-  const { stocks, cash, perfDays, agg, accounts, loading, error, refresh } = useTabletV2Data();
+  const { stocks, cash, perfDays, agg, accounts, summary, loading, error, refresh } = useTabletV2Data();
 
   // ===== 계좌 필터 기준 파생 데이터 =====
   const view = useMemo(() => buildView(stocks, cash, acctSel), [stocks, cash, acctSel]);
@@ -154,6 +154,7 @@ export default function TabletV2Page() {
                 topLeft={sbBtn}
                 stocks={stocks}
                 accounts={accounts}
+                summary={summary}
                 onRefresh={refresh}
                 refreshing={loading}
               />

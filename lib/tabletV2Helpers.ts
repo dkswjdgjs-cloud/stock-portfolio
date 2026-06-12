@@ -21,6 +21,7 @@ export interface MockStock {
   currency: "KRW" | "USD";
   price: number; // KRW 종목: 원화, USD 종목: 달러
   dayPct: number;
+  dailyChangeKRW: number; // 일일 등락 금액 (KRW 환산, 1주 기준)
   sector: string;
   country: string;
   color: string;
@@ -62,9 +63,19 @@ export const ACCT_LIST_EX_ALL = ACCT_LIST.filter((a) => a !== "전체");
 
 // 수익금 표시 모드 (프로토타입용 환산 비율 — PerfPage의 실데이터 기반 결산과는 별개)
 export const PL_MODES = ["누적", "연", "월", "일"] as const;
-export const PL_FACTOR: Record<(typeof PL_MODES)[number], number> = {
-  누적: 1, 연: 0.42, 월: 0.075, 일: 0.011,
-};
+
+export interface PortfolioSummary {
+  currValue: number;
+  totalInvested: number;
+  cumulativeProfit: number;
+  cumulativeReturn: number;
+  annualProfit: number;
+  annualReturn: number;
+  monthlyProfit: number;
+  monthlyReturn: number;
+  dailyProfit: number;
+  dailyReturn: number;
+}
 
 // ===== 포맷터 =====
 export const fmtW = (n: number) => "₩" + Math.round(n).toLocaleString("ko-KR");

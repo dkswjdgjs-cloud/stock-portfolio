@@ -2,8 +2,8 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { C, COUNTRY_COLOR, NUM, SECTOR_COLOR } from "@/lib/glow-theme";
 import {
-  PL_FACTOR, PL_MODES, allTradesOf, fmtW,
-  type AcctPerf, type MockStock, type PortfolioView,
+  PL_MODES, allTradesOf, fmtW,
+  type AcctPerf, type MockStock, type PortfolioSummary, type PortfolioView,
 } from "@/lib/tabletV2Helpers";
 import { AcctBar, Donut, type DonutItem } from "./charts";
 import { Segment } from "./ui";
@@ -15,7 +15,7 @@ function todayLabel() {
 }
 
 export default function PortfolioPage({
-  view, acctSel, sbOpen, topLeft, stocks, accounts, onRefresh, refreshing,
+  view, acctSel, sbOpen, topLeft, stocks, accounts, summary, onRefresh, refreshing,
 }: {
   view: PortfolioView;
   acctSel: string;
@@ -23,6 +23,7 @@ export default function PortfolioPage({
   topLeft: ReactNode;
   stocks: MockStock[];
   accounts: AcctPerf[];
+  summary: PortfolioSummary;
   onRefresh: () => void;
   refreshing: boolean;
 }) {
@@ -63,9 +64,14 @@ export default function PortfolioPage({
   const maxPct = acctCards.length ? Math.max(...acctCards.map((a) => Math.abs(a.pct)), 1) : 1;
 
   const mode = PL_MODES[plMode];
-  const f = PL_FACTOR[mode];
-  const plAmt = view.totalPl * f;
-  const plPct = view.totalPlPct * f;
+  const profits = [
+    { amt: summary.cumulativeProfit, pct: summary.cumulativeReturn },
+    { amt: summary.annualProfit, pct: summary.annualReturn },
+    { amt: summary.monthlyProfit, pct: summary.monthlyReturn },
+    { amt: summary.dailyProfit, pct: summary.dailyReturn },
+  ];
+  const plAmt = profits[plMode].amt;
+  const plPct = profits[plMode].pct;
   const plCol = plAmt >= 0 ? C.red : C.blue;
 
   const handleRefresh = () => {
@@ -143,7 +149,8 @@ export default function PortfolioPage({
                   }}>
                   <span style={{ width: 10, height: 10, borderRadius: "50%", background: it.color, flexShrink: 0 }} />
                   <span style={{ flex: 1, fontSize: 15 }}>{it.label}</span>
-                  <span style={{ ...NUM, fontSize: 15, fontWeight: 600 }}>
+                  <span style={{ ...NUM, fontSize: 15, fontWeight: 600 }}>{fmtW(it.value)}</span>
+                  <span style={{ ...NUM, fontSize: 13, color: C.sec, width: 58, textAlign: "right" }}>
                     {((it.value / pieTotal) * 100).toFixed(2)}%
                   </span>
                 </div>
