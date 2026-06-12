@@ -22,8 +22,8 @@ import {
 // ===== 색 팔레트 (iOS 차트 톤) =====
 const PALETTE = [
   "#5856D6", "#30B0C7", "#007AFF", "#AF52DE",
-  "#00C7BE", "#34C759", "#FF9500", "#FF3B30",
-  "#FF2D55", "#5AC8FA", "#FFCC00", "#A2845E",
+  "#00C7BE", "#34C759", "#5AC8FA", "#FFCC00",
+  "#7B68EE", "#4A90D9", "#48D1CC", "#88D498",
 ];
 function colorFor(key: string): string {
   let h = 0;
@@ -45,6 +45,7 @@ export interface TabletV2DataResult {
   perfDays: PerfPoint[];
   agg: Record<AggUnit, () => PerfPoint[]>;
   accounts: AcctPerf[];
+  allTrades: import("./tabletV2Helpers").TradeRow[];
   summary: PortfolioSummary;
   loading: boolean;
   error: string | null;
@@ -87,6 +88,7 @@ export function useTabletV2Data(): TabletV2DataResult {
   const [cash, setCash] = useState<Record<string, number>>({});
   const [perfDays, setPerfDays] = useState<PerfPoint[]>([]);
   const [accounts, setAccounts] = useState<AcctPerf[]>([]);
+  const [allTrades, setAllTrades] = useState<import("./tabletV2Helpers").TradeRow[]>([]);
   const [summary, setSummary] = useState<PortfolioSummary>({
     currValue: 0, totalInvested: 0,
     cumulativeProfit: 0, cumulativeReturn: 0,
@@ -289,6 +291,22 @@ export function useTabletV2Data(): TabletV2DataResult {
         dailyProfit: totalDailyProfit, dailyReturn,
       });
 
+      // 8. 전체 거래 내역 (매수/매도/입금/출금 모두 포함)
+      const trades: import("./tabletV2Helpers").TradeRow[] = [];
+      for (const t of transactions) {
+        if (t.trade_type && t.ticker) {
+          const st = stocksMap.get(t.ticker);
+          const cur = st?.currency || "KRW";
+          const up = t.trade_type === "매수" ? t.buy_price : t.sell_price;
+          const unit = cur === "USD" ? "$" + (up ?? 0).toFixed(2) : Math.round(up ?? 0).toLocaleString("ko-KR") + "원";
+          trades.push({ date: t.trade_date, acct: t.account, type: t.trade_type as "매수"|"매도", stockName: t.stock_name || t.ticker, qty: t.quantity ?? 0, unit, profitLoss: (t as any).profit_loss || undefined, profitRate: (t as any).profit_rate || undefined });
+        } else if (t.account_transfer) {
+          trades.push({ date: t.trade_date, acct: t.account, type: t.account_transfer as "입금"|"출금", stockName: "-", qty: 0, unit: Math.round(t.transfer_amount ?? 0).toLocaleString("ko-KR") + "원" });
+        }
+      }
+      trades.sort((a, b) => b.date.localeCompare(a.date));
+      setAllTrades(trades);
+
       setStocks(stocksArr);
       setCash(cashMap);
       setPerfDays(perf);
@@ -307,6 +325,7 @@ export function useTabletV2Data(): TabletV2DataResult {
 
   return {
     stocks,
+    allTrades,
     cash,
     perfDays,
     agg: buildAgg(perfDays),

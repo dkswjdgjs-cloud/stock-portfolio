@@ -11,6 +11,8 @@ export interface StockTrade {
   type: "매수" | "매도";
   qty: number;
   unit: string;
+  profitLoss?: number;
+  profitRate?: number;
 }
 
 export interface MockStock {
@@ -177,8 +179,15 @@ export function buildView(
 }
 
 // ===== 거래 내역 (전체 종목 합산, 계좌 필터, 날짜 내림차순) =====
-export interface TradeRow extends StockTrade {
+export interface TradeRow {
+  date: string;
+  acct: string;
+  type: "매수" | "매도" | "입금" | "출금";
   stockName: string;
+  qty: number;
+  unit: string;
+  profitLoss?: number;
+  profitRate?: number;
 }
 
 export function allTradesOf(stocks: MockStock[], acctSel: string): TradeRow[] {
