@@ -219,8 +219,10 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
 // ===== 계좌별 성과 바 =====
 export function AcctBar({ a, max, delay }: { a: AcctPerf; max: number; delay: number }) {
   const [w, setW] = useState(0);
+  const isPos = a.pct >= 0;
+  const accent = isPos ? C.red : C.blue;
   useEffect(() => {
-    const t = setTimeout(() => setW((a.pct / max) * 100), 200 + delay);
+    const t = setTimeout(() => setW((Math.abs(a.pct) / max) * 100), 200 + delay);
     return () => clearTimeout(t);
   }, [a, max, delay]);
   return (
@@ -229,15 +231,15 @@ export function AcctBar({ a, max, delay }: { a: AcctPerf; max: number; delay: nu
         <span style={{ fontSize: 17, fontWeight: 600 }}>{a.name}</span>
         <span style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
           <span style={{ ...NUM, fontSize: 14, color: C.sec }}>{a.val}</span>
-          <span style={{ ...NUM, fontSize: 17, fontWeight: 700, color: C.red }}>+{a.pct}%</span>
+          <span style={{ ...NUM, fontSize: 17, fontWeight: 700, color: accent }}>{isPos ? "+" : ""}{a.pct.toFixed(2)}%</span>
         </span>
       </div>
       <div style={{ height: 5, borderRadius: 3, background: C.fill, margin: "9px 0 7px", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${w}%`, borderRadius: 3, background: C.red, transition: "width .8s cubic-bezier(.25,.8,.3,1)" }} />
+        <div style={{ height: "100%", width: `${w}%`, borderRadius: 3, background: accent, transition: "width .8s cubic-bezier(.25,.8,.3,1)" }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <span style={{ ...NUM, fontSize: 13, color: C.sec }}>투입 {a.inv}</span>
-        <span style={{ ...NUM, fontSize: 13, fontWeight: 600, color: C.red }}>{a.gain}</span>
+        <span style={{ ...NUM, fontSize: 13, fontWeight: 600, color: accent }}>{a.gain}</span>
       </div>
     </div>
   );

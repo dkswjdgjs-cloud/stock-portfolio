@@ -143,8 +143,7 @@ export default function PortfolioPage({
                   }}>
                   <span style={{ width: 10, height: 10, borderRadius: "50%", background: it.color, flexShrink: 0 }} />
                   <span style={{ flex: 1, fontSize: 15 }}>{it.label}</span>
-                  <span style={{ ...NUM, fontSize: 15, fontWeight: 600 }}>{fmtW(it.value)}</span>
-                  <span style={{ ...NUM, fontSize: 13, color: C.sec, width: 58, textAlign: "right" }}>
+                  <span style={{ ...NUM, fontSize: 15, fontWeight: 600 }}>
                     {((it.value / pieTotal) * 100).toFixed(2)}%
                   </span>
                 </div>
