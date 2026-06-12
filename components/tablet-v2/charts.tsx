@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { C, NUM } from "@/lib/glow-theme";
-import { fmtEok, makeSeries, type AcctPerf, type MockStock, type PerfPoint, type ProfitBar } from "@/lib/tabletV2Helpers";
+import { fmtEok, type AcctPerf, type PerfPoint, type ProfitBar } from "@/lib/tabletV2Helpers";
 
 export interface DonutItem {
   key: string;
@@ -41,22 +41,28 @@ export function Donut({
   );
 }
 
-// ===== 주가 라인 차트 (1단계: 시드 기반 가상 시계열 / 2단계: KIS 기간별 시세) =====
-export function PriceChart({ stock, period, trendPct }: { stock: MockStock; period: string; trendPct: number }) {
+// ===== 주가 라인 차트 (실데이터) =====
+export interface ChartPoint { date: string; close: number; open?: number; high?: number; low?: number; volume?: number; }
+
+export function PriceChart({ data, currency }: { data: ChartPoint[]; currency: string }) {
   const W = 560, H = 220, PAD = 8;
-  const n = ({ "1주": 7, "1개월": 30, "3개월": 90, "6개월": 180, "1년": 250 } as Record<string, number>)[period] || 30;
-  const seed = stock.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0) * (n + 7);
-  const data = useMemo(() => makeSeries(seed, n, trendPct * (n / 250)), [seed, n, trendPct]);
-  const min = Math.min(...data), max = Math.max(...data);
-  const up = data[data.length - 1] >= data[0];
+  if (!data.length) return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block" }}>
+      <text x={W / 2} y={H / 2} textAnchor="middle" fill={C.sec} fontSize="14">차트 데이터 없음</text>
+    </svg>
+  );
+  const closes = data.map((d) => d.close);
+  const n = closes.length;
+  const min = Math.min(...closes), max = Math.max(...closes);
+  const up = closes[n - 1] >= closes[0];
   const col = up ? C.red : C.blue;
   const xy = (v: number, i: number): [number, number] => [
     PAD + (i / (n - 1)) * (W - PAD * 2),
     H - PAD - ((v - min) / (max - min || 1)) * (H - PAD * 2),
   ];
-  const path = data.map((v, i) => { const [x, y] = xy(v, i); return `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`; }).join(" ");
-  const [lx, ly] = xy(data[n - 1], n - 1);
-  const gid = `g-${stock.id}-${n}`;
+  const path = closes.map((v, i) => { const [x, y] = xy(v, i); return `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`; }).join(" ");
+  const [lx, ly] = xy(closes[n - 1], n - 1);
+  const gid = `pc-${n}`;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block" }}>
       <defs>
@@ -74,6 +80,7 @@ export function PriceChart({ stock, period, trendPct }: { stock: MockStock; peri
     </svg>
   );
 }
+
 
 // ===== 스무딩 패스 (Catmull-Rom → Bezier) =====
 function smoothPath(pts: [number, number][]): string {

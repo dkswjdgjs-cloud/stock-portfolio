@@ -1,11 +1,24 @@
 "use client";
-import { useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { C, NUM } from "@/lib/glow-theme";
 import {
   fmtAvg, fmtN, fmtPrice, fmtW, type HoldingView, type MockStock,
 } from "@/lib/tabletV2Helpers";
-import { PriceChart } from "./charts";
+import { PriceChart, type ChartPoint } from "./charts";
 import { Badge, Segment } from "./ui";
+
+const PERIODS: { label: string; range: string }[] = [
+  { label: "1주", range: "1W" },
+  { label: "1개월", range: "1M" },
+  { label: "3개월", range: "3M" },
+  { label: "6개월", range: "1Y" },
+  { label: "1년", range: "3Y" },
+];
+
+interface StockInfoData {
+  mktCap?: string; per?: string; pbr?: string; eps?: string;
+  avgVol?: string; roe?: string; w52High?: number; w52Low?: number;
+}
 
 export default function StockDetail({
   stock, holding, acctSel, totalValue, topLeft, onBack,
@@ -17,15 +30,64 @@ export default function StockDetail({
   topLeft: ReactNode;
   onBack: () => void;
 }) {
-  const [period, setPeriod] = useState("1개월");
+  const [periodIdx, setPeriodIdx] = useState(1); // 기본 1개월
+  const [chartData, setChartData] = useState<ChartPoint[]>([]);
+  const [chartLoading, setChartLoading] = useState(false);
+  const [info, setInfo] = useState<StockInfoData | null>(null);
 
-  const infoRows: [string, string][] = [
+  const market = stock.currency === "USD" ? "US" : "KR";
+
+  // 차트 데이터 fetch
+  const fetchChart = useCallback(async (range: string) => {
+    setChartLoading(true);
+    try {
+      const r = await fetch(`/api/stock-chart?ticker=${stock.code}&market=${market}&range=${range}`);
+      const d = await r.json();
+      setChartData(d.chartData || []);
+    } catch { setChartData([]); }
+    finally { setChartLoading(false); }
+  }, [stock.code, market]);
+
+  // 종목 정보 fetch (KR만)
+  useEffect(() => {
+    if (market !== "KR") { setInfo(null); return; }
+    fetch(`/api/stock-info?ticker=${stock.code}&market=KR`)
+      .then((r) => r.json())
+      .then((d) => setInfo(d.info || null))
+      .catch(() => setInfo(null));
+  }, [stock.code, market]);
+
+  // period 변경 시 차트 재 fetch
+  useEffect(() => { fetchChart(PERIODS[periodIdx].range); }, [periodIdx, fetchChart]);
+
+  // 차트 마지막 점에서 시가/고가/저가/거래량 추출
+  const last = chartData.length > 0 ? chartData[chartData.length - 1] : null;
+  const fmtOhlc = (v: number | undefined) => {
+    if (v == null) return "—";
+    return stock.currency === "USD" ? `$${v.toLocaleString()}` : v.toLocaleString("ko-KR");
+  };
+  const ohlcv: [string, string][] = last ? [
+    ["시가", fmtOhlc(last.open)],
+    ["고가", fmtOhlc(last.high)],
+    ["저가", fmtOhlc(last.low)],
+    ["거래량", last.volume?.toLocaleString("ko-KR") ?? "—"],
+  ] : [["시가", "—"], ["고가", "—"], ["저가", "—"], ["거래량", "—"]];
+
+  // 종목 정보 행
+  const infoRows: [string, string, string?][] = [
     ["보유 수량", fmtN(holding.qty) + "주"],
     ["평균 단가", fmtAvg(stock, holding.avg)],
     ["평가 금액", fmtW(holding.value)],
-    ["평가 손익", (holding.pl >= 0 ? "+" : "") + fmtW(holding.pl)],
+    ["평가 손익", (holding.pl >= 0 ? "+" : "") + fmtW(holding.pl), holding.pl >= 0 ? C.red : C.blue],
     ["포트폴리오 비중", ((holding.value / totalValue) * 100).toFixed(2) + "%"],
-    ...(stock.stats.PER ? ([["PER", stock.stats.PER], ["PBR", stock.stats.PBR]] as [string, string][]) : []),
+    ...(info?.mktCap && info.mktCap !== "-" ? [["시가총액", info.mktCap] as [string, string]] : []),
+    ...(info?.per && info.per !== "-" ? [["PER", info.per] as [string, string]] : []),
+    ...(info?.pbr && info.pbr !== "-" ? [["PBR", info.pbr] as [string, string]] : []),
+    ...(info?.eps && info.eps !== "-" ? [["EPS", info.eps] as [string, string]] : []),
+    ...(info?.roe && info.roe !== "-" ? [["ROE", info.roe] as [string, string]] : []),
+    ...(info?.avgVol && info.avgVol !== "-" ? [["평균거래량", info.avgVol] as [string, string]] : []),
+    ...(info?.w52High ? [["52주 최고", fmtN(info.w52High) + "원"] as [string, string]] : []),
+    ...(info?.w52Low ? [["52주 최저", fmtN(info.w52Low) + "원"] as [string, string]] : []),
   ];
 
   const trades = stock.trades.filter((t) => acctSel === "전체" || t.acct === acctSel);
@@ -68,14 +130,19 @@ export default function StockDetail({
 
       <div style={{ background: C.card, borderRadius: 16, padding: 22, marginBottom: 26 }}>
         <div style={{ marginBottom: 14 }}>
-          <Segment compact items={["1주", "1개월", "3개월", "6개월", "1년"]} value={period} onChange={setPeriod} />
+          <Segment compact items={PERIODS.map((p) => p.label)} value={PERIODS[periodIdx].label}
+            onChange={(v) => setPeriodIdx(PERIODS.findIndex((p) => p.label === v))} />
         </div>
-        <PriceChart stock={stock} period={period} trendPct={holding.plPct} />
+        {chartLoading ? (
+          <div style={{ height: 220, display: "grid", placeItems: "center", color: C.sec, fontSize: 14 }}>차트 로딩 중…</div>
+        ) : (
+          <PriceChart data={chartData} currency={stock.currency} />
+        )}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16, background: C.fill, borderRadius: 10, padding: "12px 16px" }}>
-          {["시가", "고가", "저가", "거래량"].map((k) => (
+          {ohlcv.map(([k, v]) => (
             <div key={k}>
               <p style={{ margin: 0, fontSize: 12, color: C.sec }}>{k}</p>
-              <p style={{ ...NUM, margin: "2px 0 0", fontSize: 15, fontWeight: 600 }}>{stock.stats[k] || "—"}</p>
+              <p style={{ ...NUM, margin: "2px 0 0", fontSize: 15, fontWeight: 600 }}>{v}</p>
             </div>
           ))}
         </div>
@@ -83,10 +150,10 @@ export default function StockDetail({
 
       <h2 style={{ margin: "0 0 10px", fontSize: 22, fontWeight: 700 }}>종목 정보{acctSel !== "전체" ? ` · ${acctSel}` : ""}</h2>
       <div style={{ background: C.card, borderRadius: 16, padding: "4px 22px", marginBottom: 26 }}>
-        {infoRows.map(([k, v], i) => (
+        {infoRows.map(([k, v, col], i) => (
           <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
             <span style={{ fontSize: 15, color: C.sec }}>{k}</span>
-            <span style={{ ...NUM, fontSize: 15, fontWeight: 600, color: k === "평가 손익" ? (holding.pl >= 0 ? C.red : C.blue) : C.label }}>{v}</span>
+            <span style={{ ...NUM, fontSize: 15, fontWeight: 600, color: col || C.label }}>{v}</span>
           </div>
         ))}
       </div>
