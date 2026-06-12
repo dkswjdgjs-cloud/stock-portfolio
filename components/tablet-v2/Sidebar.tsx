@@ -1,4 +1,5 @@
 "use client";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { C, FONT, NUM } from "@/lib/glow-theme";
 import { fmtAvg, fmtN, fmtPrice, fmtW, holdingOf, type MockStock, type PortfolioView } from "@/lib/tabletV2Helpers";
 import { type FavEntry } from "@/lib/tabletV2Favorites";
@@ -26,15 +27,42 @@ export default function Sidebar({
   favStocks: MockStock[];
 }) {
   const isSearching = query.trim().length > 0;
+  const [apiResults, setApiResults] = useState<{ticker:string;name:string;market:string}[]>([]);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const doSearch = useCallback((q: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!q.trim()) { setApiResults([]); return; }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const r = await fetch("/api/stock-search?q=" + encodeURIComponent(q.trim()));
+        setApiResults(await r.json());
+      } catch { setApiResults([]); }
+    }, 250);
+  }, []);
+
+  useEffect(() => { doSearch(query); }, [query, doSearch]);
 
   // 검색: 보유 종목 + 즐겨찾기 종목 합산 후 필터
   const allStocks = [...view.rows.map((r) => r.stock), ...favStocks.filter((fs) => !view.rows.some((r) => r.stock.id === fs.id))];
-  const searchResults = isSearching
-    ? allStocks.filter((s) =>
-        s.name.toLowerCase().includes(query.trim().toLowerCase()) ||
-        s.code.toLowerCase().includes(query.trim().toLowerCase())
-      )
-    : [];
+  const searchResults = isSearching ? (() => {
+    const localMatch = allStocks.filter((s) =>
+      s.name.toLowerCase().includes(query.trim().toLowerCase()) ||
+      s.code.toLowerCase().includes(query.trim().toLowerCase())
+    );
+    const localTickers = new Set(localMatch.map((s) => s.code));
+    const apiExtra = apiResults
+      .filter((sr) => !localTickers.has(sr.ticker))
+      .map((sr): MockStock => ({
+        id: sr.ticker, code: sr.ticker, name: sr.name,
+        market: sr.market === "US" ? "해외" : "국내",
+        currency: sr.market === "US" ? "USD" : "KRW",
+        price: 0, dayPct: 0, dailyChangeKRW: 0,
+        sector: "기타", country: sr.market === "US" ? "미국" : "한국",
+        color: "#8E8E93", holdings: {}, stats: {}, trades: [],
+      }));
+    return [...localMatch, ...apiExtra];
+  })() : [];
 
   const isFav = (ticker: string) => favs.some((f) => f.ticker === ticker);
 
@@ -59,9 +87,13 @@ export default function Sidebar({
           </p>
         </div>
         <div style={{ textAlign: "right", flexShrink: 0 }}>
-          <p style={{ ...NUM, margin: 0, fontSize: 17, fontWeight: 600 }}>
-            {opts.subType === "holding" && h && tab === "평가" ? fmtW(h.value) : fmtPrice(s)}
-          </p>
+          {s.price > 0 ? (
+            <p style={{ ...NUM, margin: 0, fontSize: 17, fontWeight: 600 }}>
+              {opts.subType === "holding" && h && tab === "평가" ? fmtW(h.value) : fmtPrice(s)}
+            </p>
+          ) : (
+            <p style={{ ...NUM, margin: 0, fontSize: 13, color: C.ter }}>시세 조회</p>
+          )}
           <div style={{ marginTop: 3, height: 27, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
             {opts.subType === "holding" && h && tab === "평가" ? (
               <span style={{ ...NUM, fontSize: 12, fontWeight: 600, color: h.pl >= 0 ? C.red : C.blue }}>
