@@ -194,7 +194,7 @@ export default function TabletV2Page() {
         </div>
       ) : (
         <div style={{ flex: 1, minWidth: 0, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px 0", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px 0", flexShrink: 0, background: C.card }}>
             {sbBtn}
             <div style={{ display: "inline-flex", background: "rgba(120,120,128,0.12)", borderRadius: 9, padding: 2 }}>
               {["포트폴리오", "성과 추이"].map((label, p) => (
