@@ -17,6 +17,22 @@ export default function TabletV2Page() {
   const [selected, setSelected] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [sbOpen, setSbOpen] = useState(true);
+
+  // Safari safe area 배경색 맞추기
+  useEffect(() => {
+    const orig = document.body.style.background;
+    const update = () => {
+      const isDark = document.querySelector('.glow-v2')?.getAttribute('data-theme') === 'dark'
+        || (!(document.querySelector('.glow-v2')?.getAttribute('data-theme')) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.body.style.background = isDark ? '#000000' : '#F2F2F7';
+    };
+    update();
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener('change', update);
+    const observer = new MutationObserver(update);
+    observer.observe(document.querySelector('.glow-v2') || document.body, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => { document.body.style.background = orig; mq.removeEventListener('change', update); observer.disconnect(); };
+  }, []);
   const [theme, setTheme] = useState<"auto"|"light"|"dark">("auto");
 
   // 다크모드 localStorage 저장/로드
