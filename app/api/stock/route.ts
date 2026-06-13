@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       price = parseFloat(data.output?.stck_prpr || '0');
       const dailyChangeAmt = parseFloat(data.output?.prdy_vrss || '0');
       const dailySign = data.output?.prdy_vrss_sign;
-      dailyChange = (dailySign === '4' || dailySign === '5') ? -Math.abs(dailyChangeAmt) : Math.abs(dailyChangeAmt);
+      dailyChange = (String(dailySign) === '4' || String(dailySign) === '5') ? -Math.abs(dailyChangeAmt) : Math.abs(dailyChangeAmt);
     } else {
       exchangeRate = await getUSDKRWRate();
       const cachedExcd = exchangeCache.get(ticker);
@@ -86,7 +86,9 @@ export async function GET(request: NextRequest) {
         const p = parseFloat(data.output?.last || '0');
         if (p > 0) {
           price = p;
-          dailyChange = parseFloat(data.output?.diff || '0') || 0;
+          const diffVal = parseFloat(data.output?.diff || '0') || 0;
+          const diffSign = String(data.output?.sign || '');
+          dailyChange = (diffSign === '4' || diffSign === '5' || diffSign === '2') ? -Math.abs(diffVal) : Math.abs(diffVal);
           exchangeCache.set(ticker, excd);
           break;
         }
