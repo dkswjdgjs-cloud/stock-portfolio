@@ -13,12 +13,12 @@ function NewsCard({ item }: { item: NewsItem }) {
       rel="noopener noreferrer"
       style={{ display: "block", textDecoration: "none", color: "inherit" }}
     >
-      <p style={{ margin: "0 0 4px", fontSize: 11.5, fontWeight: 500, color: C.sec }}>
+      <p style={{ margin: "0 0 4px", fontSize: 13.8, fontWeight: 500, color: C.sec }}>
         {item.source}
       </p>
       <p
         style={{
-          margin: 0, fontSize: 15.5, fontWeight: 700, lineHeight: 1.35, color: C.label,
+          margin: 0, fontSize: 18.6, fontWeight: 700, lineHeight: 1.35, color: C.label,
           display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
         }}
       >
@@ -27,14 +27,14 @@ function NewsCard({ item }: { item: NewsItem }) {
       {item.description && (
         <p
           style={{
-            margin: "6px 0 0", fontSize: 12.5, lineHeight: 1.4, color: C.sec,
+            margin: "6px 0 0", fontSize: 15, lineHeight: 1.4, color: C.sec,
             display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
           }}
         >
           {item.description}
         </p>
       )}
-      <p style={{ ...NUM, margin: "8px 0 0", fontSize: 11, color: C.ter }}>{item.timeAgo}</p>
+      <p style={{ ...NUM, margin: "8px 0 0", fontSize: 13.2, color: C.ter }}>{item.timeAgo}</p>
     </a>
   );
 }
