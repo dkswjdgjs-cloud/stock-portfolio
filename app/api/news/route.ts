@@ -1,77 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripHtml, sourceFromUrl, timeAgo, dedupeNews, passesNewsFilter, type NewsItem } from "@/lib/news";
+import { fetchAndCurateNews } from "@/lib/newsCuration";
+import { getCachedNews, setCachedNews } from "@/lib/newsCache";
 
-const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
-const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
-interface NaverNewsApiItem {
-  title: string;
-  originallink: string;
-  link: string;
-  description: string;
-  pubDate: string;
-}
-
-// Naver 검색 API 최대 display 값 (1회 호출당 비용은 동일하므로 항상 최대로 가져온다)
-const NAVER_FETCH_COUNT = 100;
-
-const CURATION_PROMPT = `다음은 "%QUERY%" 관련 뉴스 후보 목록이다. 아래 규칙에 따라 최종적으로 남길 기사의 번호만 JSON 배열로 반환하라 (예: [0,2,5]). 다른 설명 없이 JSON 배열만 출력하라.
-
-규칙:
-1. 단순 홍보성 보도자료나 기업의 일상적인 홍보 기사는 제외한다.
-2. 거시 경제 지표, 산업 트렌드, 기업의 주요 실적, 정책 변화 등 실질적인 투자 의사결정에 가치가 있는 기사 위주로 남긴다.
-3. 동일 이슈를 다루는 기사가 여럿이면 가장 분석적인 기사 1건만 남기고 나머지는 제외한다.
-4. 남길 기사가 없으면 빈 배열 []을 반환한다.
-
-뉴스 후보 목록:
-%LIST%`;
-
-// Gemini로 "지능적 판단" 단계 적용 — 실패 시 입력을 그대로 반환 (graceful fallback)
-async function curateWithGemini(query: string, items: NewsItem[]): Promise<NewsItem[]> {
-  if (!GEMINI_API_KEY || items.length === 0) return items;
-
-  const list = items
-    .map((it, i) => `${i}. [${it.source}] ${it.title} - ${it.description}`)
-    .join("\n");
-  const prompt = CURATION_PROMPT.replace("%QUERY%", query).replace("%LIST%", list);
-
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 512 },
-        }),
-      }
-    );
-    if (!res.ok) return items;
-
-    const data = await res.json();
-    const text: string = data.candidates?.[0]?.content?.parts
-      ?.filter((p: { text?: string }) => p.text)
-      ?.map((p: { text?: string }) => p.text)
-      ?.join("") || "";
-
-    const match = text.match(/\[[\d,\s]*\]/);
-    if (!match) return items;
-
-    const indices: number[] = JSON.parse(match[0]);
-    if (!Array.isArray(indices)) return items;
-
-    const kept = indices
-      .filter((i) => Number.isInteger(i) && i >= 0 && i < items.length)
-      .map((i) => items[i]);
-
-    return kept;
-  } catch (error) {
-    console.error("News curation error:", error);
-    return items;
-  }
-}
+// 캐시에 저장할 때 사용하는 개수 (요청별 display는 이 값에서 slice)
+const CACHE_DISPLAY_COUNT = 20;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -80,46 +12,19 @@ export async function GET(request: NextRequest) {
 
   if (!query) return NextResponse.json({ items: [] });
 
-  if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
-    return NextResponse.json({ items: [], error: "NAVER_API_NOT_CONFIGURED" });
+  // 1. 캐시 확인 — /api/news/refresh (cron) 이 미리 채워둔 결과를 즉시 반환
+  const cached = await getCachedNews(query);
+  if (cached) {
+    return NextResponse.json({ items: cached.items.slice(0, display), updatedAt: cached.updatedAt });
   }
 
-  try {
-    const url = `https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(query)}&display=${NAVER_FETCH_COUNT}&sort=date`;
-    const res = await fetch(url, {
-      headers: {
-        "X-Naver-Client-Id": NAVER_CLIENT_ID,
-        "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
-      },
-      next: { revalidate: 300 }, // 5분 캐시
-    });
+  // 2. 캐시 미스 — 라이브로 1회 계산 후 다음 요청을 위해 캐시에 저장
+  const result = await fetchAndCurateNews(query, CACHE_DISPLAY_COUNT);
 
-    if (!res.ok) {
-      console.error("Naver news API error:", res.status, await res.text());
-      return NextResponse.json({ items: [], error: "NAVER_API_ERROR" });
-    }
-
-    const data: { items?: NaverNewsApiItem[] } = await res.json();
-
-    const rawItems: NewsItem[] = (data.items || []).map((it) => ({
-      title: stripHtml(it.title || ""),
-      description: stripHtml(it.description || ""),
-      link: it.link || it.originallink || "",
-      source: sourceFromUrl(it.originallink || it.link || ""),
-      timeAgo: timeAgo(it.pubDate || ""),
-    }));
-
-    // 1단계: 중복 제거 + 강제 필터 (화이트리스트 매체 / 스팸 키워드 / 거시경제 키워드)
-    const filtered = dedupeNews(rawItems).filter(passesNewsFilter);
-
-    // 2단계: 지능적 선별 (Gemini) — 홍보성·중복 이슈 추가 정리
-    const curated = await curateWithGemini(query, filtered);
-
-    const items = curated.slice(0, display);
-
-    return NextResponse.json({ items });
-  } catch (error) {
-    console.error("News fetch error:", error);
-    return NextResponse.json({ items: [], error: "FETCH_FAILED" });
+  if (!result.ok) {
+    return NextResponse.json({ items: [], error: result.error });
   }
+
+  await setCachedNews(query, result.items);
+  return NextResponse.json({ items: result.items.slice(0, display) });
 }
