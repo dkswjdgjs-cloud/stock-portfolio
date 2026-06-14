@@ -105,3 +105,31 @@ export function dedupeNews(items: NewsItem[]): NewsItem[] {
 
   return result;
 }
+
+// ===== 뉴스 선별 규칙 (강제 적용) =====
+
+// 화이트리스트 매체: 이 매체의 기사는 항상 통과
+export const WHITELIST_SOURCES = new Set([
+  "연합뉴스", "매일경제", "한국경제", "머니투데이", "이데일리",
+  "서울경제", "조선일보", "중앙일보", "동아일보", "뉴스1",
+]);
+
+// 광고/스팸성 키워드 — 제목/본문에 포함되면 즉시 제거
+const SPAM_KEYWORDS = [
+  "무료체험", "주식리딩", "단독상담", "수익보장", "급등주", "추천주", "광고", "제공",
+];
+
+// 거시 경제 지표 · 국가적 주요 이슈 키워드 — 화이트리스트 외 매체는 이 키워드가 있어야 통과
+const MACRO_KEYWORDS = [
+  "금리", "기준금리", "환율", "물가", "인플레이션", "한국은행", "연준", "Fed", "FOMC",
+  "정부", "정책", "세법", "추경", "예산", "GDP", "경제성장률", "수출", "무역", "관세",
+  "코스피", "코스닥", "증시",
+];
+
+// 강제 필터: 화이트리스트 매체 + 스팸 키워드 제거 + (비화이트리스트는 거시경제/국가 이슈만)
+export function passesNewsFilter(item: NewsItem): boolean {
+  const text = `${item.title} ${item.description}`;
+  if (SPAM_KEYWORDS.some((kw) => text.includes(kw))) return false;
+  if (WHITELIST_SOURCES.has(item.source)) return true;
+  return MACRO_KEYWORDS.some((kw) => text.includes(kw));
+}

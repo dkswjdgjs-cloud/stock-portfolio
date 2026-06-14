@@ -1,9 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { C, FONT, NUM } from "@/lib/glow-theme";
-import { fmtAvg, fmtDailyChangeAmt, fmtN, fmtPrice, fmtW, holdingOf, type MockStock, type PortfolioView } from "@/lib/tabletV2Helpers";
+import { dailyChangeColor, fmtAvg, fmtDailyChangeFull, fmtN, fmtPrice, fmtW, holdingOf, type MockStock, type PortfolioView } from "@/lib/tabletV2Helpers";
 import { type FavEntry } from "@/lib/tabletV2Favorites";
-import { AcctDropdown, Badge, HeaderMenu, Segment, StarButton } from "./ui";
+import { AcctDropdown, HeaderMenu, Segment, StarButton } from "./ui";
 
 export default function Sidebar({
   open, view, tab, onTab, acctSel, onAcct, selected, onPick, onHome,
@@ -100,10 +100,9 @@ export default function Sidebar({
                 {h.pl >= 0 ? "+" : ""}{fmtW(h.pl)} ({h.pl >= 0 ? "+" : ""}{h.plPct.toFixed(1)}%)
               </span>
             ) : (
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ ...NUM, fontSize: 13, color: C.sec }}>{fmtDailyChangeAmt(s)}</span>
-                <Badge pct={s.dayPct} />
-              </div>
+              <span style={{ ...NUM, fontSize: 15, fontWeight: 600, color: dailyChangeColor(s) }}>
+                {fmtDailyChangeFull(s)}
+              </span>
             )}
           </div>
         </div>

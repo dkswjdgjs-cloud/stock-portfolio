@@ -5,6 +5,8 @@
 // 실데이터는 lib/tabletV2Data.ts의 useTabletV2Data() hook에서 공급.
 // =============================================================
 
+import { C } from "./glow-theme";
+
 export interface StockTrade {
   date: string;
   acct: string;
@@ -97,6 +99,18 @@ export const fmtDailyChangeAmt = (s: MockStock) => {
   const abs = Math.abs(amt);
   return s.currency === "USD" ? `${sign}$${abs.toFixed(2)}` : `${sign}${fmtN(Math.round(abs))}`;
 };
+
+// 일일 등락 표시 (금액 + 등락률 결합) — "+1,000원(+0.25%)" / "+$0.41(+0.45%)"
+export const fmtDailyChangeFull = (s: MockStock) => {
+  const amt = fmtDailyChangeAmt(s);
+  const amtStr = s.currency === "KRW" ? `${amt}원` : amt;
+  const pctSign = s.dayPct > 0 ? "+" : "";
+  return `${amtStr}(${pctSign}${s.dayPct.toFixed(2)}%)`;
+};
+
+// 일일 등락 색상 (상승: 빨강 / 하락: 파랑 / 보합: 회색)
+export const dailyChangeColor = (s: MockStock) => (s.dayPct > 0 ? C.red : s.dayPct < 0 ? C.blue : C.gray);
+
 
 export const fmtEok = (n: number) => {
   const sign = n < 0 ? "-" : "";

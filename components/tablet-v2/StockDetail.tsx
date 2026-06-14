@@ -2,11 +2,11 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { C, NUM } from "@/lib/glow-theme";
 import {
-  fmtAvg, fmtDailyChangeAmt, fmtN, fmtPrice, fmtW, type HoldingView, type MockStock,
+  dailyChangeColor, fmtAvg, fmtDailyChangeFull, fmtN, fmtPrice, fmtW, type HoldingView, type MockStock,
 } from "@/lib/tabletV2Helpers";
 import { PriceChart, type ChartPoint } from "./charts";
 import StockNewsGrid from "./StockNewsGrid";
-import { Badge, Segment } from "./ui";
+import { Segment } from "./ui";
 
 const PERIODS: { label: string; range: string }[] = [
   { label: "1주", range: "1W" },
@@ -137,19 +137,15 @@ export default function StockDetail({
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 12, margin: "12px 0 18px" }}>
-        <span style={{ ...NUM, fontSize: 44, fontWeight: 700, letterSpacing: "-0.03em" }}>
-          {fmtPrice(stock)}{stock.currency === "KRW" ? "원" : ""}
-        </span>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, paddingBottom: 2 }}>
-          <span style={{ ...NUM, fontSize: 14, fontWeight: 600, color: stock.dayPct >= 0 ? C.red : C.blue }}>
-            {fmtDailyChangeAmt(stock)}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "12px 0 18px" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+          <span style={{ ...NUM, fontSize: 44, fontWeight: 700, letterSpacing: "-0.03em" }}>
+            {fmtPrice(stock)}{stock.currency === "KRW" ? "원" : ""}
           </span>
-          <Badge pct={stock.dayPct} size={13} />
+          <span style={{ ...NUM, fontSize: 17, fontWeight: 600, color: dailyChangeColor(stock) }}>
+            {fmtDailyChangeFull(stock)}
+          </span>
         </div>
-      </div>
-
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
         <Segment compact items={["관련뉴스", "종목정보"]} value={detailTab} onChange={setDetailTab} />
       </div>
 

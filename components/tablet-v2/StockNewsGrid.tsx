@@ -1,10 +1,9 @@
 "use client";
-import { useState } from "react";
 import { C, NUM } from "@/lib/glow-theme";
 import { useStockNews, type NewsTarget } from "@/lib/useStockNews";
 import type { NewsItem } from "@/lib/news";
 
-const PAGE_SIZE = 4;
+const PREVIEW_SIZE = 4;
 
 function NewsCard({ item }: { item: NewsItem }) {
   return (
@@ -42,8 +41,8 @@ function NewsCard({ item }: { item: NewsItem }) {
 
 /**
  * 한 종목에 대한 관련 뉴스를 2x2 그리드로 표시.
- * - onMore가 없으면: "더 보기" 클릭 시 같은 화면에서 4개씩 더 노출 (inline pagination)
- * - onMore가 있으면: 뉴스가 있을 때 "더 보기" 클릭 시 onMore() 호출 (예: 종목 상세로 이동)
+ * - onMore가 없으면 (종목 상세 "관련뉴스" 탭): 가져온 뉴스를 전부 펼쳐서 표시, 더 보기 없음
+ * - onMore가 있으면 (포트폴리오 탭 미리보기): 최대 4개만 표시, "더 보기" 클릭 시 onMore() 호출 (종목 상세로 이동)
  */
 export default function StockNewsGrid({
   target, fetchCount = 20, onMore,
@@ -54,7 +53,6 @@ export default function StockNewsGrid({
 }) {
   const { groups, loading, apiUnavailable } = useStockNews([target], fetchCount);
   const items = groups[0]?.items ?? [];
-  const [visible, setVisible] = useState(PAGE_SIZE);
 
   if (loading && items.length === 0) {
     return <p style={{ margin: 0, fontSize: 13, color: C.ter }}>뉴스를 불러오는 중…</p>;
@@ -66,13 +64,7 @@ export default function StockNewsGrid({
     return <p style={{ margin: 0, fontSize: 13, color: C.ter }}>관련 뉴스가 없습니다.</p>;
   }
 
-  const shown = items.slice(0, visible);
-  const showMoreBtn = onMore ? true : visible < items.length;
-
-  const handleMore = () => {
-    if (onMore) onMore();
-    else setVisible((v) => Math.min(v + PAGE_SIZE, items.length));
-  };
+  const shown = onMore ? items.slice(0, PREVIEW_SIZE) : items;
 
   return (
     <>
@@ -81,9 +73,9 @@ export default function StockNewsGrid({
           <NewsCard key={ii} item={item} />
         ))}
       </div>
-      {showMoreBtn && (
+      {onMore && (
         <button
-          onClick={handleMore}
+          onClick={onMore}
           style={{
             display: "block", marginTop: 16, padding: 0,
             background: "none", border: "none", color: C.blue,

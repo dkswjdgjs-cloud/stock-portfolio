@@ -36,7 +36,7 @@ export default function NewsSection({
             }}
           >
             <h3 style={{ margin: "0 0 14px", fontSize: 19, fontWeight: 700 }}>{s.name}</h3>
-            <StockNewsGrid target={s} fetchCount={4} onMore={() => onSelectStock(s.id)} />
+            <StockNewsGrid target={s} fetchCount={8} onMore={() => onSelectStock(s.id)} />
           </div>
         ))
       )}
