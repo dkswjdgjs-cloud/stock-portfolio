@@ -12,13 +12,14 @@ function todayLabel() {
 }
 
 export default function PortfolioPage({
-  view, acctSel, summary, heldStocks, favStocks,
+  view, acctSel, summary, heldStocks, favStocks, onSelectStock,
 }: {
   view: PortfolioView;
   acctSel: string;
   summary: PortfolioSummary;
   heldStocks: NewsTarget[];
   favStocks: NewsTarget[];
+  onSelectStock: (id: string) => void;
 }) {
   const [plMode, setPlMode] = useState(0);
 
@@ -60,7 +61,7 @@ export default function PortfolioPage({
         </svg>
       </div>
 
-      <NewsSection heldStocks={heldStocks} favStocks={favStocks} />
+      <NewsSection heldStocks={heldStocks} favStocks={favStocks} onSelectStock={onSelectStock} />
     </main>
   );
 }

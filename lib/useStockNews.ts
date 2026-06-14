@@ -9,6 +9,7 @@ export interface StockNewsGroup {
 }
 
 export interface NewsTarget {
+  id: string;
   name: string;
   color?: string;
 }

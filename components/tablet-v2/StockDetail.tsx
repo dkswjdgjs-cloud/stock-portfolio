@@ -2,9 +2,10 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { C, NUM } from "@/lib/glow-theme";
 import {
-  fmtAvg, fmtN, fmtPrice, fmtW, type HoldingView, type MockStock,
+  fmtAvg, fmtDailyChangeAmt, fmtN, fmtPrice, fmtW, type HoldingView, type MockStock,
 } from "@/lib/tabletV2Helpers";
 import { PriceChart, type ChartPoint } from "./charts";
+import StockNewsGrid from "./StockNewsGrid";
 import { Badge, Segment } from "./ui";
 
 const PERIODS: { label: string; range: string }[] = [
@@ -31,6 +32,7 @@ export default function StockDetail({
   onBack: () => void;
 }) {
   const [periodIdx, setPeriodIdx] = useState(1);
+  const [detailTab, setDetailTab] = useState("관련뉴스");
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [info, setInfo] = useState<StockInfoData | null>(null);
@@ -135,11 +137,20 @@ export default function StockDetail({
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, margin: "12px 0 18px" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 12, margin: "12px 0 18px" }}>
         <span style={{ ...NUM, fontSize: 44, fontWeight: 700, letterSpacing: "-0.03em" }}>
           {fmtPrice(stock)}{stock.currency === "KRW" ? "원" : ""}
         </span>
-        <Badge pct={stock.dayPct} size={17} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, paddingBottom: 2 }}>
+          <span style={{ ...NUM, fontSize: 14, fontWeight: 600, color: stock.dayPct >= 0 ? C.red : C.blue }}>
+            {fmtDailyChangeAmt(stock)}
+          </span>
+          <Badge pct={stock.dayPct} size={13} />
+        </div>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+        <Segment compact items={["관련뉴스", "종목정보"]} value={detailTab} onChange={setDetailTab} />
       </div>
 
       <div style={{ background: C.card, borderRadius: 16, padding: 22, marginBottom: 26 }}>
@@ -162,35 +173,44 @@ export default function StockDetail({
         </div>
       </div>
 
-      <h2 style={{ margin: "0 0 10px", fontSize: 22, fontWeight: 700 }}>종목 정보{owned && acctSel !== "전체" ? ` · ${acctSel}` : ""}</h2>
-      <div style={{ background: C.card, borderRadius: 16, padding: "4px 22px", marginBottom: 26 }}>
-        {infoRows.map(([k, v, col], i) => (
-          <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
-            <span style={{ fontSize: 15, color: C.sec }}>{k}</span>
-            <span style={{ ...NUM, fontSize: 15, fontWeight: 600, color: col || C.label }}>{v}</span>
-          </div>
-        ))}
-      </div>
-
-      {owned && trades.length > 0 && (
+      {detailTab === "관련뉴스" ? (
         <>
-          <h2 style={{ margin: "0 0 10px", fontSize: 22, fontWeight: 700 }}>거래 내역</h2>
-          <div style={{ background: C.card, borderRadius: 16, overflow: "hidden" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "110px 1fr 64px 70px 110px", gap: 8, padding: "10px 22px", background: C.fill }}>
-              {["날짜", "계좌", "구분", "수량", "단가"].map((h) => (
-                <span key={h} style={{ fontSize: 12, fontWeight: 600, color: C.sec, textAlign: h === "수량" || h === "단가" ? "right" : "left" }}>{h}</span>
-              ))}
-            </div>
-            {trades.map((t, i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "110px 1fr 64px 70px 110px", gap: 8, alignItems: "center", padding: "12px 22px", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
-                <span style={{ ...NUM, fontSize: 14 }}>{t.date}</span>
-                <span style={{ fontSize: 14 }}>{t.acct}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, textAlign: "center", padding: "2px 0", borderRadius: 5, color: t.type === "매수" ? C.red : C.blue, background: t.type === "매수" ? "rgba(255,59,48,0.10)" : "rgba(0,122,255,0.10)" }}>{t.type}</span>
-                <span style={{ ...NUM, fontSize: 14, textAlign: "right" }}>{t.qty}주</span>
-                <span style={{ ...NUM, fontSize: 14, textAlign: "right" }}>{t.unit}</span>
+          <h2 style={{ margin: "0 0 10px", fontSize: 22, fontWeight: 700 }}>관련 뉴스</h2>
+          <StockNewsGrid target={{ id: stock.id, name: stock.name }} fetchCount={20} />
+        </>
+      ) : (
+        <>
+          <h2 style={{ margin: "0 0 10px", fontSize: 22, fontWeight: 700 }}>종목 정보{owned && acctSel !== "전체" ? ` · ${acctSel}` : ""}</h2>
+          <div style={{ background: C.card, borderRadius: 16, padding: "4px 22px", marginBottom: 26 }}>
+            {infoRows.map(([k, v, col], i) => (
+              <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
+                <span style={{ fontSize: 15, color: C.sec }}>{k}</span>
+                <span style={{ ...NUM, fontSize: 15, fontWeight: 600, color: col || C.label }}>{v}</span>
               </div>
             ))}
           </div>
+
+          {owned && trades.length > 0 && (
+            <>
+              <h2 style={{ margin: "0 0 10px", fontSize: 22, fontWeight: 700 }}>거래 내역</h2>
+              <div style={{ background: C.card, borderRadius: 16, overflow: "hidden" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "110px 1fr 64px 70px 110px", gap: 8, padding: "10px 22px", background: C.fill }}>
+                  {["날짜", "계좌", "구분", "수량", "단가"].map((h) => (
+                    <span key={h} style={{ fontSize: 12, fontWeight: 600, color: C.sec, textAlign: h === "수량" || h === "단가" ? "right" : "left" }}>{h}</span>
+                  ))}
+                </div>
+                {trades.map((t, i) => (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "110px 1fr 64px 70px 110px", gap: 8, alignItems: "center", padding: "12px 22px", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
+                    <span style={{ ...NUM, fontSize: 14 }}>{t.date}</span>
+                    <span style={{ fontSize: 14 }}>{t.acct}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, textAlign: "center", padding: "2px 0", borderRadius: 5, color: t.type === "매수" ? C.red : C.blue, background: t.type === "매수" ? "rgba(255,59,48,0.10)" : "rgba(0,122,255,0.10)" }}>{t.type}</span>
+                    <span style={{ ...NUM, fontSize: 14, textAlign: "right" }}>{t.qty}주</span>
+                    <span style={{ ...NUM, fontSize: 14, textAlign: "right" }}>{t.unit}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
     </main>

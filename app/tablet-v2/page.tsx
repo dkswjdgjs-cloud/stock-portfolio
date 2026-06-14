@@ -102,11 +102,11 @@ export default function TabletV2Page() {
 
   // ===== 관련 뉴스 대상 종목 (보유 종목 상위 5개 / 즐겨찾기 종목 상위 5개) =====
   const newsHeldStocks = useMemo(
-    () => view.rows.slice(0, 5).map((r) => ({ name: r.stock.name })),
+    () => view.rows.slice(0, 5).map((r) => ({ id: r.stock.id, name: r.stock.name })),
     [view.rows]
   );
   const newsFavStocks = useMemo(
-    () => favs.slice(0, 5).map((f) => ({ name: f.name })),
+    () => favs.slice(0, 5).map((f) => ({ id: f.ticker, name: f.name })),
     [favs]
   );
 
@@ -118,6 +118,11 @@ export default function TabletV2Page() {
   const pick = (id: string) => {
     if (id === "CASH" || !id) return;
     setSelected((prev) => (prev === id ? null : id));
+  };
+
+  // 관련 뉴스 "더 보기" → 해당 종목 상세 화면으로 이동 (토글 아님, 항상 선택)
+  const selectStock = (id: string) => {
+    if (id) setSelected(id);
   };
 
   const sbBtn = <SidebarToggle open={sbOpen} onToggle={() => setSbOpen((o) => !o)} />;
@@ -251,6 +256,7 @@ export default function TabletV2Page() {
                 summary={summary}
                 heldStocks={newsHeldStocks}
                 favStocks={newsFavStocks}
+                onSelectStock={selectStock}
               />
             </div>
           ) : page === 1 ? (

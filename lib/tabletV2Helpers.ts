@@ -88,6 +88,16 @@ export const fmtAvg = (s: MockStock, avg: number) =>
 export const toKRW = (s: MockStock, units: number) =>
   s.currency === "USD" ? units * (s.exchangeRate || FX) : units;
 
+// 일일 등락 금액 (종목 통화 기준, 1주) — dayPct로부터 역산
+export const fmtDailyChangeAmt = (s: MockStock) => {
+  const denom = 1 + s.dayPct / 100;
+  const prevClose = denom > 0 ? s.price / denom : s.price;
+  const amt = s.price - prevClose;
+  const sign = amt > 0 ? "+" : amt < 0 ? "-" : "";
+  const abs = Math.abs(amt);
+  return s.currency === "USD" ? `${sign}$${abs.toFixed(2)}` : `${sign}${fmtN(Math.round(abs))}`;
+};
+
 export const fmtEok = (n: number) => {
   const sign = n < 0 ? "-" : "";
   const a = Math.abs(n);
