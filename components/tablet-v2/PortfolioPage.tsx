@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { C, NUM } from "@/lib/glow-theme";
 import { PL_MODES, fmtW, type PortfolioSummary, type PortfolioView } from "@/lib/tabletV2Helpers";
+import NewsSection from "./NewsSection";
+import type { NewsTarget } from "@/lib/useStockNews";
 
 function todayLabel() {
   const d = new Date();
@@ -10,11 +12,13 @@ function todayLabel() {
 }
 
 export default function PortfolioPage({
-  view, acctSel, summary,
+  view, acctSel, summary, listMode, newsStocks,
 }: {
   view: PortfolioView;
   acctSel: string;
   summary: PortfolioSummary;
+  listMode: string;
+  newsStocks: NewsTarget[];
 }) {
   const [plMode, setPlMode] = useState(0);
 
@@ -56,7 +60,7 @@ export default function PortfolioPage({
         </svg>
       </div>
 
-      {/* TODO: 네이버 뉴스 API 연동 영역 (다음 작업) */}
+      <NewsSection stocks={newsStocks} listMode={listMode} />
     </main>
   );
 }
