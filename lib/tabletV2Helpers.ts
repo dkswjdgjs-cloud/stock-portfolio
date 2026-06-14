@@ -108,6 +108,12 @@ export const fmtDailyChangeFull = (s: MockStock) => {
   return `${amtStr}(${pctSign}${s.dayPct.toFixed(2)}%)`;
 };
 
+// 평가손익 표시 (금액 + 수익률 결합, 일일 등락과 동일한 형식) — "+1,234,567원(+12.34%)"
+export const fmtPlFull = (pl: number, plPct: number) => {
+  const sign = pl >= 0 ? "+" : "";
+  return `${sign}${fmtN(Math.round(pl))}원(${sign}${plPct.toFixed(2)}%)`;
+};
+
 // 일일 등락 색상 (상승: 빨강 / 하락: 파랑 / 보합: 회색)
 export const dailyChangeColor = (s: MockStock) => (s.dayPct > 0 ? C.red : s.dayPct < 0 ? C.blue : C.gray);
 

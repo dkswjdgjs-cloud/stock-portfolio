@@ -72,6 +72,18 @@ export default function StockDetail({
     ["거래량", last.volume?.toLocaleString("ko-KR") ?? "—"],
   ] : [["시가", "—"], ["고가", "—"], ["저가", "—"], ["거래량", "—"]];
 
+  // 시가총액/PER/PBR/EPS/ROE/평균거래량/52주 최고·최저 — 데이터 유무와 상관없이 항상 같은 행 구성으로 표시
+  const extraInfoRows: [string, string][] = [
+    ["시가총액", info?.mktCap && info.mktCap !== "-" ? info.mktCap : "—"],
+    ["PER", info?.per && info.per !== "-" ? info.per : "—"],
+    ["PBR", info?.pbr && info.pbr !== "-" ? info.pbr : "—"],
+    ["EPS", info?.eps && info.eps !== "-" ? info.eps : "—"],
+    ["ROE", info?.roe && info.roe !== "-" ? info.roe : "—"],
+    ["평균거래량", info?.avgVol && info.avgVol !== "-" ? info.avgVol : "—"],
+    ["52주 최고", info?.w52High ? fmtN(info.w52High) + "원" : "—"],
+    ["52주 최저", info?.w52Low ? fmtN(info.w52Low) + "원" : "—"],
+  ];
+
   // 종목 정보 — 보유 vs 미보유
   const infoRows: [string, string, string?][] = owned && holding ? [
     ["보유 수량", fmtN(holding.qty) + "주"],
@@ -79,24 +91,14 @@ export default function StockDetail({
     ["평가 금액", fmtW(holding.value)],
     ["평가 손익", (holding.pl >= 0 ? "+" : "") + fmtW(holding.pl), holding.pl >= 0 ? C.red : C.blue],
     ["포트폴리오 비중", ((holding.value / totalValue) * 100).toFixed(2) + "%"],
-    ...(info?.mktCap && info.mktCap !== "-" ? [["시가총액", info.mktCap] as [string, string]] : []),
-    ...(info?.per && info.per !== "-" ? [["PER", info.per] as [string, string]] : []),
-    ...(info?.pbr && info.pbr !== "-" ? [["PBR", info.pbr] as [string, string]] : []),
-    ...(info?.eps && info.eps !== "-" ? [["EPS", info.eps] as [string, string]] : []),
-    ...(info?.roe && info.roe !== "-" ? [["ROE", info.roe] as [string, string]] : []),
-    ...(info?.avgVol && info.avgVol !== "-" ? [["평균거래량", info.avgVol] as [string, string]] : []),
-    ...(info?.w52High ? [["52주 최고", fmtN(info.w52High) + "원"] as [string, string]] : []),
-    ...(info?.w52Low ? [["52주 최저", fmtN(info.w52Low) + "원"] as [string, string]] : []),
+    ...extraInfoRows,
   ] : [
     ["현재가", fmtPrice(stock) + (stock.currency === "KRW" ? "원" : "")],
     ["등락률", (stock.dayPct >= 0 ? "+" : "") + stock.dayPct.toFixed(2) + "%", stock.dayPct >= 0 ? C.red : C.blue],
     ["섹터", stock.sector],
     ["시장", stock.market],
     ["국가", stock.country],
-    ...(info?.mktCap && info.mktCap !== "-" ? [["시가총액", info.mktCap] as [string, string]] : []),
-    ...(info?.per && info.per !== "-" ? [["PER", info.per] as [string, string]] : []),
-    ...(info?.pbr && info.pbr !== "-" ? [["PBR", info.pbr] as [string, string]] : []),
-    ...(info?.roe && info.roe !== "-" ? [["ROE", info.roe] as [string, string]] : []),
+    ...extraInfoRows,
   ];
 
   const trades = stock.trades.filter((t) => acctSel === "전체" || t.acct === acctSel);

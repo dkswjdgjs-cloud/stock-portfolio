@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { C, FONT, NUM } from "@/lib/glow-theme";
-import { dailyChangeColor, fmtAvg, fmtDailyChangeFull, fmtN, fmtPrice, fmtW, holdingOf, type MockStock, type PortfolioView } from "@/lib/tabletV2Helpers";
+import { dailyChangeColor, fmtAvg, fmtDailyChangeFull, fmtN, fmtPlFull, fmtPrice, fmtW, holdingOf, type MockStock, type PortfolioView } from "@/lib/tabletV2Helpers";
 import { type FavEntry } from "@/lib/tabletV2Favorites";
 import { AcctDropdown, HeaderMenu, Segment, StarButton } from "./ui";
 
@@ -96,8 +96,8 @@ export default function Sidebar({
           )}
           <div style={{ marginTop: 3, height: 27, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
             {opts.subType === "holding" && h && tab === "평가" ? (
-              <span style={{ ...NUM, fontSize: 14, fontWeight: 600, color: h.pl >= 0 ? C.red : C.blue }}>
-                {h.pl >= 0 ? "+" : ""}{fmtW(h.pl)} ({h.pl >= 0 ? "+" : ""}{h.plPct.toFixed(1)}%)
+              <span style={{ ...NUM, fontSize: 15, fontWeight: 600, color: h.pl >= 0 ? C.red : C.blue }}>
+                {fmtPlFull(h.pl, h.plPct)}
               </span>
             ) : (
               <span style={{ ...NUM, fontSize: 15, fontWeight: 600, color: dailyChangeColor(s) }}>
