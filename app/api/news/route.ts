@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripHtml, sourceFromUrl, timeAgo, type NewsItem } from "@/lib/news";
+import { stripHtml, sourceFromUrl, timeAgo, dedupeNews, type NewsItem } from "@/lib/news";
 
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
@@ -15,7 +15,9 @@ interface NaverNewsApiItem {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const query = (searchParams.get("query") || "").trim();
-  const display = Math.min(Math.max(Number(searchParams.get("display")) || 3, 1), 10);
+  const display = Math.min(Math.max(Number(searchParams.get("display")) || 20, 1), 100);
+  // 중복 제거 후에도 display개를 채울 수 있도록 여유 있게 더 가져온다
+  const fetchCount = Math.min(display * 2, 100);
 
   if (!query) return NextResponse.json({ items: [] });
 
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const url = `https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(query)}&display=${display}&sort=date`;
+    const url = `https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(query)}&display=${fetchCount}&sort=date`;
     const res = await fetch(url, {
       headers: {
         "X-Naver-Client-Id": NAVER_CLIENT_ID,
@@ -40,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     const data: { items?: NaverNewsApiItem[] } = await res.json();
 
-    const items: NewsItem[] = (data.items || []).map((it) => ({
+    const rawItems: NewsItem[] = (data.items || []).map((it) => ({
       title: stripHtml(it.title || ""),
       description: stripHtml(it.description || ""),
       link: it.link || it.originallink || "",
@@ -48,9 +50,12 @@ export async function GET(request: NextRequest) {
       timeAgo: timeAgo(it.pubDate || ""),
     }));
 
+    const items = dedupeNews(rawItems).slice(0, display);
+
     return NextResponse.json({ items });
   } catch (error) {
     console.error("News fetch error:", error);
     return NextResponse.json({ items: [], error: "FETCH_FAILED" });
   }
 }
+

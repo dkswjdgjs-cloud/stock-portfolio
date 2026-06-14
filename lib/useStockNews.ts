@@ -20,10 +20,10 @@ interface FetchResult extends StockNewsGroup {
 /**
  * 종목별 관련 뉴스를 /api/news 에서 가져온다.
  * - stocks: 뉴스를 가져올 종목 목록 (이름 기준 쿼리)
- * - perStock: 종목당 가져올 뉴스 개수
+ * - fetchCount: 종목당 가져올 뉴스 개수 (중복 제거 전 기준)
  * 세션 내에서는 종목명별로 캐싱하여 중복 호출을 줄인다.
  */
-export function useStockNews(stocks: NewsTarget[], perStock = 2) {
+export function useStockNews(stocks: NewsTarget[], fetchCount = 20) {
   const [groups, setGroups] = useState<StockNewsGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [apiUnavailable, setApiUnavailable] = useState(false);
@@ -41,7 +41,7 @@ export function useStockNews(stocks: NewsTarget[], perStock = 2) {
         const cached = cacheRef.current.get(s.name);
         if (cached) return { name: s.name, color: s.color, items: cached, unavailable: false };
         try {
-          const r = await fetch(`/api/news?query=${encodeURIComponent(s.name)}&display=${perStock}`);
+          const r = await fetch(`/api/news?query=${encodeURIComponent(s.name)}&display=${fetchCount}`);
           const d: { items?: NewsItem[]; error?: string } = await r.json();
           const items = d.items || [];
           cacheRef.current.set(s.name, items);
@@ -61,7 +61,7 @@ export function useStockNews(stocks: NewsTarget[], perStock = 2) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, perStock]);
+  }, [key, fetchCount]);
 
   return { groups, loading, apiUnavailable };
 }

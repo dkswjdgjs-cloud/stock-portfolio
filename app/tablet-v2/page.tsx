@@ -100,13 +100,15 @@ export default function TabletV2Page() {
   // ===== 계좌 필터 기준 파생 데이터 =====
   const view = useMemo(() => buildView(stocks, cash, acctSel), [stocks, cash, acctSel]);
 
-  // ===== 관련 뉴스 대상 종목 (보유 종목 상위 5개 | 즐겨찾기 종목 상위 5개) =====
-  const newsStocks = useMemo(() => {
-    if (listMode === "즐겨찾기") {
-      return favs.slice(0, 5).map((f) => ({ name: f.name }));
-    }
-    return view.rows.slice(0, 5).map((r) => ({ name: r.stock.name, color: r.stock.color }));
-  }, [listMode, favs, view.rows]);
+  // ===== 관련 뉴스 대상 종목 (보유 종목 상위 5개 / 즐겨찾기 종목 상위 5개) =====
+  const newsHeldStocks = useMemo(
+    () => view.rows.slice(0, 5).map((r) => ({ name: r.stock.name })),
+    [view.rows]
+  );
+  const newsFavStocks = useMemo(
+    () => favs.slice(0, 5).map((f) => ({ name: f.name })),
+    [favs]
+  );
 
   // 선택 종목: held + favStocks 합산에서 찾기
   const allStocks = useMemo(() => [...stocks, ...favStocks.filter((fs) => !stocks.some((s) => s.id === fs.id))], [stocks, favStocks]);
@@ -247,8 +249,8 @@ export default function TabletV2Page() {
                 view={view}
                 acctSel={acctSel}
                 summary={summary}
-                listMode={listMode}
-                newsStocks={newsStocks}
+                heldStocks={newsHeldStocks}
+                favStocks={newsFavStocks}
               />
             </div>
           ) : page === 1 ? (

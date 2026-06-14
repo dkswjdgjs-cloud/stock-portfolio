@@ -83,3 +83,25 @@ export function timeAgo(pubDate: string): string {
   const month = Math.floor(day / 30);
   return `${month}개월 전`;
 }
+
+// 제목 비교용 정규화 (공백/특수문자 제거 후 소문자화)
+function normalizeTitle(title: string): string {
+  return title.replace(/\s+/g, "").replace(/[\[\]()【】<>…·,."'“”‘’|\-–—]/g, "").toLowerCase();
+}
+
+// 동일 기사(언론사별 재배포 포함) 중복 제거 — link 또는 정규화된 제목 기준
+export function dedupeNews(items: NewsItem[]): NewsItem[] {
+  const seenLinks = new Set<string>();
+  const seenTitles = new Set<string>();
+  const result: NewsItem[] = [];
+
+  for (const item of items) {
+    const normTitle = normalizeTitle(item.title);
+    if ((item.link && seenLinks.has(item.link)) || seenTitles.has(normTitle)) continue;
+    if (item.link) seenLinks.add(item.link);
+    seenTitles.add(normTitle);
+    result.push(item);
+  }
+
+  return result;
+}
