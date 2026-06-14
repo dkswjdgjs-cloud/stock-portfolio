@@ -7,6 +7,7 @@ import { useTabletV2Data } from "@/lib/tabletV2Data";
 import { loadFavorites, saveFavorites, toggleFav, type FavEntry } from "@/lib/tabletV2Favorites";
 import Sidebar from "@/components/tablet-v2/Sidebar";
 import PortfolioPage from "@/components/tablet-v2/PortfolioPage";
+import AssetPage from "@/components/tablet-v2/AssetPage";
 import PerfPage from "@/components/tablet-v2/PerfPage";
 import StockDetail from "@/components/tablet-v2/StockDetail";
 import { SidebarToggle } from "@/components/tablet-v2/ui";
@@ -213,7 +214,7 @@ export default function TabletV2Page() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px 0", flexShrink: 0, background: C.bgGrouped }}>
             {sbBtn}
             <div style={{ display: "inline-flex", background: "rgba(120,120,128,0.12)", borderRadius: 9, padding: 2 }}>
-              {["포트폴리오", "성과 추이"].map((label, p) => (
+              {["포트폴리오", "자산배분", "성과 추이"].map((label, p) => (
                 <button key={label} onClick={() => setPage(p)}
                   style={{
                     border: "none", padding: "5px 20px", borderRadius: 7, fontSize: 13,
@@ -237,14 +238,17 @@ export default function TabletV2Page() {
               <PortfolioPage
                 view={view}
                 acctSel={acctSel}
+                summary={summary}
+              />
+            </div>
+          ) : page === 1 ? (
+            <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+              <AssetPage
+                view={view}
+                acctSel={acctSel}
                 sbOpen={sbOpen}
-                topLeft={sbBtn}
-                stocks={stocks}
                 accounts={accounts}
                 allTrades={allTrades}
-                summary={summary}
-                onRefresh={refresh}
-                refreshing={loading}
               />
             </div>
           ) : (
