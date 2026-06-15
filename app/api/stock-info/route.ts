@@ -1,21 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Redis } from '@upstash/redis';
 
 const KIS_APP_KEY = process.env.KIS_APP_KEY!;
 const KIS_APP_SECRET = process.env.KIS_APP_SECRET!;
 const KIS_BASE_URL = 'https://openapi.koreainvestment.com:9443';
 
-let tokenCache: { token: string; expires: number } | null = null;
+// /api/stock 라우트와 동일한 Redis 캐시(kis_token)를 공유한다.
+// (이전에는 함수 내 변수에만 캐싱해서, 서버리스 콜드 스타트마다 새 토큰을 발급받다가
+//  KIS 토큰 발급 빈도 제한에 걸려 인증이 실패 → 모든 항목이 "-"로 빠지는 문제가 있었음)
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+});
 
-async function getAccessToken() {
-  if (tokenCache && Date.now() < tokenCache.expires) return tokenCache.token;
+async function fetchNewToken(): Promise<string> {
   const res = await fetch(`${KIS_BASE_URL}/oauth2/tokenP`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ grant_type: 'client_credentials', appkey: KIS_APP_KEY, appsecret: KIS_APP_SECRET }),
   });
   const data = await res.json();
-  tokenCache = { token: data.access_token, expires: Date.now() + (data.expires_in - 60) * 1000 };
-  return tokenCache.token;
+  if (!data.access_token) {
+    console.error('KIS token 발급 실패:', JSON.stringify(data).slice(0, 300));
+    throw new Error('KIS token 발급 실패');
+  }
+  const token = data.access_token as string;
+  const ttl = (data.expires_in || 86400) - 60;
+  await redis.set('kis_token', token, { ex: ttl });
+  return token;
+}
+
+async function getAccessToken(): Promise<string> {
+  const cached = await redis.get<string>('kis_token');
+  if (cached) return cached;
+  return fetchNewToken();
+}
+
+interface KisApiData {
+  rt_cd?: string;
+  msg_cd?: string;
+  msg1?: string;
+  output?: unknown;
+}
+
+// KIS API 호출 + rt_cd 체크. 인증 오류(rt_cd !== '0')면 토큰을 새로 받아 1회 재시도.
+async function kisFetch(url: string, trId: string, token: string): Promise<{ data: KisApiData; token: string }> {
+  const call = (tok: string) =>
+    fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${tok}`,
+        appkey: KIS_APP_KEY,
+        appsecret: KIS_APP_SECRET,
+        tr_id: trId,
+      },
+    }).then((r) => r.json());
+
+  let data = await call(token);
+  if (data.rt_cd && data.rt_cd !== '0') {
+    console.error(`KIS API error (tr_id=${trId}):`, data.msg_cd, data.msg1);
+    const fresh = await fetchNewToken();
+    data = await call(fresh);
+    if (data.rt_cd && data.rt_cd !== '0') {
+      console.error(`KIS API retry failed (tr_id=${trId}):`, data.msg_cd, data.msg1);
+    }
+    return { data, token: fresh };
+  }
+  return { data, token };
 }
 
 export async function GET(request: NextRequest) {
@@ -26,38 +77,24 @@ export async function GET(request: NextRequest) {
   if (!ticker) return NextResponse.json({ error: 'ticker is required' }, { status: 400 });
 
   try {
-    const token = await getAccessToken();
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      appkey: KIS_APP_KEY,
-      appsecret: KIS_APP_SECRET,
-    };
+    let token = await getAccessToken();
 
     if (market !== 'KR') {
       return NextResponse.json({ info: null, message: '해외 종목은 지원하지 않습니다' });
     }
 
     // 주식현재가 시세 (PER, PBR, EPS, 52주 최고/최저 등)
-    headers['tr_id'] = 'FHKST01010100';
     const priceUrl = `${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}`;
-    const priceRes = await fetch(priceUrl, { headers });
-    const priceData = await priceRes.json();
-    const p = priceData.output || {};
+    const priceResult = await kisFetch(priceUrl, 'FHKST01010100', token);
+    const p = (priceResult.data.output || {}) as Record<string, string>;
+    token = priceResult.token;
 
     // 재무비율 (ROE, 부채비율, 매출성장률)
-    const finHeaders: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      appkey: KIS_APP_KEY,
-      appsecret: KIS_APP_SECRET,
-      'tr_id': 'FHKST66430200',
-    };
     const finUrl = `${KIS_BASE_URL}/uapi/domestic-stock/v1/finance/financial-ratio?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}&FID_PERIOD_DIV_CODE=Y`;
-    const finRes = await fetch(finUrl, { headers: finHeaders });
-    const finData = await finRes.json();
-    console.log('fin API full:', JSON.stringify(finData).slice(0, 500));
-    const f = finData.output && finData.output.length > 0 ? finData.output[0] : {};
+    const finResult = await kisFetch(finUrl, 'FHKST66430200', token);
+    const finOutput = finResult.data.output as Record<string, string>[] | undefined;
+    token = finResult.token;
+    const f = finOutput && finOutput.length > 0 ? finOutput[0] : ({} as Record<string, string>);
 
     const info = {
       // 시세 API
@@ -81,18 +118,10 @@ export async function GET(request: NextRequest) {
     const isEtf = etfKeywords.some(k => (p.bstp_kor_isnm || '').includes(k) || (p.rprs_mrkt_kor_name || '').includes(k));
     if (isEtf) {
       try {
-        const etfHeaders: Record<string, string> = {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-          appkey: KIS_APP_KEY,
-          appsecret: KIS_APP_SECRET,
-          'tr_id': 'FHKST121204C0',
-        };
         const etfUrl = `${KIS_BASE_URL}/uapi/etfetn/v1/quotations/inquire-component-stock-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}`;
-        const etfRes = await fetch(etfUrl, { headers: etfHeaders });
-        const etfData = await etfRes.json();
-        console.log('ETF API response:', JSON.stringify(etfData).slice(0, 300));
-        etfComponents = (etfData.output || []).slice(0, 10).map((item: any) => ({
+        const etfResult = await kisFetch(etfUrl, 'FHKST121204C0', token);
+        const etfOutput = (etfResult.data.output as Record<string, string>[]) || [];
+        etfComponents = etfOutput.slice(0, 10).map((item: any) => ({
           name: item.hts_kor_isnm || '-',
           ticker: item.stck_shrn_iscd || '-',
           weight: item.etf_cnfg_issu_rate ? parseFloat(item.etf_cnfg_issu_rate).toFixed(2) : '-',
@@ -100,7 +129,7 @@ export async function GET(request: NextRequest) {
           changeSign: item.prdy_vrss_sign || '3',
         }));
       } catch (e) {
-        console.log('ETF API error:', e);
+        console.error('ETF API error:', e);
         etfComponents = [];
       }
     }
