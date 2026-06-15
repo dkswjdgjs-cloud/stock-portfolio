@@ -7,7 +7,7 @@ import { AcctDropdown, HeaderMenu, Segment, StarButton } from "./ui";
 
 export default function Sidebar({
   open, view, tab, onTab, acctSel, onAcct, selected, onPick, onHome,
-  query, onQuery, listMode, onListMode, favs, onToggleFav, favStocks,
+  query, onQuery, listMode, onListMode, favs, onToggleFav, favStocks, rtConnected,
 }: {
   open: boolean;
   view: PortfolioView;
@@ -25,6 +25,7 @@ export default function Sidebar({
   favs: FavEntry[];
   onToggleFav: (s: MockStock) => void;
   favStocks: MockStock[];
+  rtConnected: boolean;
 }) {
   const isSearching = query.trim().length > 0;
   const [apiResults, setApiResults] = useState<{ticker:string;name:string;market:string}[]>([]);
@@ -216,7 +217,11 @@ export default function Sidebar({
         </div>
 
         <p style={{ margin: "14px 0 0", fontSize: 13, color: C.ter, textAlign: "center" }}>
-          GLOW · KIS 실시간 시세
+          GLOW · KIS 실시간 시세{" "}
+          <span style={{
+            display: "inline-block", width: 7, height: 7, borderRadius: "50%",
+            background: rtConnected ? C.green : C.red, marginLeft: 2, marginBottom: -0.5,
+          }} title={rtConnected ? "실시간 연결됨" : "실시간 연결 안 됨"} />
         </p>
       </div>
     </aside>

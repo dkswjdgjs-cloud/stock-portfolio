@@ -110,7 +110,7 @@ export default function TabletV2Page() {
     return Array.from(set);
   }, [stocks, favs]);
 
-  const { prices: rtPrices, watch: rtWatch } = useRealtimePrices(alwaysTickers);
+  const { prices: rtPrices, connected: rtConnected, watch: rtWatch } = useRealtimePrices(alwaysTickers);
 
   const liveStocks = useMemo(
     () => stocks.map((s) => applyRealtimePrice(s, rtPrices)),
@@ -215,6 +215,7 @@ export default function TabletV2Page() {
         favs={favs}
         onToggleFav={handleToggleFav}
         favStocks={liveFavStocks}
+        rtConnected={rtConnected}
       />
 
       {sel && selH ? (
