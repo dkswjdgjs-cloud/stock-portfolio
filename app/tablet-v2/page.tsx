@@ -4,6 +4,7 @@ import "./glow-tokens.css";
 import { C, FONT } from "@/lib/glow-theme";
 import { buildView, holdingOf, type MockStock } from "@/lib/tabletV2Helpers";
 import { useTabletV2Data } from "@/lib/tabletV2Data";
+import { useRealtimePrices, applyRealtimePrice } from "@/lib/useRealtimePrices";
 import { loadFavorites, saveFavorites, toggleFav, type FavEntry } from "@/lib/tabletV2Favorites";
 import Sidebar from "@/components/tablet-v2/Sidebar";
 import PortfolioPage from "@/components/tablet-v2/PortfolioPage";
@@ -97,8 +98,31 @@ export default function TabletV2Page() {
     })).then((results) => setFavStocks(results.filter(Boolean) as MockStock[]));
   }, [favs, stocks]);
 
+  // ===== KIS 실시간 시세 (국내 보유+즐겨찾기 상시구독 + 종목상세 동적구독) =====
+  const alwaysTickers = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of stocks) {
+      if (s.currency === "KRW") set.add(s.code);
+    }
+    for (const f of favs) {
+      if (f.market === "KR") set.add(f.ticker);
+    }
+    return Array.from(set);
+  }, [stocks, favs]);
+
+  const { prices: rtPrices, watch: rtWatch } = useRealtimePrices(alwaysTickers);
+
+  const liveStocks = useMemo(
+    () => stocks.map((s) => applyRealtimePrice(s, rtPrices)),
+    [stocks, rtPrices]
+  );
+  const liveFavStocks = useMemo(
+    () => favStocks.map((s) => applyRealtimePrice(s, rtPrices)),
+    [favStocks, rtPrices]
+  );
+
   // ===== 계좌 필터 기준 파생 데이터 =====
-  const view = useMemo(() => buildView(stocks, cash, acctSel), [stocks, cash, acctSel]);
+  const view = useMemo(() => buildView(liveStocks, cash, acctSel), [liveStocks, cash, acctSel]);
 
   // ===== 관련 뉴스 대상 종목 (보유 종목 상위 5개 / 즐겨찾기 종목 상위 5개) =====
   const newsHeldStocks = useMemo(
@@ -110,10 +134,18 @@ export default function TabletV2Page() {
     [favs]
   );
 
-  // 선택 종목: held + favStocks 합산에서 찾기
-  const allStocks = useMemo(() => [...stocks, ...favStocks.filter((fs) => !stocks.some((s) => s.id === fs.id))], [stocks, favStocks]);
+  // 선택 종목: held + favStocks 합산에서 찾기 (실시간 가격 반영본)
+  const allStocks = useMemo(() => [...liveStocks, ...liveFavStocks.filter((fs) => !liveStocks.some((s) => s.id === fs.id))], [liveStocks, liveFavStocks]);
   const sel = selected ? allStocks.find((s) => s.id === selected) ?? null : null;
   const selH = sel ? holdingOf(sel, acctSel) : null;
+
+  // 종목상세에서 보고 있는 국내 종목을 실시간 동적 구독
+  const selCode = sel?.code ?? null;
+  const selCurrency = sel?.currency ?? null;
+  useEffect(() => {
+    if (selCode && selCurrency === "KRW") rtWatch(selCode);
+    else rtWatch(null);
+  }, [selCode, selCurrency, rtWatch]);
 
   const pick = (id: string) => {
     if (id === "CASH" || !id) return;
@@ -182,7 +214,7 @@ export default function TabletV2Page() {
         onListMode={setListMode}
         favs={favs}
         onToggleFav={handleToggleFav}
-        favStocks={favStocks}
+        favStocks={liveFavStocks}
       />
 
       {sel && selH ? (
