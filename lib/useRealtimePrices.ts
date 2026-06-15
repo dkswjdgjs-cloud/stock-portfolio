@@ -27,6 +27,7 @@ export function useRealtimePrices(alwaysTickers: string[]) {
   const wsRef = useRef<WebSocket | null>(null);
   const watchRef = useRef<string | null>(null);
   const alwaysRef = useRef<string[]>(alwaysTickers);
+  const pendingRef = useRef<Record<string, RealtimeTick>>({});
   const alwaysKey = alwaysTickers.slice().sort().join(",");
 
   // 보유+즐겨찾기 목록이 바뀌면 현재 연결에 다시 전송
@@ -66,15 +67,13 @@ export function useRealtimePrices(alwaysTickers: string[]) {
           return;
         }
         if (msg.type === "price" && msg.ticker) {
-          setPrices((prev) => ({
-            ...prev,
-            [msg.ticker as string]: {
-              price: msg.price ?? 0,
-              change: msg.change ?? 0,
-              changeRate: msg.changeRate ?? 0,
-              time: msg.time ?? "",
-            },
-          }));
+          // 화면 갱신은 1초 간격으로 묶어서 반영 — 여기서는 최신 값만 버퍼에 저장
+          pendingRef.current[msg.ticker] = {
+            price: msg.price ?? 0,
+            change: msg.change ?? 0,
+            changeRate: msg.changeRate ?? 0,
+            time: msg.time ?? "",
+          };
         } else if (msg.type === "status") {
           setConnected(!!msg.kisConnected);
         }
@@ -99,6 +98,17 @@ export function useRealtimePrices(alwaysTickers: string[]) {
       wsRef.current?.close();
       wsRef.current = null;
     };
+  }, []);
+
+  // 버퍼에 쌓인 최신 시세를 1초마다 한 번씩 화면에 반영 (너무 잦은 리렌더 방지)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Object.keys(pendingRef.current).length === 0) return;
+      const updates = pendingRef.current;
+      pendingRef.current = {};
+      setPrices((prev) => ({ ...prev, ...updates }));
+    }, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   // 종목상세에서 보고 있는 종목 1개를 동적으로 구독/해제
