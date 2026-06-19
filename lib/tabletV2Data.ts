@@ -158,8 +158,14 @@ export function useTabletV2Data(): TabletV2DataResult {
             const price = Number(d.price) || 0;
             const dayChg = Number(d.dailyChange) || 0;
             s.price = price;
-            const prev = price - dayChg;
-            s.dayPct = prev > 0 ? (dayChg / prev) * 100 : 0;
+            if (s.currency === "USD") {
+              // 해외 종목: API가 내려준 전일종가(prevClose)로 현재가 - 전일종가 직접 계산
+              const prevClose = Number(d.prevClose) || 0;
+              s.dayPct = prevClose > 0 ? ((price - prevClose) / prevClose) * 100 : 0;
+            } else {
+              const prev = price - dayChg;
+              s.dayPct = prev > 0 ? (dayChg / prev) * 100 : 0;
+            }
             // USD 종목: KIS 응답의 실시간 환율 보관 (없으면 FX 폴백)
             if (s.currency === "USD" && d.exchangeRate) {
               s.exchangeRate = Number(d.exchangeRate);

@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
     let price = 0;
     let dailyChange = 0;
     let exchangeRate = 1;
+    let prevClose = 0;
 
     if (isKR) {
       const url = `${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}`;
@@ -86,16 +87,17 @@ export async function GET(request: NextRequest) {
         const p = parseFloat(data.output?.last || '0');
         if (p > 0) {
           price = p;
-          const diffVal = parseFloat(data.output?.diff || '0') || 0;
-          const diffSign = String(data.output?.sign || '');
-          dailyChange = (diffSign === '4' || diffSign === '5' || diffSign === '2') ? -Math.abs(diffVal) : Math.abs(diffVal);
+          // 해외 종목: KIS sign/diff 역산 대신 전일종가(base) 기준으로 직접 계산
+          // (output.sign 코드 체계가 모호해 상승/하락이 뒤집히는 문제가 있었음)
+          prevClose = parseFloat(data.output?.base || '0') || 0;
+          dailyChange = prevClose > 0 ? price - prevClose : 0;
           exchangeCache.set(ticker, excd);
           break;
         }
       }
     }
 
-    return NextResponse.json({ ticker, price, dailyChange, exchangeRate, market });
+    return NextResponse.json({ ticker, price, dailyChange, exchangeRate, prevClose, market });
   } catch (error) {
     console.error('KIS API error:', error);
     return NextResponse.json({ error: 'Failed to fetch price' }, { status: 500 });
