@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useMemo, useState } from "react";
 import { C, COUNTRY_COLOR, NUM, SECTOR_COLOR } from "@/lib/glow-theme";
 import {
@@ -8,20 +8,67 @@ import {
 import { AcctBar, Donut, type DonutItem } from "./charts";
 import { Segment } from "./ui";
 
+const ACCOUNTS = ['ISA', 'IRP', '연금저축', 'DC형 연금', '일반직투1', '일반직투2'];
+
+const INIT_FORM = () => ({
+  trade_date: new Date().toISOString().split('T')[0],
+  account: 'ISA', account_transfer: '', transfer_amount: '',
+  ticker: '', stock_name: '', sector: '', trade_type: '',
+  quantity: '', buy_price: '', sell_price: '', currency: 'KRW', memo: '',
+});
+
+const LBL: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: C.sec, marginBottom: 5, display: 'block' };
+const INP: React.CSSProperties = {
+  width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10,
+  border: `1px solid ${C.sep}`, background: C.bgGrouped, color: C.label,
+  fontSize: 15, fontFamily: 'inherit', outline: 'none',
+};
+
 export default function AssetPage({
-  view, acctSel, sbOpen, allTrades, accounts,
+  view, acctSel, sbOpen, allTrades, accounts, onRefresh,
 }: {
   view: PortfolioView;
   acctSel: string;
   sbOpen: boolean;
   allTrades: TradeRow[];
   accounts: AcctPerf[];
+  onRefresh: () => void;
 }) {
   const [pieMode, setPieMode] = useState("종목별");
   const [pieActive, setPieActive] = useState<string | null>(null);
   const [showTrades, setShowTrades] = useState(false);
   const [tradesOpen, setTradesOpen] = useState(false);
   const [tradeTap, setTradeTap] = useState<number | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [form, setForm] = useState(INIT_FORM());
+  const [saving, setSaving] = useState(false);
+  const [saveErr, setSaveErr] = useState('');
+  const setF = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSave = async () => {
+    setSaving(true); setSaveErr('');
+    try {
+      const res = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trade_date: form.trade_date, account: form.account,
+          account_transfer: form.account_transfer || null,
+          transfer_amount: form.transfer_amount ? parseFloat(form.transfer_amount) : null,
+          ticker: form.ticker || null, stock_name: form.stock_name || null,
+          sector: form.sector || null, trade_type: form.trade_type || null,
+          quantity: form.quantity ? parseFloat(form.quantity) : null,
+          buy_price: form.buy_price ? parseFloat(form.buy_price) : null,
+          sell_price: form.sell_price ? parseFloat(form.sell_price) : null,
+          currency: form.currency, memo: form.memo || null,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setShowAddForm(false); setForm(INIT_FORM()); onRefresh();
+    } catch (e: unknown) {
+      setSaveErr(e instanceof Error ? e.message : '저장 실패');
+    } finally { setSaving(false); }
+  };
 
   const pieItems: DonutItem[] = useMemo(() => {
     if (pieMode === "종목별") {
@@ -45,10 +92,8 @@ export default function AssetPage({
 
   const pieTotal = pieItems.reduce((s, it) => s + it.value, 0) || 1;
 
-  // 전체 거래 내역 (계좌 필터 적용)
   const filteredTrades = useMemo(() => acctSel === "전체" ? allTrades : allTrades.filter((t) => t.acct === acctSel), [allTrades, acctSel]);
 
-  // 계좌별 성과: 전체 보기일 땐 모두, 특정 계좌 선택 시 그 계좌만
   const acctCards = acctSel === "전체" ? accounts : accounts.filter((a) => a.name === acctSel);
   const maxPct = acctCards.length ? Math.max(...acctCards.map((a) => Math.abs(a.pct)), 1) : 1;
 
@@ -186,8 +231,14 @@ export default function AssetPage({
         <div style={{ width: 40, height: 5, borderRadius: 3, background: "rgba(60,60,67,0.25)", margin: "8px auto 0" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px 10px" }}>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>전체 거래 내역{acctSel !== "전체" ? ` · ${acctSel}` : ""}</h2>
-          <button onClick={() => setShowTrades(false)}
-            style={{ width: 30, height: 30, borderRadius: "50%", border: "none", background: C.fill, color: C.sec, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>✕</button>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <button onClick={() => setShowAddForm(true)}
+              style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 10, border: "none", background: C.blue, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+              <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> 거래 추가
+            </button>
+            <button onClick={() => setShowTrades(false)}
+              style={{ width: 30, height: 30, borderRadius: "50%", border: "none", background: C.fill, color: C.sec, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>✕</button>
+          </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "104px 1fr 110px 58px 64px 104px", gap: 8, padding: "9px 24px", background: C.fill }}>
           {["날짜", "종목", "계좌", "구분", "수량", "단가"].map((h) => (
@@ -224,6 +275,98 @@ export default function AssetPage({
           {filteredTrades.length === 0 && <p style={{ padding: "18px 0", fontSize: 15, color: C.sec }}>거래 내역이 없습니다.</p>}
         </div>
       </div>
+
+      {/* 거래 추가 모달 */}
+      {showAddForm && (
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowAddForm(false); setForm(INIT_FORM()); setSaveErr(''); } }}>
+          <div style={{ background: C.card, borderRadius: 18, width: "100%", maxWidth: 560, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <div style={{ padding: "22px 24px 18px", borderBottom: `1px solid ${C.sep}` }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>거래 추가</h2>
+            </div>
+            <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px" }}>
+              <div>
+                <label style={LBL}>날짜</label>
+                <input type="date" value={form.trade_date} onChange={e => setF('trade_date', e.target.value)} style={INP} />
+              </div>
+              <div>
+                <label style={LBL}>계좌</label>
+                <select value={form.account} onChange={e => setF('account', e.target.value)} style={INP}>
+                  {ACCOUNTS.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={LBL}>티커</label>
+                <input type="text" placeholder="예: AAPL" value={form.ticker} onChange={e => setF('ticker', e.target.value)} style={INP} />
+              </div>
+              <div>
+                <label style={LBL}>종목명</label>
+                <input type="text" placeholder="예: 애플" value={form.stock_name} onChange={e => setF('stock_name', e.target.value)} style={INP} />
+              </div>
+              <div>
+                <label style={LBL}>섹터</label>
+                <input type="text" placeholder="예: IT" value={form.sector} onChange={e => setF('sector', e.target.value)} style={INP} />
+              </div>
+              <div>
+                <label style={LBL}>매수/매도</label>
+                <select value={form.trade_type} onChange={e => setF('trade_type', e.target.value)} style={INP}>
+                  <option value="">-</option>
+                  <option value="매수">매수</option>
+                  <option value="매도">매도</option>
+                </select>
+              </div>
+              <div>
+                <label style={LBL}>수량</label>
+                <input type="number" placeholder="0" value={form.quantity} onChange={e => setF('quantity', e.target.value)} style={INP} />
+              </div>
+              <div>
+                <label style={LBL}>매수단가</label>
+                <input type="number" placeholder="0" value={form.buy_price} onChange={e => setF('buy_price', e.target.value)} style={INP} />
+              </div>
+              <div>
+                <label style={LBL}>매도단가</label>
+                <input type="number" placeholder="0" value={form.sell_price} onChange={e => setF('sell_price', e.target.value)} style={INP} />
+              </div>
+              <div>
+                <label style={LBL}>입출금</label>
+                <select value={form.account_transfer} onChange={e => setF('account_transfer', e.target.value)} style={INP}>
+                  <option value="">-</option>
+                  <option value="입금">입금</option>
+                  <option value="출금">출금</option>
+                </select>
+              </div>
+              <div>
+                <label style={LBL}>입출금 금액</label>
+                <input type="number" placeholder="0" value={form.transfer_amount} onChange={e => setF('transfer_amount', e.target.value)} style={INP} />
+              </div>
+              <div>
+                <label style={LBL}>통화</label>
+                <select value={form.currency} onChange={e => setF('currency', e.target.value)} style={INP}>
+                  <option value="KRW">KRW</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={LBL}>메모</label>
+                <input type="text" placeholder="메모 (선택)" value={form.memo} onChange={e => setF('memo', e.target.value)} style={INP} />
+              </div>
+            </div>
+            {saveErr && (
+              <div style={{ margin: "0 24px", padding: "10px 14px", background: "rgba(255,59,48,0.10)", borderRadius: 8, color: C.red, fontSize: 13, fontWeight: 600 }}>{saveErr}</div>
+            )}
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", padding: "16px 24px 22px" }}>
+              <button onClick={() => { setShowAddForm(false); setForm(INIT_FORM()); setSaveErr(''); }}
+                style={{ padding: "10px 22px", borderRadius: 10, border: "none", background: C.fill, color: C.label, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                취소
+              </button>
+              <button onClick={handleSave} disabled={saving}
+                style={{ padding: "10px 22px", borderRadius: 10, border: "none", background: C.blue, color: "#fff", fontSize: 15, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1, fontFamily: "inherit" }}>
+                {saving ? "저장 중…" : "저장"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
