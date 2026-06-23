@@ -111,7 +111,7 @@ export default function AssetPage({
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>자산 배분</h2>
               <Segment compact items={["종목별", "섹터별", "국가별"]} value={pieMode} onChange={(m) => { setPieMode(m); setPieActive(null); }} />
             </div>
-            <div style={{ background: C.card, borderRadius: 16, padding: 22, flex: 1, height: 360, boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
+            <div style={{ background: C.card, borderRadius: 16, padding: 22, flex: 1, height: 340, boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", gap: 24, flex: 1, minHeight: 0 }}>
                 <div style={{ position: "relative", width: 220, height: 220, flexShrink: 0, alignSelf: "flex-start" }}>
                   <Donut items={pieItems} active={pieActive} size={220}
@@ -151,7 +151,7 @@ export default function AssetPage({
           {/* 오른쪽: 계좌별 성과 */}
           <div style={{ display: "flex", flexDirection: "column" }}>
             <h2 style={{ margin: "0 0 10px", fontSize: 22, fontWeight: 700 }}>계좌별 성과</h2>
-            <div style={{ background: C.card, borderRadius: 16, padding: "8px 22px 10px", overflowY: "auto", boxSizing: "border-box", height: 360, maxHeight: 360 }}>
+            <div style={{ background: C.card, borderRadius: 16, padding: "8px 22px 10px", overflowY: "auto", boxSizing: "border-box", height: 340, maxHeight: 340 }}>
               {acctCards.length === 0 ? (
                 <p style={{ padding: "20px 0", fontSize: 14, color: C.sec, textAlign: "center" }}>계좌 데이터가 없습니다.</p>
               ) : (
