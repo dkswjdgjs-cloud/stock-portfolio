@@ -104,14 +104,14 @@ export default function AssetPage({
           자산배분{acctSel !== "전체" ? ` · ${acctSel}` : ""}
         </h1>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "stretch" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
           {/* 왼쪽: 자산 배분 */}
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>자산 배분</h2>
               <Segment compact items={["종목별", "섹터별", "국가별"]} value={pieMode} onChange={(m) => { setPieMode(m); setPieActive(null); }} />
             </div>
-            <div style={{ background: C.card, borderRadius: 16, padding: 22, flex: 1, height: 390, boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
+            <div style={{ background: C.card, borderRadius: 16, padding: 22, flex: 1, height: 360, boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", gap: 24, flex: 1, minHeight: 0 }}>
                 <div style={{ position: "relative", width: 220, height: 220, flexShrink: 0, alignSelf: "flex-start" }}>
                   <Donut items={pieItems} active={pieActive} size={220}
@@ -151,7 +151,7 @@ export default function AssetPage({
           {/* 오른쪽: 계좌별 성과 */}
           <div style={{ display: "flex", flexDirection: "column" }}>
             <h2 style={{ margin: "0 0 10px", fontSize: 22, fontWeight: 700 }}>계좌별 성과</h2>
-            <div style={{ background: C.card, borderRadius: 16, padding: "8px 22px 10px", overflowY: "auto", boxSizing: "border-box", height: 420 }}>
+            <div style={{ background: C.card, borderRadius: 16, padding: "8px 22px 10px", overflowY: "auto", boxSizing: "border-box", height: 360, maxHeight: 360 }}>
               {acctCards.length === 0 ? (
                 <p style={{ padding: "20px 0", fontSize: 14, color: C.sec, textAlign: "center" }}>계좌 데이터가 없습니다.</p>
               ) : (
