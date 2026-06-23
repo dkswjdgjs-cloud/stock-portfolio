@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 import { C, NUM } from "@/lib/glow-theme";
 import { fmtEok, type AcctPerf, type PerfPoint, type ProfitBar } from "@/lib/tabletV2Helpers";
@@ -233,7 +233,7 @@ export function AcctBar({ a, max, delay }: { a: AcctPerf; max: number; delay: nu
     return () => clearTimeout(t);
   }, [a, max, delay]);
   return (
-    <div style={{ padding: "13px 0", borderTop: `0.5px solid ${C.sep}` }}>
+    <div style={{ padding: "13px 0", borderTop: "none" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
         <span style={{ fontSize: 17, fontWeight: 600 }}>{a.name}</span>
         <span style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
