@@ -70,10 +70,11 @@ export default function AssetPage({
     } finally { setSaving(false); }
   };
 
+  const PIE_COLORS = ["#6366f1","#22d3ee","#3b82f6","#a78bfa","#2dd4bf","#818cf8","#67e8f9","#c4b5fd"];
   const pieItems: DonutItem[] = useMemo(() => {
     if (pieMode === "종목별") {
       return [
-        ...view.rows.map((r) => ({ key: r.stock.id, label: r.stock.name, value: r.h.value, color: r.stock.color })),
+        ...view.rows.map((r, i) => ({ key: r.stock.id, label: r.stock.name, value: r.h.value, color: PIE_COLORS[i % PIE_COLORS.length] })),
         ...(view.cash ? [{ key: "CASH", label: "현금성 자산", value: view.cash, color: C.green }] : []),
       ];
     }
@@ -118,10 +119,10 @@ export default function AssetPage({
                     onPick={(key) => setPieActive((p) => (p === key ? null : key))} />
                   <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", pointerEvents: "none" }}>
                     <div style={{ maxWidth: 140 }}>
-                      <p style={{ margin: 0, fontSize: 12, color: C.sec, letterSpacing: "0.05em", lineHeight: 1.3 }}>
+                      <p style={{ margin: 0, fontSize: 13, color: C.sec, letterSpacing: "0.05em", lineHeight: 1.3 }}>
                         {pieActive ? pieItems.find((it) => it.key === pieActive)?.label : "MARKET VALUE"}
                       </p>
-                      <p style={{ ...NUM, margin: "2px 0 0", fontSize: 18, fontWeight: 700 }}>
+                      <p style={{ ...NUM, margin: "2px 0 0", fontSize: 20, fontWeight: 700 }}>
                         {pieActive ? fmtW(pieItems.find((it) => it.key === pieActive)?.value || 0) : fmtW(view.totalValue)}
                       </p>
                     </div>

@@ -30,7 +30,7 @@ export function Donut({
         const dim = active && active !== it.key;
         return (
           <circle key={it.key} cx="21" cy="21" r="15.9155" fill="none"
-            stroke={it.color} strokeWidth={active === it.key ? 8 : 7}
+            stroke={it.color} strokeWidth={active === it.key ? 9 : 8}
             strokeDasharray={`${w} ${100 - w}`} strokeDashoffset={o}
             opacity={dim ? 0.25 : 1}
             style={{ cursor: onPick ? "pointer" : "default", transition: "opacity .25s" }}
