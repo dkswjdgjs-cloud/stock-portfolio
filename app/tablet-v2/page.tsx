@@ -300,6 +300,7 @@ export default function TabletV2Page() {
                 sbOpen={sbOpen}
                 accounts={accounts}
                 allTrades={allTrades}
+                onRefresh={refresh}
               />
             </div>
           ) : (
