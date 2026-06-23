@@ -111,7 +111,7 @@ export default function AssetPage({
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>자산 배분</h2>
               <Segment compact items={["종목별", "섹터별", "국가별"]} value={pieMode} onChange={(m) => { setPieMode(m); setPieActive(null); }} />
             </div>
-            <div style={{ background: C.card, borderRadius: 16, padding: 22, flex: 1, height: 385, boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
+            <div style={{ background: C.card, borderRadius: 16, padding: 22, height: 385, boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", gap: 24, flex: 1, minHeight: 0 }}>
                 <div style={{ position: "relative", width: 220, height: 220, flexShrink: 0, alignSelf: "flex-start" }}>
                   <Donut items={pieItems} active={pieActive} size={220}
