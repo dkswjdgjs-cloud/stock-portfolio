@@ -112,16 +112,16 @@ export default function AssetPage({
               <Segment compact items={["종목별", "섹터별", "국가별"]} value={pieMode} onChange={(m) => { setPieMode(m); setPieActive(null); }} />
             </div>
             <div style={{ background: C.card, borderRadius: 16, padding: 22, height: 385, boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", gap: 24, flex: 1, minHeight: 0 }}>
-                <div style={{ position: "relative", width: 280, height: 280, flexShrink: 0, alignSelf: "flex-start" }}>
-                  <Donut items={pieItems} active={pieActive} size={280}
+              <div style={{ display: "flex", gap: 40, flex: 1, minHeight: 0 }}>
+                <div style={{ position: "relative", width: 300, height: 300, flexShrink: 0, alignSelf: "flex-start" }}>
+                  <Donut items={pieItems} active={pieActive} size={300}
                     onPick={(key) => setPieActive((p) => (p === key ? null : key))} />
                   <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", pointerEvents: "none" }}>
-                    <div style={{ maxWidth: 120 }}>
-                      <p style={{ margin: 0, fontSize: 10, color: C.sec, letterSpacing: "0.05em", lineHeight: 1.3 }}>
+                    <div style={{ maxWidth: 140 }}>
+                      <p style={{ margin: 0, fontSize: 12, color: C.sec, letterSpacing: "0.05em", lineHeight: 1.3 }}>
                         {pieActive ? pieItems.find((it) => it.key === pieActive)?.label : "MARKET VALUE"}
                       </p>
-                      <p style={{ ...NUM, margin: "2px 0 0", fontSize: 15, fontWeight: 700 }}>
+                      <p style={{ ...NUM, margin: "2px 0 0", fontSize: 18, fontWeight: 700 }}>
                         {pieActive ? fmtW(pieItems.find((it) => it.key === pieActive)?.value || 0) : fmtW(view.totalValue)}
                       </p>
                     </div>
