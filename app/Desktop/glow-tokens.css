@@ -1,0 +1,61 @@
+.glow-v2 {
+  --glow-bg-grouped: #F2F2F7;
+  --glow-bg-sidebar: #F7F7F9;
+  --glow-card: #FFFFFF;
+  --glow-label: #000000;
+  --glow-sec: rgba(60,60,67,0.60);
+  --glow-ter: rgba(60,60,67,0.30);
+  --glow-sep: rgba(60,60,67,0.29);
+  --glow-fill: rgba(120,120,128,0.08);
+  --glow-search: rgba(120,120,128,0.12);
+  --glow-red: #FF3B30;
+  --glow-blue: #007AFF;
+  --glow-green: #34C759;
+  --glow-gray: #8E8E93;
+  --glow-orange: #FF9500;
+  --glow-selected: #E4E4E9;
+}
+
+/* 시스템 다크모드 자동 (수동 설정 없을 때) */
+@media (prefers-color-scheme: dark) {
+  .glow-v2:not([data-theme="light"]) {
+    --glow-bg-grouped: #000000;
+    --glow-bg-sidebar: #1C1C1E;
+    --glow-card: #1C1C1E;
+    --glow-label: #FFFFFF;
+    --glow-sec: rgba(235,235,245,0.60);
+    --glow-ter: rgba(235,235,245,0.30);
+    --glow-sep: rgba(84,84,88,0.65);
+    --glow-fill: rgba(120,120,128,0.24);
+    --glow-search: rgba(120,120,128,0.24);
+    --glow-red: #FF453A;
+    --glow-blue: #0A84FF;
+    --glow-green: #30D158;
+    --glow-gray: #8E8E93;
+    --glow-orange: #FF9F0A;
+    --glow-selected: #3A3A3C;
+  }
+}
+
+/* 수동 다크모드 강제 */
+.glow-v2[data-theme="dark"] {
+  --glow-bg-grouped: #000000;
+  --glow-bg-sidebar: #1C1C1E;
+  --glow-card: #1C1C1E;
+  --glow-label: #FFFFFF;
+  --glow-sec: rgba(235,235,245,0.60);
+  --glow-ter: rgba(235,235,245,0.30);
+  --glow-sep: rgba(84,84,88,0.65);
+  --glow-fill: rgba(120,120,128,0.24);
+  --glow-search: rgba(120,120,128,0.24);
+  --glow-red: #FF453A;
+  --glow-blue: #0A84FF;
+  --glow-green: #30D158;
+  --glow-gray: #8E8E93;
+  --glow-orange: #FF9F0A;
+  --glow-selected: #3A3A3C;
+}
+
+.glow-v2 ::-webkit-scrollbar { width: 6px; }
+.glow-v2 ::-webkit-scrollbar-thumb { background: var(--glow-ter); border-radius: 3px; }
+.glow-v2 ::-webkit-scrollbar-track { background: transparent; }
