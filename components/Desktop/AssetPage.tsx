@@ -104,14 +104,14 @@ export default function AssetPage({
           자산배분{acctSel !== "전체" ? ` · ${acctSel}` : ""}
         </h1>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "stretch" }}>
           {/* 왼쪽: 자산 배분 */}
-          <div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>자산 배분</h2>
               <Segment compact items={["종목별", "섹터별", "국가별"]} value={pieMode} onChange={(m) => { setPieMode(m); setPieActive(null); }} />
             </div>
-            <div style={{ background: C.card, borderRadius: 16, padding: 22 }}>
+            <div style={{ background: C.card, borderRadius: 16, padding: 22, flex: 1 }}>
               <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
                 <div style={{ position: "relative", width: 220, height: 220, flexShrink: 0 }}>
                   <Donut items={pieItems} active={pieActive} size={220}
@@ -149,20 +149,22 @@ export default function AssetPage({
           </div>
 
           {/* 오른쪽: 계좌별 성과 */}
-          <div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
             <h2 style={{ margin: "0 0 10px", fontSize: 22, fontWeight: 700 }}>계좌별 성과</h2>
-            <div style={{ background: C.card, borderRadius: 16, padding: "8px 22px 10px", overflowY: "auto", boxSizing: "border-box" }}>
+            <div style={{ background: C.card, borderRadius: 16, padding: "8px 22px 10px", overflowY: "auto", boxSizing: "border-box", flex: 1 }}>
               {acctCards.length === 0 ? (
                 <p style={{ padding: "20px 0", fontSize: 14, color: C.sec, textAlign: "center" }}>계좌 데이터가 없습니다.</p>
               ) : (
                 acctCards.map((a, i) => <AcctBar key={a.name + acctSel} a={a} max={maxPct} delay={i * 80} />)
               )}
             </div>
-            <button onClick={() => setShowTrades(true)}
-              style={{ display: "block", width: "100%", textAlign: "center", background: C.card, borderRadius: 10, padding: 13, marginTop: 12, fontSize: 17, color: C.blue, border: "none", cursor: "pointer", fontFamily: "inherit" }}>
-              전체 거래 내역 보기 · {filteredTrades.length}건
-            </button>
           </div>
+
+          {/* 전체 너비 버튼 */}
+          <button onClick={() => setShowTrades(true)}
+            style={{ gridColumn: "1 / -1", textAlign: "center", background: C.card, borderRadius: 10, padding: 13, fontSize: 17, color: C.blue, border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+            전체 거래 내역 보기 · {filteredTrades.length}건
+          </button>
         </div>
       </main>
 
