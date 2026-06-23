@@ -157,6 +157,7 @@ export default function AssetPage({
               ) : (
                 acctCards.map((a, i) => <AcctBar key={a.name + acctSel} a={a} max={maxPct} delay={i * 80} />)
               )}
+              <div style={{ height: 8 }} />
             </div>
           </div>
 
