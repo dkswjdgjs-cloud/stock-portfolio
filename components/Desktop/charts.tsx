@@ -369,6 +369,7 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
   const [xView, setXView] = useState<[number, number]>([0, Math.max(bars.length - 1, 1)]);
   const [yView, setYView] = useState<[number, number]>([-1, 1]);
   const [isDragging, setIsDragging] = useState(false);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<{ cx: number; cy: number; xv: [number, number]; yv: [number, number] } | null>(null);
 
@@ -426,6 +427,17 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
   }, [bars.length]);
 
   // 드래그 시작
+  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (isDragging) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const svgX = ((e.clientX - rect.left) / rect.width) * W;
+    const svgY = ((e.clientY - rect.top) / rect.height) * H;
+    if (svgX < PL || svgX > W - PR || svgY < PT || svgY > H - PB) { setHoverIdx(null); return; }
+    const frac = (svgX - PL) / (W - PL - PR);
+    const idx = Math.round(xView[0] + frac * (xView[1] - xView[0]));
+    setHoverIdx(Math.max(iMin, Math.min(iMax, idx)));
+  }, [isDragging, xView, iMin, iMax]);
+
   const handleMouseDown = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
     if (e.button !== 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -434,6 +446,7 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
     if (svgX >= PL && svgX <= W - PR && svgY >= PT && svgY <= H - PB) {
       dragRef.current = { cx: e.clientX, cy: e.clientY, xv: xView, yv: yView };
       setIsDragging(true);
+      setHoverIdx(null);
     }
   }, [xView, yView]);
 
@@ -461,9 +474,21 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
 
   const cursor = isDragging ? "grabbing" : "crosshair";
 
+  // 툴팁
+  const hb = hoverIdx !== null ? bars[hoverIdx] : null;
+  const hbX = hoverIdx !== null ? barX(hoverIdx) + ((W - PL - PR) / visCount) / 2 : 0;
+  const fmtExactBar = (v: number) => (v >= 0 ? "+" : "-") + Math.round(Math.abs(v)).toLocaleString("ko-KR") + "원";
+  const tooltipLabel = hb ? (hb.full ?? hb.label) : "";
+  const tooltipVal = hb ? fmtExactBar(hb.value) : "";
+  const ttLines = [tooltipLabel, tooltipVal];
+  const ttW = Math.max(...ttLines.map((l) => l.length)) * 3.05 + 14;
+  const ttOnLeft = hbX > W * 0.6;
+
   return (
     <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%"
       style={{ display: "block", cursor, userSelect: "none" }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setHoverIdx(null)}
       onMouseDown={handleMouseDown}>
       <defs>
         <linearGradient id="pb-up" x1="0" y1="0" x2="0" y2="1">
@@ -540,6 +565,20 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
             textAnchor="middle" style={NUM}>{b.label}</text>
         );
       })}
+
+      {/* 호버 툴팁 */}
+      {hb !== null && !isDragging && hbX >= PL && hbX <= W - PR && (
+        <g>
+          <line x1={hbX} x2={hbX} y1={PT} y2={H - PB} stroke="rgba(60,60,67,0.2)" strokeWidth="1" strokeDasharray="3 3" />
+          <g transform={`translate(${ttOnLeft ? hbX - ttW - 8 : hbX + 8},${PT + 4})`}>
+            <rect x="0" y="0" width={ttW} height="26" rx="4"
+              fill="rgba(255,255,255,0.96)" stroke="rgba(60,60,67,0.12)" strokeWidth="1"
+              style={{ filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.10))" }} />
+            <text x="7" y="10" fontSize="5.5" fontWeight="600" fill="rgba(60,60,67,0.55)" style={NUM}>{tooltipLabel}</text>
+            <text x="7" y="21" fontSize="5.5" fill={hb.value >= 0 ? C.red : C.blue} style={NUM}>{tooltipVal}</text>
+          </g>
+        </g>
+      )}
     </svg>
   );
 }
