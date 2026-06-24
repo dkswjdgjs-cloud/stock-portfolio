@@ -552,19 +552,29 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
         })}
       </g>
 
-      {/* X축 라벨 */}
-      {bars.slice(iMin, iMax + 1).map((b, ii) => {
-        const i = iMin + ii;
-        const x = barX(i) + ((W - PL - PR) / visCount) / 2;
-        if (x < PL || x > W - PR) return null;
-        // 너무 많으면 간격 조절
-        const skip = Math.ceil(visCount / 20);
-        if (ii % skip !== 0) return null;
-        return (
-          <text key={i} x={x} y={H - 9} fontSize="6" fill="rgba(60,60,67,0.45)"
-            textAnchor="middle" style={NUM}>{b.label}</text>
-        );
-      })}
+      {/* X축 라벨: 겹치지 않게, 1월1일은 연도, 나머지는 월-일 */}
+      {(() => {
+        const minGap = 36;
+        let lastX = -999;
+        return bars.slice(iMin, iMax + 1).map((b, ii) => {
+          const i = iMin + ii;
+          const x = barX(i) + ((W - PL - PR) / visCount) / 2;
+          if (x < PL || x > W - PR) return null;
+          if (x - lastX < minGap) return null;
+          const full = b.full ?? "";
+          const isJan1 = full.endsWith("-01-01");
+          const displayLabel = isJan1
+            ? full.slice(0, 4)
+            : full.length >= 10 ? full.slice(5, 10) : b.label;
+          lastX = x;
+          return (
+            <text key={i} x={x} y={H - 9} fontSize="6"
+              fill={isJan1 ? "rgba(60,60,67,0.7)" : "rgba(60,60,67,0.45)"}
+              fontWeight={isJan1 ? "700" : "400"}
+              textAnchor="middle" style={NUM}>{displayLabel}</text>
+          );
+        });
+      })()}
 
       {/* 호버 툴팁 */}
       {hb !== null && !isDragging && hbX >= PL && hbX <= W - PR && (
