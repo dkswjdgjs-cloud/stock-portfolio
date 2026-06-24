@@ -15,7 +15,7 @@ const todayStr = () => new Date().toISOString().slice(0, 10);
 
 const INPUT_STYLE: React.CSSProperties = {
   width: "100%", padding: "10px 12px", fontSize: 15, borderRadius: 10,
-  border: `1px solid ${C.sep}`, background: C.fill, color: C.text,
+  border: `1px solid ${C.sep}`, background: C.fill, color: C.sec,
   boxSizing: "border-box", outline: "none",
 };
 
