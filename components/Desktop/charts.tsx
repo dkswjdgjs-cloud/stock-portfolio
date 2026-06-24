@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { C, NUM } from "@/lib/glow-theme";
 import { fmtEok, type AcctPerf, type PerfPoint, type ProfitBar } from "@/lib/tabletV2Helpers";
 
@@ -95,13 +95,36 @@ function smoothPath(pts: [number, number][]): string {
 }
 
 // ===== 3계열 누적 라인 차트 (누적평가액/누적투자금/누적수익금) =====
+function niceTickInterval(range: number, targetCount: number): number {
+  const rough = range / targetCount;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough / mag;
+  const nice = norm < 1.5 ? 1 : norm < 3.5 ? 2 : norm < 7.5 ? 5 : 10;
+  return nice * mag;
+}
+
+function fmtM(v: number): string {
+  const m = Math.round(v / 1_000_000);
+  return m === 0 ? "0" : `${m}M`;
+}
+
 export function PerfLineChart({ points }: { points: PerfPoint[] }) {
-  const W = 600, H = 264, PL = 10, PR = 52, PT = 14, PB = 26;
+  const W = 600, H = 264, PL = 52, PR = 10, PT = 14, PB = 28;
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+
   const vals = points.flatMap((p) => [p.value, p.invested, p.profit]);
-  const max = Math.max(...vals);
-  const min = Math.min(0, ...vals);
+  const rawMax = Math.max(...vals, 0);
+  const rawMin = Math.min(0, ...vals);
+
+  const tickInterval = niceTickInterval(rawMax - rawMin || 1, 5);
+  const tickMin = Math.floor(rawMin / tickInterval) * tickInterval;
+  const tickMax = Math.ceil(rawMax / tickInterval) * tickInterval;
+  const yTicks: number[] = [];
+  for (let v = tickMin; v <= tickMax + tickInterval * 0.01; v += tickInterval) yTicks.push(v);
+
   const sx = (i: number) => PL + (i / Math.max(points.length - 1, 1)) * (W - PL - PR);
-  const sy = (v: number) => H - PB - ((v - min) / (max - min || 1)) * (H - PB - PT);
+  const sy = (v: number) => H - PB - ((v - tickMin) / (tickMax - tickMin || 1)) * (H - PB - PT);
+
   type SeriesKey = "value" | "invested" | "profit";
   const coords = (key: SeriesKey): [number, number][] => points.map((p, i) => [sx(i), sy(p[key])]);
   const line = (key: SeriesKey) =>
@@ -110,13 +133,48 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
       : smoothPath(coords(key));
   const area = (key: SeriesKey) =>
     `${line(key)} L${sx(points.length - 1).toFixed(1)},${(H - PB).toFixed(1)} L${PL},${(H - PB).toFixed(1)} Z`;
-  const SERIES: { key: SeriesKey; label: string; color: string; width: number; dash?: string; fill?: boolean }[] = [
+
+  const SERIES: { key: SeriesKey; label: string; color: string; width: number; dash?: string }[] = [
     { key: "invested", label: "누적투자금", color: C.gray, width: 1.5, dash: "1 4" },
     { key: "profit", label: "누적수익금", color: C.green, width: 2 },
-    { key: "value", label: "누적평가액", color: C.blue, width: 2.4, fill: true },
+    { key: "value", label: "누적평가액", color: C.blue, width: 2.4 },
   ];
-  const yTicks = [0, 0.5, 1].map((f) => min + f * (max - min));
-  const xi = [0, Math.floor(points.length / 2), points.length - 1];
+
+  // X축 라벨: 겹치지 않게 월 단위로 추출 (최대 약 12개)
+  const xLabels: { i: number; label: string }[] = [];
+  if (points.length > 1) {
+    const minGapPx = 52; // SVG 단위 기준 최소 간격
+    let lastX = -999;
+    // 월의 첫 날짜 인덱스만 선택
+    let prevMonth = "";
+    points.forEach((p, i) => {
+      const ym = p.label.slice(0, 7);
+      if (ym !== prevMonth) {
+        prevMonth = ym;
+        const x = sx(i);
+        if (x - lastX >= minGapPx) {
+          xLabels.push({ i, label: ym });
+          lastX = x;
+        }
+      }
+    });
+  }
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (!points.length) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = ((e.clientX - rect.left) / rect.width) * W;
+    const frac = Math.max(0, Math.min(1, (px - PL) / (W - PL - PR)));
+    const idx = Math.round(frac * (points.length - 1));
+    setHoverIdx(idx);
+  }, [points.length]);
+
+  const hp = hoverIdx !== null ? points[hoverIdx] : null;
+  const hx = hoverIdx !== null ? sx(hoverIdx) : 0;
+
+  // 툴팁 위치: 오른쪽 넘치면 왼쪽에 표시
+  const tooltipW = 148, tooltipOnLeft = hoverIdx !== null && hx > W * 0.6;
+
   return (
     <div>
       <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
@@ -131,24 +189,32 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
           </span>
         ))}
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", cursor: "crosshair" }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHoverIdx(null)}>
         <defs>
           <linearGradient id="pf-v" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={C.blue} stopOpacity="0.18" />
             <stop offset="100%" stopColor={C.blue} stopOpacity="0" />
           </linearGradient>
         </defs>
+
+        {/* Y축 눈금선 + 라벨 */}
         {yTicks.map((v, i) => (
           <g key={i}>
-            <line x1={PL} x2={W - PR + 6} y1={sy(v)} y2={sy(v)} stroke="rgba(60,60,67,0.10)" strokeWidth="1" />
-            <text x={W - PR + 10} y={sy(v) + 3.5} fontSize="10.5" fill="rgba(60,60,67,0.45)" style={NUM}>{fmtEok(v)}</text>
+            <line x1={PL} x2={W - PR} y1={sy(v)} y2={sy(v)} stroke="rgba(60,60,67,0.09)" strokeWidth="1" />
+            <text x={PL - 6} y={sy(v) + 3.5} fontSize="10" fill="rgba(60,60,67,0.45)" textAnchor="end" style={NUM}>{fmtM(v)}</text>
           </g>
         ))}
+
+        {/* 차트 영역 */}
         <path d={area("value")} fill="url(#pf-v)" />
         {SERIES.map((s) => (
           <path key={s.key} d={line(s.key)} fill="none" stroke={s.color} strokeWidth={s.width}
             strokeDasharray={s.dash || "none"} strokeLinejoin="round" strokeLinecap="round" />
         ))}
+
+        {/* 끝점 원형 마커 */}
         {SERIES.filter((s) => !s.dash).map((s) => {
           const c = coords(s.key)[points.length - 1];
           return (
@@ -158,12 +224,40 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
             </g>
           );
         })}
-        {xi.map((i) => (
-          <text key={i} x={sx(i)} y={H - 7} fontSize="10.5" fill="rgba(60,60,67,0.45)"
-            textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"} style={NUM}>
-            {points[i].label.slice(0, 7)}
-          </text>
+
+        {/* X축 라벨 */}
+        {xLabels.map(({ i, label }) => (
+          <text key={i} x={sx(i)} y={H - 8} fontSize="10" fill="rgba(60,60,67,0.45)"
+            textAnchor="middle" style={NUM}>{label}</text>
         ))}
+
+        {/* 호버 크로스헤어 + 툴팁 */}
+        {hp !== null && hoverIdx !== null && (
+          <g>
+            <line x1={hx} x2={hx} y1={PT} y2={H - PB} stroke="rgba(60,60,67,0.25)" strokeWidth="1" strokeDasharray="3 3" />
+            {/* 각 시리즈 교차점 */}
+            {SERIES.map((s) => {
+              const v = hp[s.key as SeriesKey];
+              return <circle key={s.key} cx={hx} cy={sy(v)} r="3.5" fill={s.color} stroke="#fff" strokeWidth="1.2" />;
+            })}
+            {/* 툴팁 박스 */}
+            <g transform={`translate(${tooltipOnLeft ? hx - tooltipW - 10 : hx + 10},${PT + 2})`}>
+              <rect x="0" y="0" width={tooltipW} height="62" rx="6"
+                fill="rgba(255,255,255,0.96)" stroke="rgba(60,60,67,0.12)" strokeWidth="1"
+                style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.10))" }} />
+              <text x="9" y="14" fontSize="10" fontWeight="600" fill="rgba(60,60,67,0.55)" style={NUM}>{hp.label}</text>
+              <text x="9" y="29" fontSize="10.5" fill={C.blue} style={NUM}>
+                평가액 {fmtEok(hp.value)}
+              </text>
+              <text x="9" y="44" fontSize="10.5" fill={C.gray} style={NUM}>
+                투입금 {fmtEok(hp.invested)}
+              </text>
+              <text x="9" y="59" fontSize="10.5" fill={C.green} style={NUM}>
+                수익금 {hp.profit >= 0 ? "+" : ""}{fmtEok(hp.profit)}
+              </text>
+            </g>
+          </g>
+        )}
       </svg>
     </div>
   );
