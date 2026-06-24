@@ -77,7 +77,7 @@ export default function AssetPage({
   const handleDelete = async (id: number) => {
     setDeleting(true);
     try {
-      const res = await fetch(/api/transactions?id=, { method: 'DELETE' });
+      const res = await fetch('/api/transactions?id=' + id, { method: 'DELETE' });
       if (!res.ok) throw new Error(await res.text());
       setDeleteId(null); onRefresh();
     } catch (e) { console.error(e); }
