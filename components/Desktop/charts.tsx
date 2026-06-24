@@ -203,8 +203,13 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
         {yTicks.map((v, i) => (
           <g key={i}>
             <line x1={PL} x2={W - PR} y1={sy(v)} y2={sy(v)} stroke="rgba(60,60,67,0.09)" strokeWidth="1" />
-            <text x={PL - 6} y={sy(v) + 3.5} fontSize="10" fill="rgba(60,60,67,0.45)" textAnchor="end" style={NUM}>{fmtM(v)}</text>
+            <text x={PL - 5} y={sy(v) + 3} fontSize="8.5" fill="rgba(60,60,67,0.45)" textAnchor="end" style={NUM}>{fmtM(v)}</text>
           </g>
+        ))}
+
+        {/* X축 세로 눈금선 */}
+        {xLabels.map(({ i }) => (
+          <line key={i} x1={sx(i)} x2={sx(i)} y1={PT} y2={H - PB} stroke="rgba(60,60,67,0.07)" strokeWidth="1" />
         ))}
 
         {/* 차트 영역 */}
@@ -227,7 +232,7 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
 
         {/* X축 라벨 */}
         {xLabels.map(({ i, label }) => (
-          <text key={i} x={sx(i)} y={H - 8} fontSize="10" fill="rgba(60,60,67,0.45)"
+          <text key={i} x={sx(i)} y={H - 9} fontSize="8.5" fill="rgba(60,60,67,0.45)"
             textAnchor="middle" style={NUM}>{label}</text>
         ))}
 
