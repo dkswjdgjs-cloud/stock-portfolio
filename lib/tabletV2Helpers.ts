@@ -86,7 +86,7 @@ export function buildLiveAccts(
     return {
       name: acct,
       val: "₩" + Math.round(val).toLocaleString("ko-KR"),
-      inv: "투입₩" + Math.round(invested).toLocaleString("ko-KR"),
+      inv: "₩" + Math.round(invested).toLocaleString("ko-KR"),
       gain: (gain >= 0 ? "+" : "-") + "₩" + Math.round(Math.abs(gain)).toLocaleString("ko-KR"),
       pct,
     };

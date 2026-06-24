@@ -316,6 +316,15 @@ export function useTabletV2Data(): TabletV2DataResult {
       trades.sort((a, b) => b.date.localeCompare(a.date));
       setAllTrades(trades);
 
+      // 계좌별 누적 투입금
+      const investedMap: Record<string, number> = {};
+      for (const acct of ACCT_LIST_EX_ALL) {
+        investedMap[acct] = transactions
+          .filter((t) => t.account === acct && t.account_transfer)
+          .reduce((sum, t) => t.account_transfer === "입금" ? sum + (t.transfer_amount || 0) : sum - (t.transfer_amount || 0), 0);
+      }
+      setAcctInvested(investedMap);
+
       setStocks(stocksArr);
       setCash(cashMap);
       setPerfDays(perf);
