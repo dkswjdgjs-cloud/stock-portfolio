@@ -222,7 +222,7 @@ export default function AssetPage({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px 10px" }}>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>전체 거래 내역{acctSel !== "전체" ? ` · ${acctSel}` : ""}</h2>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <button onClick={() => setShowAddForm(true)}
+            <button onClick={() => { setEditId(null); setForm(INIT_FORM()); setShowAddForm(true); }}
               style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 10, border: "none", background: C.blue, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
               <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> 거래 추가
             </button>
