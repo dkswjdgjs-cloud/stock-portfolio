@@ -364,16 +364,107 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
 
 // ===== 기간별 수익금 막대 차트 =====
 export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
-  const W = 600, H = 264, PL = 10, PR = 52, PT = 18, PB = 26;
-  const maxAbs = Math.max(...bars.map((b) => Math.abs(b.value)), 1);
-  const hasNeg = bars.some((b) => b.value < 0);
-  const yLen = hasNeg ? (H - PB - PT) / 2 : H - PB - PT;
-  const y0 = hasNeg ? PT + yLen : H - PB;
-  const step = (W - PL - PR) / bars.length;
-  const bw = Math.min(30, step * 0.58);
-  const labelEvery = bars.length > 16 ? 5 : 1;
+  const W = 600, H = 264, PL = 28, PR = 10, PT = 14, PB = 28;
+
+  const [xView, setXView] = useState<[number, number]>([0, Math.max(bars.length - 1, 1)]);
+  const [yView, setYView] = useState<[number, number]>([-1, 1]);
+  const [isDragging, setIsDragging] = useState(false);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const dragRef = useRef<{ cx: number; cy: number; xv: [number, number]; yv: [number, number] } | null>(null);
+
+  useEffect(() => {
+    if (!bars.length) return;
+    const maxAbs = Math.max(...bars.map((b) => Math.abs(b.value)), 1);
+    const hasNeg = bars.some((b) => b.value < 0);
+    const rawMin = hasNeg ? -maxAbs : 0;
+    const ti = niceTickInterval(maxAbs - rawMin || 1, 4);
+    setXView([0, bars.length - 1]);
+    setYView([Math.floor(rawMin / ti) * ti, Math.ceil(maxAbs / ti) * ti]);
+  }, [bars.length]);
+
+  const yTi = niceTickInterval(yView[1] - yView[0] || 1, 4);
+  const yTicks: number[] = [];
+  for (let v = Math.floor(yView[0] / yTi) * yTi; v <= yView[1] + yTi * 0.01; v += yTi) yTicks.push(v);
+
+  // 보이는 바 범위 (소수 인덱스 → 정수 클램프)
+  const iMin = Math.max(0, Math.floor(xView[0]));
+  const iMax = Math.min(bars.length - 1, Math.ceil(xView[1]));
+  const visCount = xView[1] - xView[0] + 1;
+
+  const sy = (v: number) => H - PB - ((v - yView[0]) / (yView[1] - yView[0])) * (H - PB - PT);
+  const barX = (i: number) => PL + ((i - xView[0]) / visCount) * (W - PL - PR);
+  const barW = Math.max(2, Math.min(36, (W - PL - PR) / visCount * 0.65));
+
+  // 휠 (non-passive)
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const svgX = ((e.clientX - rect.left) / rect.width) * W;
+      const svgY = ((e.clientY - rect.top) / rect.height) * H;
+      const factor = e.deltaY < 0 ? 0.8 : 1.25;
+      if (svgX < PL) {
+        setYView(([lo, hi]) => {
+          const center = (lo + hi) / 2;
+          const half = (hi - lo) / 2 * factor;
+          return [center - half, center + half];
+        });
+      } else if (svgY > H - PB) {
+        const frac = Math.max(0, Math.min(1, (svgX - PL) / (W - PL - PR)));
+        setXView(([lo, hi]) => {
+          const pivot = lo + frac * (hi - lo);
+          const newLo = Math.max(0, pivot - (pivot - lo) * factor);
+          const newHi = Math.min(bars.length - 1, pivot + (hi - pivot) * factor);
+          return [newLo, newHi];
+        });
+      }
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [bars.length]);
+
+  // 드래그 시작
+  const handleMouseDown = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (e.button !== 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const svgX = ((e.clientX - rect.left) / rect.width) * W;
+    const svgY = ((e.clientY - rect.top) / rect.height) * H;
+    if (svgX >= PL && svgX <= W - PR && svgY >= PT && svgY <= H - PB) {
+      dragRef.current = { cx: e.clientX, cy: e.clientY, xv: xView, yv: yView };
+      setIsDragging(true);
+    }
+  }, [xView, yView]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+    const onMove = (e: MouseEvent) => {
+      if (!dragRef.current || !svgRef.current) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      const dx = e.clientX - dragRef.current.cx;
+      const dy = e.clientY - dragRef.current.cy;
+      const xSpan = dragRef.current.xv[1] - dragRef.current.xv[0];
+      const ySpan = dragRef.current.yv[1] - dragRef.current.yv[0];
+      const dxData = -(dx / rect.width) * W / (W - PL - PR) * xSpan;
+      const dyData = (dy / rect.height) * H / (H - PB - PT) * ySpan;
+      const newLo = dragRef.current.xv[0] + dxData;
+      const newHi = dragRef.current.xv[1] + dxData;
+      if (newLo >= 0 && newHi <= bars.length - 1) setXView([newLo, newHi]);
+      setYView([dragRef.current.yv[0] + dyData, dragRef.current.yv[1] + dyData]);
+    };
+    const onUp = () => setIsDragging(false);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, [isDragging, bars.length]);
+
+  const cursor = isDragging ? "grabbing" : "crosshair";
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block" }}>
+    <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%"
+      style={{ display: "block", cursor, userSelect: "none" }}
+      onMouseDown={handleMouseDown}>
       <defs>
         <linearGradient id="pb-up" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={C.red} stopOpacity="0.95" />
@@ -383,33 +474,70 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
           <stop offset="0%" stopColor={C.blue} stopOpacity="0.55" />
           <stop offset="100%" stopColor={C.blue} stopOpacity="0.95" />
         </linearGradient>
+        <clipPath id="pb-clip">
+          <rect x={PL} y={PT} width={W - PL - PR} height={H - PT - PB} />
+        </clipPath>
       </defs>
-      <line x1={PL} x2={W - PR + 6} y1={PT} y2={PT} stroke="rgba(60,60,67,0.10)" strokeWidth="1" />
-      <text x={W - PR + 10} y={PT + 3.5} fontSize="10.5" fill="rgba(60,60,67,0.45)" style={NUM}>{fmtEok(maxAbs)}</text>
-      {hasNeg && (
-        <>
-          <line x1={PL} x2={W - PR + 6} y1={H - PB} y2={H - PB} stroke="rgba(60,60,67,0.10)" strokeWidth="1" />
-          <text x={W - PR + 10} y={H - PB + 3.5} fontSize="10.5" fill="rgba(60,60,67,0.45)" style={NUM}>{fmtEok(-maxAbs)}</text>
-        </>
-      )}
-      <line x1={PL} x2={W - PR + 6} y1={y0} y2={y0} stroke="rgba(60,60,67,0.22)" strokeWidth="1" />
-      <text x={W - PR + 10} y={y0 + 3.5} fontSize="10.5" fill="rgba(60,60,67,0.45)" style={NUM}>0</text>
-      {bars.map((b, i) => {
-        const h = (Math.abs(b.value) / maxAbs) * yLen;
-        const x = PL + i * step + (step - bw) / 2;
-        const y = b.value >= 0 ? y0 - h : y0;
+
+      {/* Y축 눈금선 + 라벨 */}
+      {yTicks.map((v, i) => {
+        const y = sy(v);
+        if (y < PT || y > H - PB) return null;
         return (
           <g key={i}>
-            <rect x={x} y={y} width={bw} height={Math.max(h, 2)} rx={Math.min(5, bw / 2.4)}
-              fill={b.value >= 0 ? "url(#pb-up)" : "url(#pb-dn)"} />
-            {bars.length <= 13 && (
-              <text x={x + bw / 2} y={b.value >= 0 ? y - 6 : y + h + 12} textAnchor="middle" fontSize="10"
-                fontWeight="600" fill={b.value >= 0 ? C.red : C.blue} style={NUM}>{fmtEok(b.value)}</text>
-            )}
-            {i % labelEvery === 0 && (
-              <text x={x + bw / 2} y={H - 7} textAnchor="middle" fontSize="10.5" fill="rgba(60,60,67,0.45)">{b.label}</text>
-            )}
+            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(60,60,67,0.09)" strokeWidth="1" />
+            <text x={PL - 5} y={y + 3} fontSize="6" fill="rgba(60,60,67,0.45)" textAnchor="end" style={NUM}>{fmtM(v)}</text>
           </g>
+        );
+      })}
+
+      {/* X축 세로 눈금선 */}
+      {bars.slice(iMin, iMax + 1).map((_, ii) => {
+        const i = iMin + ii;
+        const x = barX(i) + barW / 2;
+        return <line key={i} x1={x} x2={x} y1={PT} y2={H - PB} stroke="rgba(60,60,67,0.07)" strokeWidth="1" />;
+      })}
+
+      {/* X/Y 기준선 */}
+      <line x1={PL} x2={PL} y1={PT} y2={H - PB} stroke="rgba(20,20,25,0.75)" strokeWidth="1.2" />
+      {sy(0) >= PT && sy(0) <= H - PB && (
+        <line x1={PL} x2={W - PR} y1={sy(0)} y2={sy(0)} stroke="rgba(20,20,25,0.75)" strokeWidth="1.2" />
+      )}
+
+      {/* 막대 (clipPath 적용) */}
+      <g clipPath="url(#pb-clip)">
+        {bars.slice(iMin, iMax + 1).map((b, ii) => {
+          const i = iMin + ii;
+          const x = barX(i) + ((W - PL - PR) / visCount - barW) / 2;
+          const yZero = sy(0);
+          const yVal = sy(b.value);
+          const barTop = b.value >= 0 ? yVal : yZero;
+          const barH = Math.max(Math.abs(yZero - yVal), 2);
+          return (
+            <g key={i}>
+              <rect x={x} y={barTop} width={barW} height={barH} rx={Math.min(4, barW / 3)}
+                fill={b.value >= 0 ? "url(#pb-up)" : "url(#pb-dn)"} />
+              {visCount <= 20 && (
+                <text x={x + barW / 2} y={b.value >= 0 ? barTop - 4 : barTop + barH + 9}
+                  textAnchor="middle" fontSize="5.5" fontWeight="600"
+                  fill={b.value >= 0 ? C.red : C.blue} style={NUM}>{fmtM(b.value)}</text>
+              )}
+            </g>
+          );
+        })}
+      </g>
+
+      {/* X축 라벨 */}
+      {bars.slice(iMin, iMax + 1).map((b, ii) => {
+        const i = iMin + ii;
+        const x = barX(i) + ((W - PL - PR) / visCount) / 2;
+        if (x < PL || x > W - PR) return null;
+        // 너무 많으면 간격 조절
+        const skip = Math.ceil(visCount / 20);
+        if (ii % skip !== 0) return null;
+        return (
+          <text key={i} x={x} y={H - 9} fontSize="6" fill="rgba(60,60,67,0.45)"
+            textAnchor="middle" style={NUM}>{b.label}</text>
         );
       })}
     </svg>
