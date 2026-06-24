@@ -210,12 +210,17 @@ export function buildView(
 
 // ===== 거래 내역 (전체 종목 합산, 계좌 필터, 날짜 내림차순) =====
 export interface TradeRow {
+  id?: number;
   date: string;
   acct: string;
   type: "매수" | "매도" | "입금" | "출금";
   stockName: string;
+  ticker?: string;
   qty: number;
   unit: string;
+  buyPrice?: number;
+  sellPrice?: number;
+  transferAmount?: number;
   profitLoss?: number;
   profitRate?: number;
 }
