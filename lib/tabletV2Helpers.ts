@@ -68,6 +68,34 @@ export const ACCT_LIST_EX_ALL = ACCT_LIST.filter((a) => a !== "전체");
 // 수익금 표시 모드 (프로토타입용 환산 비율 — PerfPage의 실데이터 기반 결산과는 별개)
 export const PL_MODES = ["누적", "연", "월", "일"] as const;
 
+export function buildLiveAccts(
+  stocks: MockStock[],
+  cash: Record<string, number>,
+  acctInvested: Record<string, number>
+): AcctPerf[] {
+  return ACCT_LIST_EX_ALL.map((acct) => {
+    let val = cash[acct] || 0;
+    for (const s of stocks) {
+      const h = s.holdings[acct];
+      if (!h) continue;
+      val += s.currency === "USD" ? h.qty * s.price * (s.exchangeRate || FX) : h.qty * s.price;
+    }
+    const invested = acctInvested[acct] || 0;
+    const gain = val - invested;
+    const pct = invested > 0 ? (gain / invested) * 100 : 0;
+    return {
+      name: acct,
+      val: "₩" + Math.round(val).toLocaleString("ko-KR"),
+      inv: "투입₩" + Math.round(invested).toLocaleString("ko-KR"),
+      gain: (gain >= 0 ? "+" : "-") + "₩" + Math.round(Math.abs(gain)).toLocaleString("ko-KR"),
+      pct,
+    };
+  }).filter((a) => {
+    const n = Number(a.val.replace(/[^\d]/g, ""));
+    return n > 0;
+  });
+}
+
 export interface PortfolioSummary {
   currValue: number;
   totalInvested: number;

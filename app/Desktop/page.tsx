@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./glow-tokens.css";
 import { C, FONT } from "@/lib/glow-theme";
-import { buildView, holdingOf, type MockStock } from "@/lib/tabletV2Helpers";
+import { buildView, buildLiveAccts, holdingOf, type MockStock } from "@/lib/tabletV2Helpers";
 import { useTabletV2Data } from "@/lib/tabletV2Data";
 import { useRealtimePrices, applyRealtimePrice } from "@/lib/useRealtimePrices";
 import { loadFavorites, saveFavorites, toggleFav, type FavEntry } from "@/lib/tabletV2Favorites";
@@ -70,7 +70,7 @@ export default function DesktopPage() {
   }, []);
 
   // ===== 실데이터 fetch =====
-  const { stocks, cash, perfDays, agg, accounts, allTrades, summary, loading, error, refresh } = useTabletV2Data();
+  const { stocks, cash, perfDays, agg, acctInvested, allTrades, summary, loading, error, refresh } = useTabletV2Data();
 
   // 즐겨찾기 중 미보유 종목 가격 fetch
   useEffect(() => {
@@ -116,6 +116,11 @@ export default function DesktopPage() {
     () => stocks.map((s) => applyRealtimePrice(s, rtPrices)),
     [stocks, rtPrices]
   );
+  const liveAccounts = useMemo(
+    () => buildLiveAccts(liveStocks, cash, acctInvested),
+    [liveStocks, cash, acctInvested]
+  );
+
   const liveFavStocks = useMemo(
     () => favStocks.map((s) => applyRealtimePrice(s, rtPrices)),
     [favStocks, rtPrices]
@@ -298,7 +303,7 @@ export default function DesktopPage() {
                 view={view}
                 acctSel={acctSel}
                 sbOpen={sbOpen}
-                accounts={accounts}
+                accounts={liveAccounts}
                 allTrades={allTrades}
                 onRefresh={refresh}
               />

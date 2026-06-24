@@ -45,6 +45,7 @@ export interface TabletV2DataResult {
   perfDays: PerfPoint[];
   agg: Record<AggUnit, () => PerfPoint[]>;
   accounts: AcctPerf[];
+  acctInvested: Record<string, number>;
   allTrades: import("./tabletV2Helpers").TradeRow[];
   summary: PortfolioSummary;
   loading: boolean;
@@ -89,6 +90,7 @@ export function useTabletV2Data(): TabletV2DataResult {
   const [cash, setCash] = useState<Record<string, number>>({});
   const [perfDays, setPerfDays] = useState<PerfPoint[]>([]);
   const [accounts, setAccounts] = useState<AcctPerf[]>([]);
+  const [acctInvested, setAcctInvested] = useState<Record<string, number>>({});
   const [allTrades, setAllTrades] = useState<import("./tabletV2Helpers").TradeRow[]>([]);
   const [summary, setSummary] = useState<PortfolioSummary>({
     currValue: 0, totalInvested: 0,
@@ -332,6 +334,7 @@ export function useTabletV2Data(): TabletV2DataResult {
 
   return {
     stocks,
+    acctInvested,
     allTrades,
     cash,
     perfDays,
