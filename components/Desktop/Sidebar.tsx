@@ -7,7 +7,7 @@ import { AcctDropdown, HeaderMenu, Segment, StarButton } from "./ui";
 
 export default function Sidebar({
   open, view, tab, onTab, acctSel, onAcct, selected, onPick, onHome,
-  query, onQuery, listMode, onListMode, favs, onToggleFav, favStocks, rtConnected,
+  query, onQuery, listMode, onListMode, favs, onToggleFav, favStocks, rtConnected, onCashEdit,
 }: {
   open: boolean;
   view: PortfolioView;
@@ -26,6 +26,7 @@ export default function Sidebar({
   onToggleFav: (s: MockStock) => void;
   favStocks: MockStock[];
   rtConnected: boolean;
+  onCashEdit?: (acct: string, current: number) => void;
 }) {
   const isSearching = query.trim().length > 0;
   const [apiResults, setApiResults] = useState<{ticker:string;name:string;market:string}[]>([]);
@@ -140,15 +141,21 @@ export default function Sidebar({
     listBody = (
       <>
         {view.rows.map(({ stock: s }, i) => renderRow(s, i, { subType: "holding" }))}
-        {view.cash > 0 && (
+        {(view.cash > 0 || acctSel !== "전체") && (
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: `0.5px solid ${C.sep}` }}>
             <div style={{ flex: 1 }}>
               <p style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>현금성 자산</p>
               <p style={{ margin: "1px 0 0", fontSize: 13, color: C.sec }}>예수금</p>
             </div>
-            <div style={{ textAlign: "right" }}>
+            <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: 10 }}>
               <p style={{ ...NUM, margin: 0, fontSize: 17, fontWeight: 600 }}>{fmtW(view.cash)}</p>
-              <div style={{ marginTop: 3, height: 27 }} />
+              {acctSel !== "전체" && onCashEdit && (
+                <button
+                  onClick={() => onCashEdit(acctSel, view.cash)}
+                  style={{ fontSize: 13, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.sep}`, background: C.fill, color: C.sec, cursor: "pointer", flexShrink: 0 }}>
+                  수정
+                </button>
+              )}
             </div>
           </div>
         )}

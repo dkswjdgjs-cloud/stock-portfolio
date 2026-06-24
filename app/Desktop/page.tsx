@@ -152,6 +152,32 @@ export default function DesktopPage() {
     else rtWatch(null);
   }, [selCode, selCurrency, rtWatch]);
 
+  // ===== 현금 편집 모달 =====
+  const [cashModal, setCashModal] = useState<{ acct: string; value: string } | null>(null);
+  const [cashSaving, setCashSaving] = useState(false);
+
+  const openCashEdit = (acct: string, current: number) => {
+    setCashModal({ acct, value: String(current) });
+  };
+
+  const handleCashSave = async () => {
+    if (!cashModal) return;
+    const balance = Number(cashModal.value.replace(/,/g, ""));
+    if (isNaN(balance)) return;
+    setCashSaving(true);
+    try {
+      await fetch("/api/cash-balance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ account: cashModal.acct, balance }),
+      });
+      setCashModal(null);
+      refresh();
+    } finally {
+      setCashSaving(false);
+    }
+  };
+
   const pick = (id: string) => {
     if (id === "CASH" || !id) return;
     setSelected((prev) => (prev === id ? null : id));
@@ -221,6 +247,7 @@ export default function DesktopPage() {
         onToggleFav={handleToggleFav}
         favStocks={liveFavStocks}
         rtConnected={rtConnected}
+        onCashEdit={openCashEdit}
       />
 
       {sel && selH ? (
@@ -318,6 +345,35 @@ export default function DesktopPage() {
               />
             </div>
           )}
+        </div>
+      )}
+      {cashModal && (
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setCashModal(null); }}>
+          <div style={{ background: C.card, borderRadius: 20, padding: 28, width: 320, boxShadow: "0 8px 40px rgba(0,0,0,0.18)", fontFamily: FONT }}>
+            <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 700, color: C.label }}>현금성 자산 수정</h3>
+            <p style={{ margin: "0 0 20px", fontSize: 13, color: C.sec }}>{cashModal.acct} · 예수금</p>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.sec, marginBottom: 6 }}>금액 (원)</div>
+            <input
+              type="number"
+              value={cashModal.value}
+              onChange={(e) => setCashModal((m) => m ? { ...m, value: e.target.value } : null)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleCashSave(); if (e.key === "Escape") setCashModal(null); }}
+              autoFocus
+              style={{ width: "100%", padding: "10px 12px", fontSize: 15, borderRadius: 10, border: `1px solid ${C.sep}`, background: C.fill, color: C.label, boxSizing: "border-box", outline: "none", fontFamily: FONT }}
+            />
+            <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+              <button onClick={() => setCashModal(null)}
+                style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "none", background: C.fill, color: C.sec, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: FONT }}>
+                취소
+              </button>
+              <button onClick={handleCashSave} disabled={cashSaving}
+                style={{ flex: 2, padding: "12px 0", borderRadius: 10, border: "none", background: C.blue, color: "#fff", fontSize: 15, fontWeight: 700, cursor: cashSaving ? "not-allowed" : "pointer", opacity: cashSaving ? 0.7 : 1, fontFamily: FONT }}>
+                {cashSaving ? "저장 중..." : "저장"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
