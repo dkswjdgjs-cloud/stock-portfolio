@@ -110,29 +110,40 @@ function fmtM(v: number): string {
 
 export function PerfLineChart({ points }: { points: PerfPoint[] }) {
   const W = 600, H = 264, PL = 28, PR = 10, PT = 14, PB = 28;
+
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const [xView, setXView] = useState<[number, number]>([0, 1]);
+  const [yView, setYView] = useState<[number, number]>([-1e8, 2e8]);
+  const [isDragging, setIsDragging] = useState(false);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const dragRef = useRef<{ cx: number; cy: number; xv: [number, number]; yv: [number, number] } | null>(null);
 
-  const vals = points.flatMap((p) => [p.value, p.invested, p.profit]);
-  const rawMax = Math.max(...vals, 0);
-  const rawMin = Math.min(0, ...vals);
+  // 데이터 로드 시 뷰 초기화
+  useEffect(() => {
+    if (!points.length) return;
+    const n = points.length - 1;
+    const vals = points.flatMap((p) => [p.value, p.invested, p.profit]);
+    const rawMax = Math.max(...vals, 0);
+    const rawMin = Math.min(0, ...vals);
+    const ti = niceTickInterval(rawMax - rawMin || 1, 5);
+    setXView([0, n]);
+    setYView([Math.floor(rawMin / ti) * ti, Math.ceil(rawMax / ti) * ti]);
+  }, [points.length]);
 
-  const tickInterval = niceTickInterval(rawMax - rawMin || 1, 5);
-  const tickMin = Math.floor(rawMin / tickInterval) * tickInterval;
-  const tickMax = Math.ceil(rawMax / tickInterval) * tickInterval;
+  // Y 눈금
+  const yTi = niceTickInterval(yView[1] - yView[0] || 1, 5);
   const yTicks: number[] = [];
-  for (let v = tickMin; v <= tickMax + tickInterval * 0.01; v += tickInterval) yTicks.push(v);
+  for (let v = Math.floor(yView[0] / yTi) * yTi; v <= yView[1] + yTi * 0.01; v += yTi) yTicks.push(v);
 
-  const sx = (i: number) => PL + (i / Math.max(points.length - 1, 1)) * (W - PL - PR);
-  const sy = (v: number) => H - PB - ((v - tickMin) / (tickMax - tickMin || 1)) * (H - PB - PT);
+  const sx = (i: number) => PL + ((i - xView[0]) / (xView[1] - xView[0])) * (W - PL - PR);
+  const sy = (v: number) => H - PB - ((v - yView[0]) / (yView[1] - yView[0])) * (H - PB - PT);
+  const pxToIdx = (px: number) => xView[0] + (Math.max(0, Math.min(1, (px - PL) / (W - PL - PR)))) * (xView[1] - xView[0]);
 
   type SeriesKey = "value" | "invested" | "profit";
   const coords = (key: SeriesKey): [number, number][] => points.map((p, i) => [sx(i), sy(p[key])]);
-  const line = (key: SeriesKey) =>
-    points.length > 120
-      ? coords(key).map((c, i) => `${i ? "L" : "M"}${c[0].toFixed(1)},${c[1].toFixed(1)}`).join(" ")
-      : smoothPath(coords(key));
+  const line = (key: SeriesKey) => smoothPath(coords(key));
   const area = (key: SeriesKey) =>
-    `${line(key)} L${sx(points.length - 1).toFixed(1)},${(H - PB).toFixed(1)} L${PL},${(H - PB).toFixed(1)} Z`;
+    `${line(key)} L${sx(points.length - 1).toFixed(1)},${sy(0).toFixed(1)} L${sx(0).toFixed(1)},${sy(0).toFixed(1)} Z`;
 
   const SERIES: { key: SeriesKey; label: string; color: string; width: number; dash?: string }[] = [
     { key: "invested", label: "누적투자금", color: C.gray, width: 1.5, dash: "1 4" },
@@ -140,19 +151,19 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
     { key: "value", label: "누적평가액", color: C.blue, width: 2.4 },
   ];
 
-  // X축 라벨: 겹치지 않게 월 단위로 추출 (최대 약 12개)
+  // X축 라벨: 현재 뷰에서 겹치지 않게
   const xLabels: { i: number; label: string }[] = [];
   if (points.length > 1) {
-    const minGapPx = 52; // SVG 단위 기준 최소 간격
+    const minGapPx = 52;
     let lastX = -999;
-    // 월의 첫 날짜 인덱스만 선택
     let prevMonth = "";
     points.forEach((p, i) => {
+      if (i < Math.floor(xView[0]) - 1 || i > Math.ceil(xView[1]) + 1) return;
       const ym = p.label.slice(0, 7);
       if (ym !== prevMonth) {
         prevMonth = ym;
         const x = sx(i);
-        if (x - lastX >= minGapPx) {
+        if (x - lastX >= minGapPx && x >= PL && x <= W - PR) {
           xLabels.push({ i, label: ym });
           lastX = x;
         }
@@ -160,24 +171,85 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
     });
   }
 
+  // 마우스 휠: Y축 라벨 영역(x<PL)이면 Y줌, X축 라벨 영역(y>H-PB)이면 X줌
+  const handleWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const svgX = ((e.clientX - rect.left) / rect.width) * W;
+    const svgY = ((e.clientY - rect.top) / rect.height) * H;
+    const factor = e.deltaY < 0 ? 0.8 : 1.25; // 위=줌인, 아래=줌아웃
+
+    if (svgX < PL) {
+      // Y축 줌: 중심 기준
+      setYView(([lo, hi]) => {
+        const center = (lo + hi) / 2;
+        const half = (hi - lo) / 2 * factor;
+        return [center - half, center + half];
+      });
+    } else if (svgY > H - PB) {
+      // X축 줌: 마우스 X 위치 기준
+      const frac = Math.max(0, Math.min(1, (svgX - PL) / (W - PL - PR)));
+      setXView(([lo, hi]) => {
+        const pivot = lo + frac * (hi - lo);
+        const newLo = Math.max(0, pivot - (pivot - lo) * factor);
+        const newHi = Math.min(points.length - 1, pivot + (hi - pivot) * factor);
+        return [newLo, newHi];
+      });
+    }
+  }, [points.length]);
+
+  // 드래그 시작
+  const handleMouseDown = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (e.button !== 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const svgX = ((e.clientX - rect.left) / rect.width) * W;
+    const svgY = ((e.clientY - rect.top) / rect.height) * H;
+    if (svgX >= PL && svgX <= W - PR && svgY >= PT && svgY <= H - PB) {
+      dragRef.current = { cx: e.clientX, cy: e.clientY, xv: xView, yv: yView };
+      setIsDragging(true);
+      setHoverIdx(null);
+    }
+  }, [xView, yView]);
+
+  // 드래그 이동/해제 (window 이벤트)
+  useEffect(() => {
+    if (!isDragging) return;
+    const onMove = (e: MouseEvent) => {
+      if (!dragRef.current || !svgRef.current) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      const dx = e.clientX - dragRef.current.cx;
+      const dy = e.clientY - dragRef.current.cy;
+      const xSpan = dragRef.current.xv[1] - dragRef.current.xv[0];
+      const ySpan = dragRef.current.yv[1] - dragRef.current.yv[0];
+      const dxData = -(dx / rect.width) * W / (W - PL - PR) * xSpan;
+      const dyData = (dy / rect.height) * H / (H - PB - PT) * ySpan;
+      const newLo = dragRef.current.xv[0] + dxData;
+      const newHi = dragRef.current.xv[1] + dxData;
+      if (newLo >= 0 && newHi <= points.length - 1) setXView([newLo, newHi]);
+      setYView([dragRef.current.yv[0] + dyData, dragRef.current.yv[1] + dyData]);
+    };
+    const onUp = () => setIsDragging(false);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, [isDragging, points.length]);
+
   const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    if (!points.length) return;
+    if (isDragging || !points.length) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const px = ((e.clientX - rect.left) / rect.width) * W;
-    const frac = Math.max(0, Math.min(1, (px - PL) / (W - PL - PR)));
-    const idx = Math.round(frac * (points.length - 1));
+    const idx = Math.round(Math.max(0, Math.min(points.length - 1, pxToIdx(px))));
     setHoverIdx(idx);
-  }, [points.length]);
+  }, [isDragging, points.length, xView]);
 
   const hp = hoverIdx !== null ? points[hoverIdx] : null;
   const hx = hoverIdx !== null ? sx(hoverIdx) : 0;
-
-  // 툴팁 위치: 오른쪽 넘치면 왼쪽에 표시
   const fmtExact = (v: number) => (v >= 0 ? "+" : "-") + Math.round(Math.abs(v)).toLocaleString("ko-KR") + "원";
-  // 가장 긴 텍스트 기준으로 박스 너비 동적 계산 (fontSize 5.5 기준 글자당 약 3.1 units)
   const tooltipLines = hp ? [hp.label, "평가액 " + fmtExact(hp.value), "투입금 " + fmtExact(hp.invested), "수익금 " + fmtExact(hp.profit)] : [];
   const tooltipW = Math.max(...tooltipLines.map((l) => l.length)) * 3.05 + 14;
   const tooltipOnLeft = hoverIdx !== null && hx > W * 0.6;
+
+  const cursor = isDragging ? "grabbing" : "crosshair";
 
   return (
     <div>
@@ -193,23 +265,33 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
           </span>
         ))}
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", cursor: "crosshair" }}
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%"
+        style={{ display: "block", cursor, userSelect: "none" }}
         onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoverIdx(null)}>
+        onMouseLeave={() => { if (!isDragging) setHoverIdx(null); }}
+        onMouseDown={handleMouseDown}
+        onWheel={handleWheel}>
         <defs>
           <linearGradient id="pf-v" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={C.blue} stopOpacity="0.18" />
             <stop offset="100%" stopColor={C.blue} stopOpacity="0" />
           </linearGradient>
+          <clipPath id="pf-clip">
+            <rect x={PL} y={PT} width={W - PL - PR} height={H - PT - PB} />
+          </clipPath>
         </defs>
 
         {/* Y축 눈금선 + 라벨 */}
-        {yTicks.map((v, i) => (
-          <g key={i}>
-            <line x1={PL} x2={W - PR} y1={sy(v)} y2={sy(v)} stroke="rgba(60,60,67,0.09)" strokeWidth="1" />
-            <text x={PL - 5} y={sy(v) + 3} fontSize="6" fill="rgba(60,60,67,0.45)" textAnchor="end" style={NUM}>{fmtM(v)}</text>
-          </g>
-        ))}
+        {yTicks.map((v, i) => {
+          const y = sy(v);
+          if (y < PT || y > H - PB) return null;
+          return (
+            <g key={i}>
+              <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(60,60,67,0.09)" strokeWidth="1" />
+              <text x={PL - 5} y={y + 3} fontSize="6" fill="rgba(60,60,67,0.45)" textAnchor="end" style={NUM}>{fmtM(v)}</text>
+            </g>
+          );
+        })}
 
         {/* X축 세로 눈금선 */}
         {xLabels.map(({ i }) => (
@@ -218,25 +300,28 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
 
         {/* X/Y 기준선 */}
         <line x1={PL} x2={PL} y1={PT} y2={H - PB} stroke="rgba(20,20,25,0.75)" strokeWidth="1.2" />
-        <line x1={PL} x2={W - PR} y1={sy(0)} y2={sy(0)} stroke="rgba(20,20,25,0.75)" strokeWidth="1.2" />
+        {sy(0) >= PT && sy(0) <= H - PB && (
+          <line x1={PL} x2={W - PR} y1={sy(0)} y2={sy(0)} stroke="rgba(20,20,25,0.75)" strokeWidth="1.2" />
+        )}
 
-        {/* 차트 영역 */}
-        <path d={area("value")} fill="url(#pf-v)" />
-        {SERIES.map((s) => (
-          <path key={s.key} d={line(s.key)} fill="none" stroke={s.color} strokeWidth={s.width}
-            strokeDasharray={s.dash || "none"} strokeLinejoin="round" strokeLinecap="round" />
-        ))}
-
-        {/* 끝점 원형 마커 */}
-        {SERIES.filter((s) => !s.dash).map((s) => {
-          const c = coords(s.key)[points.length - 1];
-          return (
-            <g key={s.key}>
-              <circle cx={c[0]} cy={c[1]} r="7" fill={s.color} opacity="0.18" />
-              <circle cx={c[0]} cy={c[1]} r="3.2" fill={s.color} stroke="#fff" strokeWidth="1.4" />
-            </g>
-          );
-        })}
+        {/* 차트 영역 (clipPath 적용) */}
+        <g clipPath="url(#pf-clip)">
+          <path d={area("value")} fill="url(#pf-v)" />
+          {SERIES.map((s) => (
+            <path key={s.key} d={line(s.key)} fill="none" stroke={s.color} strokeWidth={s.width}
+              strokeDasharray={s.dash || "none"} strokeLinejoin="round" strokeLinecap="round" />
+          ))}
+          {/* 끝점 원형 마커 */}
+          {SERIES.filter((s) => !s.dash).map((s) => {
+            const c = coords(s.key)[points.length - 1];
+            return (
+              <g key={s.key}>
+                <circle cx={c[0]} cy={c[1]} r="7" fill={s.color} opacity="0.18" />
+                <circle cx={c[0]} cy={c[1]} r="3.2" fill={s.color} stroke="#fff" strokeWidth="1.4" />
+              </g>
+            );
+          })}
+        </g>
 
         {/* X축 라벨 */}
         {xLabels.map(({ i, label }) => (
@@ -245,29 +330,23 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
         ))}
 
         {/* 호버 크로스헤어 + 툴팁 */}
-        {hp !== null && hoverIdx !== null && (
+        {hp !== null && hoverIdx !== null && !isDragging && hx >= PL && hx <= W - PR && (
           <g>
             <line x1={hx} x2={hx} y1={PT} y2={H - PB} stroke="rgba(60,60,67,0.25)" strokeWidth="1" strokeDasharray="3 3" />
-            {/* 각 시리즈 교차점 */}
             {SERIES.map((s) => {
               const v = hp[s.key as SeriesKey];
-              return <circle key={s.key} cx={hx} cy={sy(v)} r="3.5" fill={s.color} stroke="#fff" strokeWidth="1.2" />;
+              const cy = sy(v);
+              if (cy < PT || cy > H - PB) return null;
+              return <circle key={s.key} cx={hx} cy={cy} r="3.5" fill={s.color} stroke="#fff" strokeWidth="1.2" />;
             })}
-            {/* 툴팁 박스 */}
             <g transform={`translate(${tooltipOnLeft ? hx - tooltipW - 10 : hx + 10},${PT + 2})`}>
               <rect x="0" y="0" width={tooltipW} height="50" rx="5"
                 fill="rgba(255,255,255,0.96)" stroke="rgba(60,60,67,0.12)" strokeWidth="1"
                 style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.10))" }} />
               <text x="7" y="11" fontSize="5.5" fontWeight="600" fill="rgba(60,60,67,0.55)" style={NUM}>{hp.label}</text>
-              <text x="7" y="23" fontSize="5.5" fill={C.blue} style={NUM}>
-                평가액 {fmtExact(hp.value)}
-              </text>
-              <text x="7" y="34" fontSize="5.5" fill={C.gray} style={NUM}>
-                투입금 {fmtExact(hp.invested)}
-              </text>
-              <text x="7" y="45" fontSize="5.5" fill={C.green} style={NUM}>
-                수익금 {fmtExact(hp.profit)}
-              </text>
+              <text x="7" y="23" fontSize="5.5" fill={C.blue} style={NUM}>평가액 {fmtExact(hp.value)}</text>
+              <text x="7" y="34" fontSize="5.5" fill={C.gray} style={NUM}>투입금 {fmtExact(hp.invested)}</text>
+              <text x="7" y="45" fontSize="5.5" fill={C.green} style={NUM}>수익금 {fmtExact(hp.profit)}</text>
             </g>
           </g>
         )}
