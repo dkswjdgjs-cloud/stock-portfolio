@@ -54,6 +54,7 @@ export interface TabletV2DataResult {
 
 // 임의 raw transaction 타입 (types/index.ts 동기화 부담 줄이려고 any 친화적으로)
 interface RawTx {
+  id: number;
   trade_date: string;
   account: string;
   ticker?: string | null;
