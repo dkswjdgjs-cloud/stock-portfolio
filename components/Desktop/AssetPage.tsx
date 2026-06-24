@@ -17,6 +17,12 @@ const INIT_FORM = () => ({
   quantity: '', buy_price: '', sell_price: '', currency: 'KRW', memo: '',
 });
 
+const INCOME_TYPES = ['배당금', '이자', '기타'];
+const INIT_INCOME = () => ({
+  income_date: new Date().toISOString().split('T')[0],
+  account: 'ISA', income_type: '배당금', amount: '', ticker: '', stock_name: '', memo: '',
+});
+
 const LBL: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: C.sec, marginBottom: 5, display: 'block' };
 const INP: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10,
@@ -40,6 +46,10 @@ export default function AssetPage({
   const [tradesOpen, setTradesOpen] = useState(false);
   const [tradeTap, setTradeTap] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [formTab, setFormTab] = useState<'trade' | 'income'>('trade');
+  const [incomeForm, setIncomeForm] = useState(INIT_INCOME());
+  const [incomeSaving, setIncomeSaving] = useState(false);
+  const setIF = (k: string, v: string) => setIncomeForm(f => ({ ...f, [k]: v }));
   const [editId, setEditId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -82,6 +92,39 @@ export default function AssetPage({
       setDeleteId(null); onRefresh();
     } catch (e) { console.error(e); }
     finally { setDeleting(false); }
+  };
+
+  const handleIncomeSave = async () => {
+    setIncomeSaving(true); setSaveErr('');
+    try {
+      // 1) cash_income 저장
+      const res = await fetch('/api/cash-income', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          income_date: incomeForm.income_date,
+          account: incomeForm.account,
+          income_type: incomeForm.income_type,
+          amount: parseFloat(incomeForm.amount) || 0,
+          ticker: incomeForm.ticker || null,
+          stock_name: incomeForm.stock_name || null,
+          memo: incomeForm.memo || null,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      // 2) 현금성자산 잔액 += amount
+      const cbRes = await fetch('/api/cash-balance');
+      const cbData: { account: string; balance: number }[] = await cbRes.json();
+      const cur = cbData.find(b => b.account === incomeForm.account);
+      await fetch('/api/cash-balance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account: incomeForm.account, balance: (cur?.balance ?? 0) + (parseFloat(incomeForm.amount) || 0) }),
+      });
+      setShowAddForm(false); setIncomeForm(INIT_INCOME()); onRefresh();
+    } catch (e: unknown) {
+      setSaveErr(e instanceof Error ? e.message : '저장 실패');
+    } finally { setIncomeSaving(false); }
   };
 
   const openEdit = (t: TradeRow) => {
@@ -222,7 +265,7 @@ export default function AssetPage({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px 10px" }}>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>전체 거래 내역{acctSel !== "전체" ? ` · ${acctSel}` : ""}</h2>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <button onClick={() => { setEditId(null); setForm(INIT_FORM()); setShowAddForm(true); }}
+            <button onClick={() => { setEditId(null); setForm(INIT_FORM()); setIncomeForm(INIT_INCOME()); setFormTab('trade'); setShowAddForm(true); }}
               style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 10, border: "none", background: C.blue, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
               <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> 거래 추가
             </button>
@@ -298,87 +341,135 @@ export default function AssetPage({
         <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
           onClick={(e) => { if (e.target === e.currentTarget) { setShowAddForm(false); setEditId(null); setForm(INIT_FORM()); setSaveErr(''); } }}>
           <div style={{ background: C.card, borderRadius: 18, width: "100%", maxWidth: 560, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-            <div style={{ padding: "22px 24px 18px", borderBottom: `1px solid ${C.sep}` }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{editId ? "거래 수정" : "거래 추가"}</h2>
+            <div style={{ padding: "22px 24px 0", borderBottom: `1px solid ${C.sep}` }}>
+              <h2 style={{ margin: "0 0 14px", fontSize: 20, fontWeight: 700 }}>{editId ? "거래 수정" : "거래 추가"}</h2>
+              {!editId && (
+                <div style={{ display: "flex", gap: 4 }}>
+                  {([["trade","거래 내역"],["income","현금 소득"]] as const).map(([t,l]) => (
+                    <button key={t} onClick={() => setFormTab(t)}
+                      style={{ padding: "7px 18px", borderRadius: "8px 8px 0 0", border: "none", fontSize: 14, fontWeight: formTab === t ? 700 : 500,
+                        background: formTab === t ? C.card : "transparent", color: formTab === t ? C.label : C.sec, cursor: "pointer", fontFamily: "inherit" }}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px" }}>
-              <div>
-                <label style={LBL}>날짜</label>
-                <input type="date" value={form.trade_date} onChange={e => setF('trade_date', e.target.value)} style={INP} />
+            {(formTab === "trade" || editId) ? (
+              <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px" }}>
+                <div>
+                  <label style={LBL}>날짜</label>
+                  <input type="date" value={form.trade_date} onChange={e => setF('trade_date', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>계좌</label>
+                  <select value={form.account} onChange={e => setF('account', e.target.value)} style={INP}>
+                    {ACCOUNTS.map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={LBL}>티커</label>
+                  <input type="text" placeholder="예: AAPL" value={form.ticker} onChange={e => setF('ticker', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>종목명</label>
+                  <input type="text" placeholder="예: 애플" value={form.stock_name} onChange={e => setF('stock_name', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>섹터</label>
+                  <input type="text" placeholder="예: IT" value={form.sector} onChange={e => setF('sector', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>매수/매도</label>
+                  <select value={form.trade_type} onChange={e => setF('trade_type', e.target.value)} style={INP}>
+                    <option value="">-</option>
+                    <option value="매수">매수</option>
+                    <option value="매도">매도</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={LBL}>수량</label>
+                  <input type="number" placeholder="0" value={form.quantity} onChange={e => setF('quantity', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>매수단가</label>
+                  <input type="number" placeholder="0" value={form.buy_price} onChange={e => setF('buy_price', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>매도단가</label>
+                  <input type="number" placeholder="0" value={form.sell_price} onChange={e => setF('sell_price', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>입출금</label>
+                  <select value={form.account_transfer} onChange={e => setF('account_transfer', e.target.value)} style={INP}>
+                    <option value="">-</option>
+                    <option value="입금">입금</option>
+                    <option value="출금">출금</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={LBL}>입출금 금액</label>
+                  <input type="number" placeholder="0" value={form.transfer_amount} onChange={e => setF('transfer_amount', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>통화</label>
+                  <select value={form.currency} onChange={e => setF('currency', e.target.value)} style={INP}>
+                    <option value="KRW">KRW</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={LBL}>메모</label>
+                  <input type="text" placeholder="메모 (선택)" value={form.memo} onChange={e => setF('memo', e.target.value)} style={INP} />
+                </div>
               </div>
-              <div>
-                <label style={LBL}>계좌</label>
-                <select value={form.account} onChange={e => setF('account', e.target.value)} style={INP}>
-                  {ACCOUNTS.map(a => <option key={a} value={a}>{a}</option>)}
-                </select>
+            ) : (
+              <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px" }}>
+                <div>
+                  <label style={LBL}>날짜</label>
+                  <input type="date" value={incomeForm.income_date} onChange={e => setIF('income_date', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>금액</label>
+                  <input type="number" placeholder="0" value={incomeForm.amount} onChange={e => setIF('amount', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>티커 (선택)</label>
+                  <input type="text" placeholder="예: AAPL" value={incomeForm.ticker} onChange={e => setIF('ticker', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>종목명 (선택)</label>
+                  <input type="text" placeholder="예: 애플" value={incomeForm.stock_name} onChange={e => setIF('stock_name', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>메모 (선택)</label>
+                  <input type="text" placeholder="메모" value={incomeForm.memo} onChange={e => setIF('memo', e.target.value)} style={INP} />
+                </div>
+                <div>
+                  <label style={LBL}>계좌</label>
+                  <select value={incomeForm.account} onChange={e => setIF('account', e.target.value)} style={INP}>
+                    {ACCOUNTS.map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={LBL}>소득 종류</label>
+                  <select value={incomeForm.income_type} onChange={e => setIF('income_type', e.target.value)} style={INP}>
+                    {INCOME_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label style={LBL}>티커</label>
-                <input type="text" placeholder="예: AAPL" value={form.ticker} onChange={e => setF('ticker', e.target.value)} style={INP} />
-              </div>
-              <div>
-                <label style={LBL}>종목명</label>
-                <input type="text" placeholder="예: 애플" value={form.stock_name} onChange={e => setF('stock_name', e.target.value)} style={INP} />
-              </div>
-              <div>
-                <label style={LBL}>섹터</label>
-                <input type="text" placeholder="예: IT" value={form.sector} onChange={e => setF('sector', e.target.value)} style={INP} />
-              </div>
-              <div>
-                <label style={LBL}>매수/매도</label>
-                <select value={form.trade_type} onChange={e => setF('trade_type', e.target.value)} style={INP}>
-                  <option value="">-</option>
-                  <option value="매수">매수</option>
-                  <option value="매도">매도</option>
-                </select>
-              </div>
-              <div>
-                <label style={LBL}>수량</label>
-                <input type="number" placeholder="0" value={form.quantity} onChange={e => setF('quantity', e.target.value)} style={INP} />
-              </div>
-              <div>
-                <label style={LBL}>매수단가</label>
-                <input type="number" placeholder="0" value={form.buy_price} onChange={e => setF('buy_price', e.target.value)} style={INP} />
-              </div>
-              <div>
-                <label style={LBL}>매도단가</label>
-                <input type="number" placeholder="0" value={form.sell_price} onChange={e => setF('sell_price', e.target.value)} style={INP} />
-              </div>
-              <div>
-                <label style={LBL}>입출금</label>
-                <select value={form.account_transfer} onChange={e => setF('account_transfer', e.target.value)} style={INP}>
-                  <option value="">-</option>
-                  <option value="입금">입금</option>
-                  <option value="출금">출금</option>
-                </select>
-              </div>
-              <div>
-                <label style={LBL}>입출금 금액</label>
-                <input type="number" placeholder="0" value={form.transfer_amount} onChange={e => setF('transfer_amount', e.target.value)} style={INP} />
-              </div>
-              <div>
-                <label style={LBL}>통화</label>
-                <select value={form.currency} onChange={e => setF('currency', e.target.value)} style={INP}>
-                  <option value="KRW">KRW</option>
-                  <option value="USD">USD</option>
-                </select>
-              </div>
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={LBL}>메모</label>
-                <input type="text" placeholder="메모 (선택)" value={form.memo} onChange={e => setF('memo', e.target.value)} style={INP} />
-              </div>
-            </div>
+            )}
             {saveErr && (
               <div style={{ margin: "0 24px", padding: "10px 14px", background: "rgba(255,59,48,0.10)", borderRadius: 8, color: C.red, fontSize: 13, fontWeight: 600 }}>{saveErr}</div>
             )}
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", padding: "16px 24px 22px" }}>
-              <button onClick={() => { setShowAddForm(false); setForm(INIT_FORM()); setSaveErr(''); }}
+              <button onClick={() => { setShowAddForm(false); setForm(INIT_FORM()); setIncomeForm(INIT_INCOME()); setSaveErr(''); setEditId(null); }}
                 style={{ padding: "10px 22px", borderRadius: 10, border: "none", background: C.fill, color: C.label, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
                 취소
               </button>
-              <button onClick={handleSave} disabled={saving}
-                style={{ padding: "10px 22px", borderRadius: 10, border: "none", background: C.blue, color: "#fff", fontSize: 15, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1, fontFamily: "inherit" }}>
-                {saving ? "저장 중…" : "저장"}
+              <button onClick={formTab === "income" && !editId ? handleIncomeSave : handleSave} disabled={saving || incomeSaving}
+                style={{ padding: "10px 22px", borderRadius: 10, border: "none", background: C.blue, color: "#fff", fontSize: 15, fontWeight: 600, cursor: (saving || incomeSaving) ? "not-allowed" : "pointer", opacity: (saving || incomeSaving) ? 0.6 : 1, fontFamily: "inherit" }}>
+                {(saving || incomeSaving) ? "저장 중…" : "저장"}
               </button>
             </div>
           </div>
