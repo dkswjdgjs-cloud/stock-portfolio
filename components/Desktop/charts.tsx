@@ -206,41 +206,40 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
     return () => el.removeEventListener("wheel", onWheel);
   }, [points.length]);
 
-  // 드래그 시작
+  // 드래그: mousedown에서 즉시 window 리스너 등록 (state 업데이트 지연 없음)
   const handleMouseDown = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
     if (e.button !== 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const svgX = ((e.clientX - rect.left) / rect.width) * W;
     const svgY = ((e.clientY - rect.top) / rect.height) * H;
-    if (svgX >= PL && svgX <= W - PR && svgY >= PT && svgY <= H - PB) {
-      dragRef.current = { cx: e.clientX, cy: e.clientY, xv: xView, yv: yView };
-      setIsDragging(true);
-      setHoverIdx(null);
-    }
-  }, [xView, yView]);
-
-  // 드래그 이동/해제 (window 이벤트)
-  useEffect(() => {
-    if (!isDragging) return;
-    const onMove = (e: MouseEvent) => {
-      if (!dragRef.current || !svgRef.current) return;
-      const rect = svgRef.current.getBoundingClientRect();
-      const dx = e.clientX - dragRef.current.cx;
-      const dy = e.clientY - dragRef.current.cy;
-      const xSpan = dragRef.current.xv[1] - dragRef.current.xv[0];
-      const ySpan = dragRef.current.yv[1] - dragRef.current.yv[0];
-      const dxData = -(dx / rect.width) * W / (W - PL - PR) * xSpan;
-      const dyData = (dy / rect.height) * H / (H - PB - PT) * ySpan;
-      const newLo = dragRef.current.xv[0] + dxData;
-      const newHi = dragRef.current.xv[1] + dxData;
+    if (svgX < PL || svgX > W - PR || svgY < PT || svgY > H - PB) return;
+    const snap = { cx: e.clientX, cy: e.clientY, xv: xView, yv: yView };
+    dragRef.current = snap;
+    setIsDragging(true);
+    setHoverIdx(null);
+    const svgEl = svgRef.current;
+    const onMove = (ev: MouseEvent) => {
+      if (!svgEl) return;
+      const r = svgEl.getBoundingClientRect();
+      const dx = ev.clientX - snap.cx;
+      const dy = ev.clientY - snap.cy;
+      const xSpan = snap.xv[1] - snap.xv[0];
+      const ySpan = snap.yv[1] - snap.yv[0];
+      const dxData = -(dx / r.width) * W / (W - PL - PR) * xSpan;
+      const dyData = (dy / r.height) * H / (H - PB - PT) * ySpan;
+      const newLo = snap.xv[0] + dxData;
+      const newHi = snap.xv[1] + dxData;
       if (newLo >= 0 && newHi <= points.length - 1) setXView([newLo, newHi]);
-      setYView([dragRef.current.yv[0] + dyData, dragRef.current.yv[1] + dyData]);
+      setYView([snap.yv[0] + dyData, snap.yv[1] + dyData]);
     };
-    const onUp = () => setIsDragging(false);
+    const onUp = () => {
+      setIsDragging(false);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
-    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
-  }, [isDragging, points.length]);
+  }, [xView, yView, points.length]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
     if (isDragging || !points.length) return;
@@ -443,34 +442,34 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
     const rect = e.currentTarget.getBoundingClientRect();
     const svgX = ((e.clientX - rect.left) / rect.width) * W;
     const svgY = ((e.clientY - rect.top) / rect.height) * H;
-    if (svgX >= PL && svgX <= W - PR && svgY >= PT && svgY <= H - PB) {
-      dragRef.current = { cx: e.clientX, cy: e.clientY, xv: xView, yv: yView };
-      setIsDragging(true);
-      setHoverIdx(null);
-    }
-  }, [xView, yView]);
-
-  useEffect(() => {
-    if (!isDragging) return;
-    const onMove = (e: MouseEvent) => {
-      if (!dragRef.current || !svgRef.current) return;
-      const rect = svgRef.current.getBoundingClientRect();
-      const dx = e.clientX - dragRef.current.cx;
-      const dy = e.clientY - dragRef.current.cy;
-      const xSpan = dragRef.current.xv[1] - dragRef.current.xv[0];
-      const ySpan = dragRef.current.yv[1] - dragRef.current.yv[0];
-      const dxData = -(dx / rect.width) * W / (W - PL - PR) * xSpan;
-      const dyData = (dy / rect.height) * H / (H - PB - PT) * ySpan;
-      const newLo = dragRef.current.xv[0] + dxData;
-      const newHi = dragRef.current.xv[1] + dxData;
+    if (svgX < PL || svgX > W - PR || svgY < PT || svgY > H - PB) return;
+    const snap = { cx: e.clientX, cy: e.clientY, xv: xView, yv: yView };
+    dragRef.current = snap;
+    setIsDragging(true);
+    setHoverIdx(null);
+    const svgEl = svgRef.current;
+    const onMove = (ev: MouseEvent) => {
+      if (!svgEl) return;
+      const r = svgEl.getBoundingClientRect();
+      const dx = ev.clientX - snap.cx;
+      const dy = ev.clientY - snap.cy;
+      const xSpan = snap.xv[1] - snap.xv[0];
+      const ySpan = snap.yv[1] - snap.yv[0];
+      const dxData = -(dx / r.width) * W / (W - PL - PR) * xSpan;
+      const dyData = (dy / r.height) * H / (H - PB - PT) * ySpan;
+      const newLo = snap.xv[0] + dxData;
+      const newHi = snap.xv[1] + dxData;
       if (newLo >= 0 && newHi <= bars.length - 1) setXView([newLo, newHi]);
-      setYView([dragRef.current.yv[0] + dyData, dragRef.current.yv[1] + dyData]);
+      setYView([snap.yv[0] + dyData, snap.yv[1] + dyData]);
     };
-    const onUp = () => setIsDragging(false);
+    const onUp = () => {
+      setIsDragging(false);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
-    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
-  }, [isDragging, bars.length]);
+  }, [xView, yView, bars.length]);
 
   const cursor = isDragging ? "grabbing" : "crosshair";
 
