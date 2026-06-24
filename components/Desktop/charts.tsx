@@ -171,31 +171,39 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
     });
   }
 
-  // 마우스 휠: Y축 라벨 영역(x<PL)이면 Y줌, X축 라벨 영역(y>H-PB)이면 X줌
-  const handleWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
-    e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const svgX = ((e.clientX - rect.left) / rect.width) * W;
-    const svgY = ((e.clientY - rect.top) / rect.height) * H;
-    const factor = e.deltaY < 0 ? 0.8 : 1.25; // 위=줌인, 아래=줌아웃
+  // 마우스 휠: non-passive로 등록해야 preventDefault()가 페이지 스크롤을 막을 수 있음
+  const xViewRef = useRef(xView);
+  const yViewRef = useRef(yView);
+  xViewRef.current = xView;
+  yViewRef.current = yView;
 
-    if (svgX < PL) {
-      // Y축 줌: 중심 기준
-      setYView(([lo, hi]) => {
-        const center = (lo + hi) / 2;
-        const half = (hi - lo) / 2 * factor;
-        return [center - half, center + half];
-      });
-    } else if (svgY > H - PB) {
-      // X축 줌: 마우스 X 위치 기준
-      const frac = Math.max(0, Math.min(1, (svgX - PL) / (W - PL - PR)));
-      setXView(([lo, hi]) => {
-        const pivot = lo + frac * (hi - lo);
-        const newLo = Math.max(0, pivot - (pivot - lo) * factor);
-        const newHi = Math.min(points.length - 1, pivot + (hi - pivot) * factor);
-        return [newLo, newHi];
-      });
-    }
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const svgX = ((e.clientX - rect.left) / rect.width) * W;
+      const svgY = ((e.clientY - rect.top) / rect.height) * H;
+      const factor = e.deltaY < 0 ? 0.8 : 1.25;
+      if (svgX < PL) {
+        setYView(([lo, hi]) => {
+          const center = (lo + hi) / 2;
+          const half = (hi - lo) / 2 * factor;
+          return [center - half, center + half];
+        });
+      } else if (svgY > H - PB) {
+        const frac = Math.max(0, Math.min(1, (svgX - PL) / (W - PL - PR)));
+        setXView(([lo, hi]) => {
+          const pivot = lo + frac * (hi - lo);
+          const newLo = Math.max(0, pivot - (pivot - lo) * factor);
+          const newHi = Math.min(points.length - 1, pivot + (hi - pivot) * factor);
+          return [newLo, newHi];
+        });
+      }
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
   }, [points.length]);
 
   // 드래그 시작
@@ -269,8 +277,7 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
         style={{ display: "block", cursor, userSelect: "none" }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => { if (!isDragging) setHoverIdx(null); }}
-        onMouseDown={handleMouseDown}
-        onWheel={handleWheel}>
+        onMouseDown={handleMouseDown}>
         <defs>
           <linearGradient id="pf-v" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={C.blue} stopOpacity="0.18" />
