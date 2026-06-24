@@ -173,8 +173,11 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
   const hx = hoverIdx !== null ? sx(hoverIdx) : 0;
 
   // 툴팁 위치: 오른쪽 넘치면 왼쪽에 표시
-  const tooltipW = 120, tooltipOnLeft = hoverIdx !== null && hx > W * 0.6;
   const fmtExact = (v: number) => (v >= 0 ? "+" : "-") + Math.round(Math.abs(v)).toLocaleString("ko-KR") + "원";
+  // 가장 긴 텍스트 기준으로 박스 너비 동적 계산 (fontSize 5.5 기준 글자당 약 3.1 units)
+  const tooltipLines = hp ? [hp.label, "평가액 " + fmtExact(hp.value), "투입금 " + fmtExact(hp.invested), "수익금 " + fmtExact(hp.profit)] : [];
+  const tooltipW = Math.max(...tooltipLines.map((l) => l.length)) * 3.05 + 14;
+  const tooltipOnLeft = hoverIdx !== null && hx > W * 0.6;
 
   return (
     <div>
