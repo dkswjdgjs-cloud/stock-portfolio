@@ -109,7 +109,7 @@ function fmtM(v: number): string {
 }
 
 export function PerfLineChart({ points }: { points: PerfPoint[] }) {
-  const W = 600, H = 264, PL = 52, PR = 10, PT = 14, PB = 28;
+  const W = 600, H = 264, PL = 26, PR = 10, PT = 14, PB = 28;
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
   const vals = points.flatMap((p) => [p.value, p.invested, p.profit]);
