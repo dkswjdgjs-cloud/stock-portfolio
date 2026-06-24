@@ -212,6 +212,10 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
           <line key={i} x1={sx(i)} x2={sx(i)} y1={PT} y2={H - PB} stroke="rgba(60,60,67,0.07)" strokeWidth="1" />
         ))}
 
+        {/* X/Y 기준선 */}
+        <line x1={PL} x2={PL} y1={PT} y2={H - PB} stroke="rgba(60,60,67,0.35)" strokeWidth="1.2" />
+        <line x1={PL} x2={W - PR} y1={H - PB} y2={H - PB} stroke="rgba(60,60,67,0.35)" strokeWidth="1.2" />
+
         {/* 차트 영역 */}
         <path d={area("value")} fill="url(#pf-v)" />
         {SERIES.map((s) => (
