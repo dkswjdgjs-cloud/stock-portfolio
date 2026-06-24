@@ -173,7 +173,7 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
   const hx = hoverIdx !== null ? sx(hoverIdx) : 0;
 
   // 툴팁 위치: 오른쪽 넘치면 왼쪽에 표시
-  const tooltipW = 148, tooltipOnLeft = hoverIdx !== null && hx > W * 0.6;
+  const tooltipW = 100, tooltipOnLeft = hoverIdx !== null && hx > W * 0.6;
 
   return (
     <div>
@@ -251,17 +251,17 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
             })}
             {/* 툴팁 박스 */}
             <g transform={`translate(${tooltipOnLeft ? hx - tooltipW - 10 : hx + 10},${PT + 2})`}>
-              <rect x="0" y="0" width={tooltipW} height="62" rx="6"
+              <rect x="0" y="0" width={tooltipW} height="44" rx="5"
                 fill="rgba(255,255,255,0.96)" stroke="rgba(60,60,67,0.12)" strokeWidth="1"
                 style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.10))" }} />
-              <text x="9" y="14" fontSize="10" fontWeight="600" fill="rgba(60,60,67,0.55)" style={NUM}>{hp.label}</text>
-              <text x="9" y="29" fontSize="10.5" fill={C.blue} style={NUM}>
+              <text x="7" y="10" fontSize="5.5" fontWeight="600" fill="rgba(60,60,67,0.55)" style={NUM}>{hp.label}</text>
+              <text x="7" y="21" fontSize="5.5" fill={C.blue} style={NUM}>
                 평가액 {fmtEok(hp.value)}
               </text>
-              <text x="9" y="44" fontSize="10.5" fill={C.gray} style={NUM}>
+              <text x="7" y="31" fontSize="5.5" fill={C.gray} style={NUM}>
                 투입금 {fmtEok(hp.invested)}
               </text>
-              <text x="9" y="59" fontSize="10.5" fill={C.green} style={NUM}>
+              <text x="7" y="41" fontSize="5.5" fill={C.green} style={NUM}>
                 수익금 {hp.profit >= 0 ? "+" : ""}{fmtEok(hp.profit)}
               </text>
             </g>
