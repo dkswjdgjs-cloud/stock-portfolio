@@ -539,15 +539,8 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
           const barTop = b.value >= 0 ? yVal : yZero;
           const barH = Math.max(Math.abs(yZero - yVal), 2);
           return (
-            <g key={i}>
-              <rect x={x} y={barTop} width={barW} height={barH} rx={Math.min(4, barW / 3)}
-                fill={b.value >= 0 ? "url(#pb-up)" : "url(#pb-dn)"} />
-              {visCount <= 20 && (
-                <text x={x + barW / 2} y={b.value >= 0 ? barTop - 4 : barTop + barH + 9}
-                  textAnchor="middle" fontSize="5.5" fontWeight="600"
-                  fill={b.value >= 0 ? C.red : C.blue} style={NUM}>{fmtM(b.value)}</text>
-              )}
-            </g>
+            <rect key={i} x={x} y={barTop} width={barW} height={barH} rx={Math.min(4, barW / 3)}
+              fill={b.value >= 0 ? C.red : C.blue} opacity="0.75" />
           );
         })}
       </g>
