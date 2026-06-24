@@ -314,6 +314,7 @@ export default function DesktopPage() {
                 topLeft={sbBtn}
                 perfDays={perfDays}
                 agg={agg}
+                onRefresh={refresh}
               />
             </div>
           )}
