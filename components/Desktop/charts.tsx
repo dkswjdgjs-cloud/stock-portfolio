@@ -230,12 +230,11 @@ export function AcctBar({ a, max, delay }: { a: AcctPerf; max: number; delay: nu
   const accent = isPos ? C.red : C.blue;
   const didAnimate = useRef(false);
   useEffect(() => {
-    if (didAnimate.current) {
-      setW((Math.abs(a.pct) / max) * 100);
-    } else {
-      const t = setTimeout(() => { setW((Math.abs(a.pct) / max) * 100); didAnimate.current = true; }, 200 + delay);
-      return () => clearTimeout(t);
-    }
+    const target = (Math.abs(a.pct) / max) * 100;
+    if (didAnimate.current) { setW(target); return; }
+    didAnimate.current = true;
+    const t = setTimeout(() => setW(target), 200 + delay);
+    return () => clearTimeout(t);
   }, [a.pct, max, delay]);
   return (
     <div style={{ padding: "13px 0", borderTop: "none" }}>
