@@ -173,7 +173,8 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
   const hx = hoverIdx !== null ? sx(hoverIdx) : 0;
 
   // 툴팁 위치: 오른쪽 넘치면 왼쪽에 표시
-  const tooltipW = 100, tooltipOnLeft = hoverIdx !== null && hx > W * 0.6;
+  const tooltipW = 120, tooltipOnLeft = hoverIdx !== null && hx > W * 0.6;
+  const fmtExact = (v: number) => (v >= 0 ? "+" : "-") + Math.round(Math.abs(v)).toLocaleString("ko-KR") + "원";
 
   return (
     <div>
@@ -251,18 +252,18 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
             })}
             {/* 툴팁 박스 */}
             <g transform={`translate(${tooltipOnLeft ? hx - tooltipW - 10 : hx + 10},${PT + 2})`}>
-              <rect x="0" y="0" width={tooltipW} height="44" rx="5"
+              <rect x="0" y="0" width={tooltipW} height="50" rx="5"
                 fill="rgba(255,255,255,0.96)" stroke="rgba(60,60,67,0.12)" strokeWidth="1"
                 style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.10))" }} />
-              <text x="7" y="10" fontSize="5.5" fontWeight="600" fill="rgba(60,60,67,0.55)" style={NUM}>{hp.label}</text>
-              <text x="7" y="21" fontSize="5.5" fill={C.blue} style={NUM}>
-                평가액 {fmtEok(hp.value)}
+              <text x="7" y="11" fontSize="5.5" fontWeight="600" fill="rgba(60,60,67,0.55)" style={NUM}>{hp.label}</text>
+              <text x="7" y="23" fontSize="5.5" fill={C.blue} style={NUM}>
+                평가액 {fmtExact(hp.value)}
               </text>
-              <text x="7" y="31" fontSize="5.5" fill={C.gray} style={NUM}>
-                투입금 {fmtEok(hp.invested)}
+              <text x="7" y="34" fontSize="5.5" fill={C.gray} style={NUM}>
+                투입금 {fmtExact(hp.invested)}
               </text>
-              <text x="7" y="41" fontSize="5.5" fill={C.green} style={NUM}>
-                수익금 {hp.profit >= 0 ? "+" : ""}{fmtEok(hp.profit)}
+              <text x="7" y="45" fontSize="5.5" fill={C.green} style={NUM}>
+                수익금 {fmtExact(hp.profit)}
               </text>
             </g>
           </g>
