@@ -286,8 +286,7 @@ export function profitBars(
       }))
       .slice(-12);
   }
-  // 일: 최근 30일
+  // 일: 전체 기간
   return perfDays
-    .map((p, i) => ({ label: `${p.date.getDate()}`, value: p.profit - (i ? perfDays[i - 1].profit : 0) }))
-    .slice(-30);
+    .map((p, i) => ({ label: `${p.date.getDate()}`, full: p.label, value: p.profit - (i ? perfDays[i - 1].profit : 0) }));
 }
