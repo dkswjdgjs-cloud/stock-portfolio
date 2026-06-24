@@ -552,25 +552,28 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
         })}
       </g>
 
-      {/* X축 라벨: 겹치지 않게, 1월1일은 연도, 나머지는 월-일 */}
+      {/* X축 라벨: 겹치지 않게, 연도 바뀌는 첫 막대는 연도, 나머지는 월-일 */}
       {(() => {
         const minGap = 36;
         let lastX = -999;
+        let lastYear = "";
         return bars.slice(iMin, iMax + 1).map((b, ii) => {
           const i = iMin + ii;
           const x = barX(i) + ((W - PL - PR) / visCount) / 2;
           if (x < PL || x > W - PR) return null;
           if (x - lastX < minGap) return null;
           const full = b.full ?? "";
-          const isJan1 = full.endsWith("-01-01");
-          const displayLabel = isJan1
-            ? full.slice(0, 4)
+          const year = full.slice(0, 4);
+          const isNewYear = year !== lastYear && year.length === 4;
+          const displayLabel = isNewYear
+            ? year
             : full.length >= 10 ? full.slice(5, 10) : b.label;
           lastX = x;
+          if (isNewYear) lastYear = year;
           return (
             <text key={i} x={x} y={H - 9} fontSize="6"
-              fill={isJan1 ? "rgba(60,60,67,0.7)" : "rgba(60,60,67,0.45)"}
-              fontWeight={isJan1 ? "700" : "400"}
+              fill={isNewYear ? "rgba(60,60,67,0.7)" : "rgba(60,60,67,0.45)"}
+              fontWeight={isNewYear ? "700" : "400"}
               textAnchor="middle" style={NUM}>{displayLabel}</text>
           );
         });
