@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { C, NUM } from "@/lib/glow-theme";
 import { fmtEok, type AcctPerf, type PerfPoint, type ProfitBar } from "@/lib/tabletV2Helpers";
 
@@ -228,10 +228,15 @@ export function AcctBar({ a, max, delay }: { a: AcctPerf; max: number; delay: nu
   const [w, setW] = useState(0);
   const isPos = a.pct >= 0;
   const accent = isPos ? C.red : C.blue;
+  const didAnimate = useRef(false);
   useEffect(() => {
-    const t = setTimeout(() => setW((Math.abs(a.pct) / max) * 100), 200 + delay);
-    return () => clearTimeout(t);
-  }, [a, max, delay]);
+    if (didAnimate.current) {
+      setW((Math.abs(a.pct) / max) * 100);
+    } else {
+      const t = setTimeout(() => { setW((Math.abs(a.pct) / max) * 100); didAnimate.current = true; }, 200 + delay);
+      return () => clearTimeout(t);
+    }
+  }, [a.pct, max, delay]);
   return (
     <div style={{ padding: "13px 0", borderTop: "none" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
