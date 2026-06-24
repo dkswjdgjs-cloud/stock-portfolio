@@ -40,6 +40,9 @@ export default function AssetPage({
   const [tradesOpen, setTradesOpen] = useState(false);
   const [tradeTap, setTradeTap] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState(INIT_FORM());
   const [saving, setSaving] = useState(false);
   const [saveErr, setSaveErr] = useState('');
@@ -48,26 +51,55 @@ export default function AssetPage({
   const handleSave = async () => {
     setSaving(true); setSaveErr('');
     try {
+      const body = {
+        trade_date: form.trade_date, account: form.account,
+        account_transfer: form.account_transfer || null,
+        transfer_amount: form.transfer_amount ? parseFloat(form.transfer_amount) : null,
+        ticker: form.ticker || null, stock_name: form.stock_name || null,
+        sector: form.sector || null, trade_type: form.trade_type || null,
+        quantity: form.quantity ? parseFloat(form.quantity) : null,
+        buy_price: form.buy_price ? parseFloat(form.buy_price) : null,
+        sell_price: form.sell_price ? parseFloat(form.sell_price) : null,
+        currency: form.currency, memo: form.memo || null,
+      };
       const res = await fetch('/api/transactions', {
-        method: 'POST',
+        method: editId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          trade_date: form.trade_date, account: form.account,
-          account_transfer: form.account_transfer || null,
-          transfer_amount: form.transfer_amount ? parseFloat(form.transfer_amount) : null,
-          ticker: form.ticker || null, stock_name: form.stock_name || null,
-          sector: form.sector || null, trade_type: form.trade_type || null,
-          quantity: form.quantity ? parseFloat(form.quantity) : null,
-          buy_price: form.buy_price ? parseFloat(form.buy_price) : null,
-          sell_price: form.sell_price ? parseFloat(form.sell_price) : null,
-          currency: form.currency, memo: form.memo || null,
-        }),
+        body: JSON.stringify(editId ? { id: editId, ...body } : body),
       });
       if (!res.ok) throw new Error(await res.text());
-      setShowAddForm(false); setForm(INIT_FORM()); onRefresh();
+      setShowAddForm(false); setEditId(null); setForm(INIT_FORM()); onRefresh();
     } catch (e: unknown) {
       setSaveErr(e instanceof Error ? e.message : '저장 실패');
     } finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: number) => {
+    setDeleting(true);
+    try {
+      const res = await fetch(/api/transactions?id=, { method: 'DELETE' });
+      if (!res.ok) throw new Error(await res.text());
+      setDeleteId(null); onRefresh();
+    } catch (e) { console.error(e); }
+    finally { setDeleting(false); }
+  };
+
+  const openEdit = (t: TradeRow) => {
+    setForm({
+      trade_date: t.date,
+      account: t.acct,
+      account_transfer: (t.type === '입금' || t.type === '출금') ? t.type : '',
+      transfer_amount: t.transferAmount ? String(t.transferAmount) : '',
+      ticker: t.ticker || '',
+      stock_name: t.stockName !== '-' ? t.stockName : '',
+      sector: '', trade_type: (t.type === '매수' || t.type === '매도') ? t.type : '',
+      quantity: t.qty ? String(t.qty) : '',
+      buy_price: t.buyPrice ? String(t.buyPrice) : '',
+      sell_price: t.sellPrice ? String(t.sellPrice) : '',
+      currency: 'KRW', memo: '',
+    });
+    setEditId(t.id ?? null);
+    setShowAddForm(true);
   };
 
   const PIE_COLORS = ["#6366f1","#22d3ee","#3b82f6","#a78bfa","#2dd4bf","#818cf8","#67e8f9","#c4b5fd"];
@@ -198,8 +230,8 @@ export default function AssetPage({
               style={{ width: 30, height: 30, borderRadius: "50%", border: "none", background: C.fill, color: C.sec, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>✕</button>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "104px 1fr 110px 58px 64px 104px", gap: 8, padding: "9px 24px", background: C.fill }}>
-          {["날짜", "종목", "계좌", "구분", "수량", "단가"].map((h) => (
+        <div style={{ display: "grid", gridTemplateColumns: "104px 1fr 110px 58px 64px 104px 60px", gap: 8, padding: "9px 24px", background: C.fill }}>
+          {["날짜", "종목", "계좌", "구분", "수량", "단가", ""].map((h) => (
             <span key={h} style={{ fontSize: 12, fontWeight: 600, color: C.sec, textAlign: h === "수량" || h === "단가" ? "right" : "left" }}>{h}</span>
           ))}
         </div>
@@ -207,13 +239,21 @@ export default function AssetPage({
           {filteredTrades.map((t, i) => (
             <div key={i} onClick={() => (t.type === "매도" && t.profitLoss != null) ? setTradeTap(tradeTap === i ? null : i) : null}
               style={{ cursor: t.type === "매도" ? "pointer" : "default" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "104px 1fr 110px 58px 64px 104px", gap: 8, alignItems: "center", padding: "12px 0", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "104px 1fr 110px 58px 64px 104px 60px", gap: 8, alignItems: "center", padding: "12px 0", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
               <span style={{ ...NUM, fontSize: 14 }}>{t.date}</span>
               <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.stockName}</span>
               <span style={{ fontSize: 14 }}>{t.acct}</span>
               <span style={{ fontSize: 12, fontWeight: 600, textAlign: "center", padding: "2px 0", borderRadius: 5, color: t.type === "매수" ? C.red : t.type === "매도" ? C.blue : t.type === "입금" ? C.green : C.sec, background: t.type === "매수" ? "rgba(255,59,48,0.10)" : t.type === "매도" ? "rgba(0,122,255,0.10)" : t.type === "입금" ? "rgba(52,199,89,0.10)" : "rgba(142,142,147,0.10)" }}>{t.type}</span>
               <span style={{ ...NUM, fontSize: 14, textAlign: "right" }}>{t.qty}주</span>
               <span style={{ ...NUM, fontSize: 14, textAlign: "right" }}>{t.unit}</span>
+              <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                <button onClick={(e) => { e.stopPropagation(); openEdit(t); }}
+                  style={{ width: 26, height: 26, borderRadius: 6, border: "none", background: C.fill, color: C.sec, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  title="수정">✎</button>
+                <button onClick={(e) => { e.stopPropagation(); setDeleteId(t.id ?? null); }}
+                  style={{ width: 26, height: 26, borderRadius: 6, border: "none", background: "rgba(255,59,48,0.10)", color: C.red, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  title="삭제">✕</button>
+              </div>
               </div>
               {tradeTap === i && t.profitLoss != null && (
                 <div style={{ display: "flex", gap: 16, padding: "8px 14px 10px", background: C.fill, borderRadius: 8, margin: "4px 0 2px", alignItems: "center" }}>
@@ -234,13 +274,32 @@ export default function AssetPage({
         </div>
       </div>
 
+      {/* 삭제 확인 모달 */}
+      {deleteId !== null && (
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setDeleteId(null); }}>
+          <div style={{ background: C.card, borderRadius: 18, padding: "28px 32px", minWidth: 300, boxShadow: "0 20px 60px rgba(0,0,0,0.3)", textAlign: "center" }}>
+            <p style={{ margin: "0 0 6px", fontSize: 17, fontWeight: 700 }}>거래 내역 삭제</p>
+            <p style={{ margin: "0 0 24px", fontSize: 14, color: C.sec }}>이 거래를 삭제하면 복구할 수 없습니다.</p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button onClick={() => setDeleteId(null)}
+                style={{ padding: "9px 22px", borderRadius: 10, border: "none", background: C.fill, color: C.label, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>취소</button>
+              <button onClick={() => deleteId && handleDelete(deleteId)} disabled={deleting}
+                style={{ padding: "9px 22px", borderRadius: 10, border: "none", background: C.red, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", opacity: deleting ? 0.6 : 1 }}>
+                {deleting ? "삭제 중..." : "삭제"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 거래 추가 모달 */}
       {showAddForm && (
         <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
-          onClick={(e) => { if (e.target === e.currentTarget) { setShowAddForm(false); setForm(INIT_FORM()); setSaveErr(''); } }}>
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowAddForm(false); setEditId(null); setForm(INIT_FORM()); setSaveErr(''); } }}>
           <div style={{ background: C.card, borderRadius: 18, width: "100%", maxWidth: 560, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
             <div style={{ padding: "22px 24px 18px", borderBottom: `1px solid ${C.sep}` }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>거래 추가</h2>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{editId ? "거래 수정" : "거래 추가"}</h2>
             </div>
             <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px" }}>
               <div>

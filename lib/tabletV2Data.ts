@@ -1,4 +1,4 @@
-// =============================================================
+﻿// =============================================================
 // tablet-v2 실데이터 fetch hook
 // /api/transactions, /api/cash-balance, /api/snapshot, /api/stock 호출 후
 // tabletV2Helpers의 타입에 맞게 변환해 반환.
@@ -305,9 +305,9 @@ export function useTabletV2Data(): TabletV2DataResult {
           const cur = st?.currency || "KRW";
           const up = t.trade_type === "매수" ? t.buy_price : t.sell_price;
           const unit = cur === "USD" ? "$" + (up ?? 0).toFixed(2) : Math.round(up ?? 0).toLocaleString("ko-KR") + "원";
-          trades.push({ date: t.trade_date, acct: t.account, type: t.trade_type as "매수"|"매도", stockName: t.stock_name || t.ticker, qty: t.quantity ?? 0, unit, profitLoss: (t as any).profit_loss || undefined, profitRate: (t as any).profit_rate || undefined });
+          trades.push({ id: t.id, date: t.trade_date, acct: t.account, type: t.trade_type as "매수"|"매도", stockName: t.stock_name || t.ticker, ticker: t.ticker || undefined, qty: t.quantity ?? 0, unit, buyPrice: t.buy_price || undefined, sellPrice: t.sell_price || undefined, profitLoss: (t as any).profit_loss || undefined, profitRate: (t as any).profit_rate || undefined });
         } else if (t.account_transfer) {
-          trades.push({ date: t.trade_date, acct: t.account, type: t.account_transfer as "입금"|"출금", stockName: "-", qty: 0, unit: Math.round(t.transfer_amount ?? 0).toLocaleString("ko-KR") + "원" });
+          trades.push({ id: t.id, date: t.trade_date, acct: t.account, type: t.account_transfer as "입금"|"출금", stockName: "-", qty: 0, unit: Math.round(t.transfer_amount ?? 0).toLocaleString("ko-KR") + "원", transferAmount: t.transfer_amount || undefined });
         }
       }
       trades.sort((a, b) => b.date.localeCompare(a.date));
