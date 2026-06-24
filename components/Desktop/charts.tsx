@@ -250,7 +250,8 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
   }, [isDragging, points.length, xView]);
 
   const hp = hoverIdx !== null ? points[hoverIdx] : null;
-  const hx = hoverIdx !== null ? sx(hoverIdx) : 0;
+  const hxRaw = hoverIdx !== null ? sx(hoverIdx) : 0;
+  const hx = Math.max(PL, Math.min(W - PR, hxRaw)); // 클램핑: 마지막 점이 범위 밖이어도 가장자리에 표시
   const fmtExact = (v: number) => (v >= 0 ? "+" : "-") + Math.round(Math.abs(v)).toLocaleString("ko-KR") + "원";
   const tooltipLines = hp ? [hp.label, "평가액 " + fmtExact(hp.value), "투입금 " + fmtExact(hp.invested), "수익금 " + fmtExact(hp.profit)] : [];
   const tooltipW = Math.max(...tooltipLines.map((l) => l.length)) * 3.05 + 14;
@@ -336,7 +337,7 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
         ))}
 
         {/* 호버 크로스헤어 + 툴팁 */}
-        {hp !== null && hoverIdx !== null && !isDragging && hx >= PL && hx <= W - PR && (
+        {hp !== null && hoverIdx !== null && !isDragging && (
           <g>
             <line x1={hx} x2={hx} y1={PT} y2={H - PB} stroke="rgba(60,60,67,0.25)" strokeWidth="1" strokeDasharray="3 3" />
             {SERIES.map((s) => {
