@@ -1,40 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Redis } from '@upstash/redis';
+import { getKisToken, KIS_BASE, KIS_KEY, KIS_SECRET } from '@/lib/kisToken';
 
-const KIS_APP_KEY = process.env.KIS_APP_KEY!;
-const KIS_APP_SECRET = process.env.KIS_APP_SECRET!;
-const KIS_BASE_URL = 'https://openapi.koreainvestment.com:9443';
-
-// /api/stock 라우트와 동일한 Redis 캐시(kis_token)를 공유한다.
-// (이전에는 함수 내 변수에만 캐싱해서, 서버리스 콜드 스타트마다 새 토큰을 발급받다가
-//  KIS 토큰 발급 빈도 제한에 걸려 인증이 실패 → 모든 항목이 "-"로 빠지는 문제가 있었음)
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL!,
-  token: process.env.KV_REST_API_TOKEN!,
-});
-
-async function fetchNewToken(): Promise<string> {
-  const res = await fetch(`${KIS_BASE_URL}/oauth2/tokenP`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ grant_type: 'client_credentials', appkey: KIS_APP_KEY, appsecret: KIS_APP_SECRET }),
-  });
-  const data = await res.json();
-  if (!data.access_token) {
-    console.error('KIS token 발급 실패:', JSON.stringify(data).slice(0, 300));
-    throw new Error('KIS token 발급 실패');
-  }
-  const token = data.access_token as string;
-  const ttl = (data.expires_in || 86400) - 60;
-  await redis.set('kis_token', token, { ex: ttl });
-  return token;
-}
-
-async function getAccessToken(): Promise<string> {
-  const cached = await redis.get<string>('kis_token');
-  if (cached) return cached;
-  return fetchNewToken();
-}
+const KIS_APP_KEY = KIS_KEY;
+const KIS_APP_SECRET = KIS_SECRET;
+const KIS_BASE_URL = KIS_BASE;
 
 interface KisApiData {
   rt_cd?: string;
@@ -59,7 +28,7 @@ async function kisFetch(url: string, trId: string, token: string): Promise<{ dat
   let data = await call(token);
   if (data.rt_cd && data.rt_cd !== '0') {
     console.error(`KIS API error (tr_id=${trId}):`, data.msg_cd, data.msg1);
-    const fresh = await fetchNewToken();
+    const fresh = await getKisToken();
     data = await call(fresh);
     if (data.rt_cd && data.rt_cd !== '0') {
       console.error(`KIS API retry failed (tr_id=${trId}):`, data.msg_cd, data.msg1);
@@ -77,7 +46,7 @@ export async function GET(request: NextRequest) {
   if (!ticker) return NextResponse.json({ error: 'ticker is required' }, { status: 400 });
 
   try {
-    let token = await getAccessToken();
+    let token = await getKisToken();
 
     if (market !== 'KR') {
       return NextResponse.json({ info: null, message: '해외 종목은 지원하지 않습니다' });

@@ -1,22 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getKisToken, KIS_BASE, KIS_KEY, KIS_SECRET } from '@/lib/kisToken';
 
-const KIS_APP_KEY = process.env.KIS_APP_KEY!;
-const KIS_APP_SECRET = process.env.KIS_APP_SECRET!;
-const KIS_BASE_URL = 'https://openapi.koreainvestment.com:9443';
-
-let tokenCache: { token: string; expires: number } | null = null;
-
-async function getAccessToken() {
-  if (tokenCache && Date.now() < tokenCache.expires) return tokenCache.token;
-  const res = await fetch(`${KIS_BASE_URL}/oauth2/tokenP`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ grant_type: 'client_credentials', appkey: KIS_APP_KEY, appsecret: KIS_APP_SECRET }),
-  });
-  const data = await res.json();
-  tokenCache = { token: data.access_token, expires: Date.now() + (data.expires_in - 60) * 1000 };
-  return tokenCache.token;
-}
+const KIS_APP_KEY = KIS_KEY;
+const KIS_APP_SECRET = KIS_SECRET;
+const KIS_BASE_URL = KIS_BASE;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -27,7 +14,7 @@ export async function GET(request: NextRequest) {
   if (!ticker) return NextResponse.json({ error: 'ticker is required' }, { status: 400 });
 
   try {
-    const token = await getAccessToken();
+    const token = await getKisToken();
     const today = new Date();
     const endDate = today.toISOString().slice(0, 10).replace(/-/g, '');
     const startDate = new Date(today);

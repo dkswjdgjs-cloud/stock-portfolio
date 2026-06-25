@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
+import { getKisToken, KIS_BASE, KIS_KEY, KIS_SECRET } from '@/lib/kisToken';
 
-const KIS_APP_KEY = process.env.KIS_APP_KEY!;
-const KIS_APP_SECRET = process.env.KIS_APP_SECRET!;
-const KIS_BASE_URL = 'https://openapi.koreainvestment.com:9443';
+const KIS_APP_KEY = KIS_KEY;
+const KIS_APP_SECRET = KIS_SECRET;
+const KIS_BASE_URL = KIS_BASE;
 
 const redis = new Redis({
   url: process.env.KV_REST_API_URL!,
@@ -11,22 +12,6 @@ const redis = new Redis({
 });
 
 const exchangeCache = new Map<string, string>();
-
-async function getAccessToken() {
-  const cached = await redis.get<string>('kis_token');
-  if (cached) return cached;
-
-  const res = await fetch(`${KIS_BASE_URL}/oauth2/tokenP`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ grant_type: 'client_credentials', appkey: KIS_APP_KEY, appsecret: KIS_APP_SECRET }),
-  });
-  const data = await res.json();
-  const token = data.access_token;
-  const ttl = (data.expires_in || 86400) - 60;
-  await redis.set('kis_token', token, { ex: ttl });
-  return token;
-}
 
 async function getUSDKRWRate(): Promise<number> {
   const cached = await redis.get<number>('usd_krw_rate');
@@ -51,7 +36,7 @@ export async function GET(request: NextRequest) {
   if (!ticker) return NextResponse.json({ error: 'ticker is required' }, { status: 400 });
 
   try {
-    const token = await getAccessToken();
+    const token = await getKisToken();
     const isKR = market === 'KR';
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -76,7 +61,7 @@ export async function GET(request: NextRequest) {
       dailyChange = (String(dailySign) === '4' || String(dailySign) === '5') ? -Math.abs(dailyChangeAmt) : Math.abs(dailyChangeAmt);
     } else {
       exchangeRate = await getUSDKRWRate();
-      const cachedExcd = exchangeCache.get(ticker);
+      const cachedExcd = exchangeCache.get(ticker) || await redis.get<string>(`excd:${ticker}`);
       const exchanges = cachedExcd
         ? [cachedExcd, ...['NAS', 'AMS', 'NYS', 'TSE', 'HKS'].filter(e => e !== cachedExcd)]
         : ['NAS', 'AMS', 'NYS', 'TSE', 'HKS'];
@@ -87,11 +72,12 @@ export async function GET(request: NextRequest) {
         const p = parseFloat(data.output?.last || '0');
         if (p > 0) {
           price = p;
-          // 해외 종목: KIS sign/diff 역산 대신 전일종가(base) 기준으로 직접 계산
-          // (output.sign 코드 체계가 모호해 상승/하락이 뒤집히는 문제가 있었음)
           prevClose = parseFloat(data.output?.base || '0') || 0;
           dailyChange = prevClose > 0 ? price - prevClose : 0;
           exchangeCache.set(ticker, excd);
+          if (!cachedExcd || cachedExcd !== excd) {
+            redis.set(`excd:${ticker}`, excd, { ex: 86400 * 30 }).catch(() => {});
+          }
           break;
         }
       }
