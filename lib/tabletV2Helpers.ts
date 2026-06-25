@@ -103,10 +103,13 @@ export interface PortfolioSummary {
   cumulativeReturn: number;
   annualProfit: number;
   annualReturn: number;
+  annualBase: number;
   monthlyProfit: number;
   monthlyReturn: number;
+  monthlyBase: number;
   dailyProfit: number;
   dailyReturn: number;
+  dailyBase: number;
 }
 
 // ===== 포맷터 =====

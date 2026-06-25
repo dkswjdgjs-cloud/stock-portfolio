@@ -319,6 +319,7 @@ export default function DesktopPage() {
                 view={view}
                 acctSel={acctSel}
                 summary={summary}
+                liveValue={view.totalValue}
                 heldStocks={newsHeldStocks}
                 favStocks={newsFavStocks}
                 onSelectStock={selectStock}

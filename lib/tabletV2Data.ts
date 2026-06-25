@@ -95,9 +95,9 @@ export function useTabletV2Data(): TabletV2DataResult {
   const [summary, setSummary] = useState<PortfolioSummary>({
     currValue: 0, totalInvested: 0,
     cumulativeProfit: 0, cumulativeReturn: 0,
-    annualProfit: 0, annualReturn: 0,
-    monthlyProfit: 0, monthlyReturn: 0,
-    dailyProfit: 0, dailyReturn: 0,
+    annualProfit: 0, annualReturn: 0, annualBase: 0,
+    monthlyProfit: 0, monthlyReturn: 0, monthlyBase: 0,
+    dailyProfit: 0, dailyReturn: 0, dailyBase: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -292,12 +292,13 @@ export function useTabletV2Data(): TabletV2DataResult {
       const monthlyReturn = monthlyBase > 0 ? (monthlyProfit / monthlyBase) * 100 : 0;
       const dailyReturn = currValue > 0 ? (totalDailyProfit / (currValue - totalDailyProfit)) * 100 : 0;
 
+      const dailyBase = currValue - totalDailyProfit;
       setSummary({
         currValue, totalInvested,
         cumulativeProfit, cumulativeReturn,
-        annualProfit, annualReturn,
-        monthlyProfit, monthlyReturn,
-        dailyProfit: totalDailyProfit, dailyReturn,
+        annualProfit, annualReturn, annualBase,
+        monthlyProfit, monthlyReturn, monthlyBase,
+        dailyProfit: totalDailyProfit, dailyReturn, dailyBase,
       });
 
       // 8. 전체 거래 내역 (매수/매도/입금/출금 모두 포함)
