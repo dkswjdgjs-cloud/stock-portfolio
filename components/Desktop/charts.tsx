@@ -227,9 +227,10 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
       const ySpan = snap.yv[1] - snap.yv[0];
       const dxData = -(dx / r.width) * W / (W - PL - PR) * xSpan;
       const dyData = (dy / r.height) * H / (H - PB - PT) * ySpan;
-      const newLo = snap.xv[0] + dxData;
-      const newHi = snap.xv[1] + dxData;
-      if (newLo >= 0 && newHi <= points.length - 1) setXView([newLo, newHi]);
+      const span = snap.xv[1] - snap.xv[0];
+      const rawLo = snap.xv[0] + dxData;
+      const clampedLo = Math.max(0, Math.min(points.length - 1 - span, rawLo));
+      setXView([clampedLo, clampedLo + span]);
       setYView([snap.yv[0] + dyData, snap.yv[1] + dyData]);
     };
     const onUp = () => {
