@@ -342,6 +342,7 @@ export default function DesktopPage() {
                 topLeft={sbBtn}
                 perfDays={perfDays}
                 agg={agg}
+                totalInvested={summary.totalInvested}
                 onRefresh={refresh}
               />
             </div>

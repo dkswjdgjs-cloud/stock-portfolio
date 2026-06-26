@@ -20,11 +20,12 @@ const INPUT_STYLE: React.CSSProperties = {
 };
 
 export default function PerfPage({
-  topLeft, perfDays, agg, onRefresh,
+  topLeft, perfDays, agg, totalInvested, onRefresh,
 }: {
   topLeft: ReactNode;
   perfDays: PerfPoint[];
   agg: Record<AggUnit, () => PerfPoint[]>;
+  totalInvested?: number;
   onRefresh?: () => void;
 }) {
   const [mode, setMode] = useState<PerfMode>("누적");
@@ -62,7 +63,7 @@ export default function PerfPage({
   const isEmpty = perfDays.length === 0;
 
   const openSave = () => {
-    setSaveForm({ date: todayStr(), valuation: "", totalInvested: "", cumulativeProfit: "" });
+    setSaveForm({ date: todayStr(), valuation: "", totalInvested: totalInvested ? String(Math.round(totalInvested)) : "", cumulativeProfit: "" });
     setShowSave(true);
   };
 
