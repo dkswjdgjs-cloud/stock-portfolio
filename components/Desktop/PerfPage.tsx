@@ -49,7 +49,7 @@ export default function PerfPage({
       : unit === "분기" ? agg["분기별"]()
       : agg["년도별"]();
     const withDelta = full.map((p, i) => ({ ...p, delta: p.profit - (i ? full[i - 1].profit : 0) }));
-    const sliced = unit === "일" ? withDelta.slice(-120) : withDelta;
+    const sliced = withDelta;
     return [...sliced].reverse();
   }, [unit, agg]);
 
