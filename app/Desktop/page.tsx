@@ -11,7 +11,6 @@ import PortfolioPage from "@/components/Desktop/PortfolioPage";
 import AssetPage from "@/components/Desktop/AssetPage";
 import PerfPage from "@/components/Desktop/PerfPage";
 import StockDetail from "@/components/Desktop/StockDetail";
-import DailyReportPage from "@/components/Desktop/DailyReportPage";
 import { SidebarToggle } from "@/components/Desktop/ui";
 
 export default function DesktopPage() {
@@ -295,7 +294,7 @@ export default function DesktopPage() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px 0", flexShrink: 0, background: C.bgGrouped }}>
             {sbBtn}
             <div style={{ display: "inline-flex", background: "rgba(120,120,128,0.12)", borderRadius: 9, padding: 2 }}>
-              {["포트폴리오", "자산배분", "성과 추이", "일일레포트"].map((label, p) => (
+              {["포트폴리오", "자산배분", "성과 추이"].map((label, p) => (
                 <button key={label} onClick={() => setPage(p)}
                   style={{
                     border: "none", padding: "5px 20px", borderRadius: 7, fontSize: 13,
@@ -337,7 +336,7 @@ export default function DesktopPage() {
                 onRefresh={refresh}
               />
             </div>
-          ) : page === 2 ? (
+          ) : (
             <div style={{ flex: 1, overflowY: "auto" }}>
               <PerfPage
                 topLeft={sbBtn}
@@ -345,10 +344,6 @@ export default function DesktopPage() {
                 agg={agg}
                 onRefresh={refresh}
               />
-            </div>
-          ) : (
-            <div style={{ flex: 1, overflowY: "auto" }}>
-              <DailyReportPage />
             </div>
           )}
         </div>
