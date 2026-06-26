@@ -117,6 +117,7 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
   const [isDragging, setIsDragging] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<{ cx: number; cy: number; xv: [number, number]; yv: [number, number] } | null>(null);
+  const yBoundsRef = useRef<[number, number]>([-1e8, 2e8]);
 
   // 데이터 로드 시 뷰 초기화
   useEffect(() => {
@@ -126,8 +127,11 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
     const rawMax = Math.max(...vals, 0);
     const rawMin = Math.min(0, ...vals);
     const ti = niceTickInterval(rawMax - rawMin || 1, 5);
+    const yMin = Math.floor(rawMin / ti) * ti;
+    const yMax = Math.ceil(rawMax / ti) * ti;
+    yBoundsRef.current = [yMin, yMax];
     setXView([0, n]);
-    setYView([Math.floor(rawMin / ti) * ti, Math.ceil(rawMax / ti) * ti]);
+    setYView([yMin, yMax]);
   }, [points.length]);
 
   // Y 눈금
@@ -227,11 +231,16 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
       const ySpan = snap.yv[1] - snap.yv[0];
       const dxData = -(dx / r.width) * W / (W - PL - PR) * xSpan;
       const dyData = (dy / r.height) * H / (H - PB - PT) * ySpan;
-      const span = snap.xv[1] - snap.xv[0];
+      const xSpan2 = snap.xv[1] - snap.xv[0];
       const rawLo = snap.xv[0] + dxData;
-      const clampedLo = Math.max(0, Math.min(points.length - 1 - span, rawLo));
-      setXView([clampedLo, clampedLo + span]);
-      setYView([snap.yv[0] + dyData, snap.yv[1] + dyData]);
+      const clampedLo = Math.max(0, Math.min(points.length - 1 - xSpan2, rawLo));
+      setXView([clampedLo, clampedLo + xSpan2]);
+
+      const [yMin, yMax] = yBoundsRef.current;
+      const rawYLo = snap.yv[0] + dyData;
+      const rawYHi = snap.yv[1] + dyData;
+      const clampedYLo = Math.max(yMin, Math.min(yMax - ySpan, rawYLo));
+      setYView([clampedYLo, clampedYLo + ySpan]);
     };
     const onUp = () => {
       setIsDragging(false);
