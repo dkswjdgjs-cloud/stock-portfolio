@@ -40,6 +40,12 @@ export default function AssetPage({
   accounts: AcctPerf[];
   onRefresh: () => void;
 }) {
+  // ticker → 현재가 맵 (view.rows에서 추출)
+  const priceMap = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of view.rows) m.set(r.stock.code, r.stock.price);
+    return m;
+  }, [view.rows]);
   const [pieMode, setPieMode] = useState("종목별");
   const [pieActive, setPieActive] = useState<string | null>(null);
   const [showTrades, setShowTrades] = useState(false);
@@ -279,9 +285,17 @@ export default function AssetPage({
           ))}
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "0 24px 20px" }}>
-          {filteredTrades.map((t, i) => (
-            <div key={i} onClick={() => (t.type === "매도" && t.profitLoss != null) ? setTradeTap(tradeTap === i ? null : i) : null}
-              style={{ cursor: t.type === "매도" ? "pointer" : "default" }}>
+          {filteredTrades.map((t, i) => {
+            // 매수: 현재가 기반 미실현 손익
+            const currPrice = t.ticker ? priceMap.get(t.ticker) ?? 0 : 0;
+            const unrealizedPL = t.type === "매수" && t.buyPrice && t.qty && currPrice > 0
+              ? (currPrice - t.buyPrice) * t.qty : null;
+            const unrealizedRate = unrealizedPL != null && t.buyPrice && t.qty
+              ? (unrealizedPL / (t.buyPrice * t.qty)) * 100 : null;
+            const isClickable = (t.type === "매도" && t.profitLoss != null) || (t.type === "매수" && unrealizedPL != null);
+            return (
+            <div key={i} onClick={() => isClickable ? setTradeTap(tradeTap === i ? null : i) : null}
+              style={{ cursor: isClickable ? "pointer" : "default" }}>
               <div style={{ display: "grid", gridTemplateColumns: "104px 1fr 110px 58px 64px 104px 60px", gap: 8, alignItems: "center", padding: "12px 0", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
               <span style={{ ...NUM, fontSize: 14 }}>{t.date}</span>
               <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.stockName}</span>
@@ -298,7 +312,7 @@ export default function AssetPage({
                   title="삭제">✕</button>
               </div>
               </div>
-              {tradeTap === i && t.profitLoss != null && (
+              {tradeTap === i && t.type === "매도" && t.profitLoss != null && (
                 <div style={{ display: "flex", gap: 16, padding: "8px 14px 10px", background: C.fill, borderRadius: 8, margin: "4px 0 2px", alignItems: "center" }}>
                   <span style={{ fontSize: 12, color: C.sec }}>매도 손익</span>
                   <span style={{ ...NUM, fontSize: 14, fontWeight: 700, color: (t.profitLoss ?? 0) >= 0 ? C.red : C.blue }}>
@@ -311,8 +325,23 @@ export default function AssetPage({
                   )}
                 </div>
               )}
+              {tradeTap === i && t.type === "매수" && unrealizedPL != null && (
+                <div style={{ display: "flex", gap: 16, padding: "8px 14px 10px", background: C.fill, borderRadius: 8, margin: "4px 0 2px", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, color: C.sec }}>현재 손익</span>
+                  <span style={{ ...NUM, fontSize: 14, fontWeight: 700, color: unrealizedPL >= 0 ? C.red : C.blue }}>
+                    {unrealizedPL >= 0 ? "+" : ""}{"₩"}{Math.round(Math.abs(unrealizedPL)).toLocaleString("ko-KR")}
+                  </span>
+                  {unrealizedRate != null && (
+                    <span style={{ ...NUM, fontSize: 13, fontWeight: 600, color: unrealizedRate >= 0 ? C.red : C.blue }}>
+                      ({unrealizedRate >= 0 ? "+" : ""}{unrealizedRate.toFixed(2)}%)
+                    </span>
+                  )}
+                  <span style={{ fontSize: 12, color: C.ter }}>현재가 ₩{Math.round(currPrice).toLocaleString("ko-KR")}</span>
+                </div>
+              )}
             </div>
-          ))}
+            );
+          })}
           {filteredTrades.length === 0 && <p style={{ padding: "18px 0", fontSize: 15, color: C.sec }}>거래 내역이 없습니다.</p>}
         </div>
       </div>
