@@ -520,8 +520,8 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
         if (y < PT || y > H - PB) return null;
         return (
           <g key={i}>
-            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(60,60,67,0.09)" strokeWidth="1" />
-            <text x={PL - 5} y={y + 3} fontSize="6" fill="rgba(60,60,67,0.45)" textAnchor="end" style={NUM}>{fmtM(v)}</text>
+            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke={C.sep} strokeWidth="1" />
+            <text x={PL - 5} y={y + 3} fontSize="6" fill={C.sec} textAnchor="end" style={NUM}>{fmtM(v)}</text>
           </g>
         );
       })}
@@ -530,13 +530,13 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
       {bars.slice(iMin, iMax + 1).map((_, ii) => {
         const i = iMin + ii;
         const x = barX(i) + barW / 2;
-        return <line key={i} x1={x} x2={x} y1={PT} y2={H - PB} stroke="rgba(60,60,67,0.07)" strokeWidth="1" />;
+        return <line key={i} x1={x} x2={x} y1={PT} y2={H - PB} stroke={C.sep} strokeWidth="1" />;
       })}
 
       {/* X/Y 기준선 */}
-      <line x1={PL} x2={PL} y1={PT} y2={H - PB} stroke="rgba(20,20,25,0.75)" strokeWidth="1.2" />
+      <line x1={PL} x2={PL} y1={PT} y2={H - PB} stroke={C.sec} strokeWidth="1.2" />
       {sy(0) >= PT && sy(0) <= H - PB && (
-        <line x1={PL} x2={W - PR} y1={sy(0)} y2={sy(0)} stroke="rgba(20,20,25,0.75)" strokeWidth="1.2" />
+        <line x1={PL} x2={W - PR} y1={sy(0)} y2={sy(0)} stroke={C.sec} strokeWidth="1.2" />
       )}
 
       {/* 막대 (clipPath 적용) */}
@@ -575,7 +575,7 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
           if (isNewYear) lastYear = year;
           return (
             <text key={i} x={x} y={H - 9} fontSize="6"
-              fill={isNewYear ? "rgba(60,60,67,0.7)" : "rgba(60,60,67,0.45)"}
+              fill={isNewYear ? C.label : C.sec}
               fontWeight={isNewYear ? "700" : "400"}
               textAnchor="middle" style={NUM}>{displayLabel}</text>
           );
@@ -585,12 +585,12 @@ export function ProfitBarChart({ bars }: { bars: ProfitBar[] }) {
       {/* 호버 툴팁 */}
       {hb !== null && !isDragging && hbX >= PL && hbX <= W - PR && (
         <g>
-          <line x1={hbX} x2={hbX} y1={PT} y2={H - PB} stroke="rgba(60,60,67,0.2)" strokeWidth="1" strokeDasharray="3 3" />
+          <line x1={hbX} x2={hbX} y1={PT} y2={H - PB} stroke={C.sec} strokeWidth="1" strokeDasharray="3 3" />
           <g transform={`translate(${ttOnLeft ? hbX - ttW - 8 : hbX + 8},${PT + 4})`}>
             <rect x="0" y="0" width={ttW} height="26" rx="4"
-              fill="rgba(255,255,255,0.96)" stroke="rgba(60,60,67,0.12)" strokeWidth="1"
+              fill={C.card} stroke={C.sep} strokeWidth="1"
               style={{ filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.10))" }} />
-            <text x="7" y="10" fontSize="5.5" fontWeight="600" fill="rgba(60,60,67,0.55)" style={NUM}>{tooltipLabel}</text>
+            <text x="7" y="10" fontSize="5.5" fontWeight="600" fill={C.sec} style={NUM}>{tooltipLabel}</text>
             <text x="7" y="21" fontSize="5.5" fill={hb.value >= 0 ? C.red : C.blue} style={NUM}>{tooltipVal}</text>
           </g>
         </g>
