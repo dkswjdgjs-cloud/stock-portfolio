@@ -304,21 +304,21 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
           if (y < PT || y > H - PB) return null;
           return (
             <g key={i}>
-              <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(60,60,67,0.09)" strokeWidth="1" />
-              <text x={PL - 5} y={y + 3} fontSize="6" fill="rgba(60,60,67,0.45)" textAnchor="end" style={NUM}>{fmtM(v)}</text>
+              <line x1={PL} x2={W - PR} y1={y} y2={y} stroke={C.sep} strokeWidth="1" />
+              <text x={PL - 5} y={y + 3} fontSize="6" fill={C.sec} textAnchor="end" style={NUM}>{fmtM(v)}</text>
             </g>
           );
         })}
 
         {/* X축 세로 눈금선 */}
         {xLabels.map(({ i }) => (
-          <line key={i} x1={sx(i)} x2={sx(i)} y1={PT} y2={H - PB} stroke="rgba(60,60,67,0.07)" strokeWidth="1" />
+          <line key={i} x1={sx(i)} x2={sx(i)} y1={PT} y2={H - PB} stroke={C.sep} strokeWidth="1" />
         ))}
 
         {/* X/Y 기준선 */}
-        <line x1={PL} x2={PL} y1={PT} y2={H - PB} stroke="rgba(20,20,25,0.75)" strokeWidth="1.2" />
+        <line x1={PL} x2={PL} y1={PT} y2={H - PB} stroke={C.sec} strokeWidth="1.2" />
         {sy(0) >= PT && sy(0) <= H - PB && (
-          <line x1={PL} x2={W - PR} y1={sy(0)} y2={sy(0)} stroke="rgba(20,20,25,0.75)" strokeWidth="1.2" />
+          <line x1={PL} x2={W - PR} y1={sy(0)} y2={sy(0)} stroke={C.sec} strokeWidth="1.2" />
         )}
 
         {/* 차트 영역 (clipPath 적용) */}
@@ -334,7 +334,7 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
             return (
               <g key={s.key}>
                 <circle cx={c[0]} cy={c[1]} r="7" fill={s.color} opacity="0.18" />
-                <circle cx={c[0]} cy={c[1]} r="3.2" fill={s.color} stroke="#fff" strokeWidth="1.4" />
+                <circle cx={c[0]} cy={c[1]} r="3.2" fill={s.color} stroke={C.card} strokeWidth="1.4" />
               </g>
             );
           })}
@@ -342,25 +342,25 @@ export function PerfLineChart({ points }: { points: PerfPoint[] }) {
 
         {/* X축 라벨 */}
         {xLabels.map(({ i, label }) => (
-          <text key={i} x={sx(i)} y={H - 9} fontSize="6" fill="rgba(60,60,67,0.45)"
+          <text key={i} x={sx(i)} y={H - 9} fontSize="6" fill={C.sec}
             textAnchor="middle" style={NUM}>{label}</text>
         ))}
 
         {/* 호버 크로스헤어 + 툴팁 */}
         {hp !== null && hoverIdx !== null && !isDragging && (
           <g>
-            <line x1={hx} x2={hx} y1={PT} y2={H - PB} stroke="rgba(60,60,67,0.25)" strokeWidth="1" strokeDasharray="3 3" />
+            <line x1={hx} x2={hx} y1={PT} y2={H - PB} stroke={C.sec} strokeWidth="1" strokeDasharray="3 3" />
             {SERIES.map((s) => {
               const v = hp[s.key as SeriesKey];
               const cy = sy(v);
               if (cy < PT || cy > H - PB) return null;
-              return <circle key={s.key} cx={hx} cy={cy} r="3.5" fill={s.color} stroke="#fff" strokeWidth="1.2" />;
+              return <circle key={s.key} cx={hx} cy={cy} r="3.5" fill={s.color} stroke={C.card} strokeWidth="1.2" />;
             })}
             <g transform={`translate(${tooltipOnLeft ? hx - tooltipW - 10 : hx + 10},${PT + 2})`}>
               <rect x="0" y="0" width={tooltipW} height="50" rx="5"
-                fill="rgba(255,255,255,0.96)" stroke="rgba(60,60,67,0.12)" strokeWidth="1"
+                fill={C.card} stroke={C.sep} strokeWidth="1"
                 style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.10))" }} />
-              <text x="7" y="11" fontSize="5.5" fontWeight="600" fill="rgba(60,60,67,0.55)" style={NUM}>{hp.label}</text>
+              <text x="7" y="11" fontSize="5.5" fontWeight="600" fill={C.sec} style={NUM}>{hp.label}</text>
               <text x="7" y="23" fontSize="5.5" fill={C.blue} style={NUM}>평가액 {fmtExact(hp.value)}</text>
               <text x="7" y="34" fontSize="5.5" fill={C.gray} style={NUM}>투입금 {fmtExact(hp.invested)}</text>
               <text x="7" y="45" fontSize="5.5" fill={C.green} style={NUM}>수익금 {fmtExact(hp.profit)}</text>
