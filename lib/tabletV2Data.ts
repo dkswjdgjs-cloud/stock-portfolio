@@ -271,8 +271,7 @@ export function useTabletV2Data(): TabletV2DataResult {
       const totalInvested = transactions
         .filter((t) => t.account_transfer)
         .reduce((sum, t) => t.account_transfer === "입금" ? sum + (t.transfer_amount || 0) : sum - (t.transfer_amount || 0), 0);
-      const cashIncomeTotal = cashIncomes.reduce((sum: number, c: RawCashIncome) => sum + c.amount, 0);
-      const cumulativeProfit = currValue - totalInvested + cashIncomeTotal;
+      const cumulativeProfit = currValue - totalInvested;
       const cumulativeReturn = totalInvested > 0 ? (cumulativeProfit / totalInvested) * 100 : 0;
 
       // 연/월 수익: snapshot 기반
