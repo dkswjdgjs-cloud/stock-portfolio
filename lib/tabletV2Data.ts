@@ -204,9 +204,12 @@ export function useTabletV2Data(): TabletV2DataResult {
         s.trades.sort((a, b) => b.date.localeCompare(a.date));
       }
 
-      // 4. 계좌별 예수금 맵
+      // 4. 계좌별 예수금 맵 (현금소득 포함)
       const cashMap: Record<string, number> = {};
       for (const b of cashBalances) cashMap[b.account] = b.balance;
+      for (const c of cashIncomes) {
+        if (c.account) cashMap[c.account] = (cashMap[c.account] || 0) + c.amount;
+      }
 
       // 5. snapshots → PerfPoint[] (날짜 오름차순)
       const sortedSnaps = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
