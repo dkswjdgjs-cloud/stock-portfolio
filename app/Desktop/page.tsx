@@ -300,9 +300,9 @@ export default function DesktopPage() {
                   style={{
                     border: "none", padding: "5px 20px", borderRadius: 7, fontSize: 13,
                     fontFamily: "inherit", fontWeight: page === p ? 600 : 500, cursor: "pointer",
-                    background: page === p ? "#fff" : "transparent",
+                    background: page === p ? C.card : "transparent",
                     boxShadow: page === p ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
-                    color: "#000", transition: "all .15s",
+                    color: C.label, transition: "all .15s",
                   }}>{label}</button>
               ))}
             </div>
