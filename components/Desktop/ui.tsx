@@ -34,7 +34,7 @@ export function Segment({
           style={{
             border: "none", padding: compact ? "4px 14px" : "5px 20px", borderRadius: 7, fontSize: 13,
             fontFamily: FONT, fontWeight: value === it ? 600 : 500, cursor: "pointer",
-            background: value === it ? "#fff" : "transparent",
+            background: value === it ? C.card : "transparent",
             boxShadow: value === it ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
             color: C.label, transition: "all .15s",
           }}>
@@ -58,7 +58,7 @@ export function AcctDropdown({ value, onChange }: { value: string; onChange: (v:
         }}>
         {value === "전체" ? "계좌 · 전체" : value}
         <svg width="9" height="6" viewBox="0 0 10 6" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}>
-          <path d="M1 1l4 4 4-4" stroke={value === "전체" ? "rgba(60,60,67,0.6)" : "#fff"} strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M1 1l4 4 4-4" stroke={value === "전체" ? C.sec : "#fff"} strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
       {open && (
@@ -67,7 +67,7 @@ export function AcctDropdown({ value, onChange }: { value: string; onChange: (v:
           <div
             style={{
               position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50, minWidth: 168,
-              background: "rgba(250,250,250,0.97)", borderRadius: 13, padding: "5px 0",
+              background: C.card, borderRadius: 13, padding: "5px 0", color: C.label,
               boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 0 0 0.5px rgba(60,60,67,0.15)",
             }}>
             {ACCT_LIST.map((a, i) => (
@@ -143,7 +143,7 @@ export function HeaderMenu({ listMode, onMode }: { listMode: string; onMode: (m:
           <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
           <div style={{
             position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50, minWidth: 180,
-            background: "rgba(250,250,250,0.97)", borderRadius: 13, padding: "5px 0",
+            background: C.card, borderRadius: 13, padding: "5px 0", color: C.label,
             boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 0 0 0.5px rgba(60,60,67,0.15)",
           }}>
             {items.map((it, i) => (
