@@ -12,12 +12,13 @@ function todayLabel() {
 }
 
 export default function PortfolioPage({
-  view, acctSel, summary, liveValue, heldStocks, favStocks, onSelectStock,
+  view, acctSel, summary, liveValue, totalLiveValue, heldStocks, favStocks, onSelectStock,
 }: {
   view: PortfolioView;
   acctSel: string;
   summary: PortfolioSummary;
   liveValue: number;
+  totalLiveValue?: number;
   heldStocks: NewsTarget[];
   favStocks: NewsTarget[];
   onSelectStock: (id: string) => void;
@@ -26,8 +27,8 @@ export default function PortfolioPage({
 
   const mode = PL_MODES[plMode];
 
-  // 실시간 delta 반영
-  const delta = liveValue - summary.currValue;
+  // 수익금은 항상 전체 포트폴리오 기준으로 계산
+  const delta = (totalLiveValue ?? liveValue) - summary.currValue;
 
   const profits = [
     { amt: summary.cumulativeProfit + delta, pct: summary.totalInvested > 0 ? ((summary.cumulativeProfit + delta) / summary.totalInvested) * 100 : 0 },

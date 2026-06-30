@@ -128,6 +128,7 @@ export default function DesktopPage() {
 
   // ===== 계좌 필터 기준 파생 데이터 =====
   const view = useMemo(() => buildView(liveStocks, cash, acctSel), [liveStocks, cash, acctSel]);
+  const totalView = useMemo(() => buildView(liveStocks, cash, "전체"), [liveStocks, cash]);
 
   // ===== 관련 뉴스 대상 종목 (보유 종목 상위 5개 / 즐겨찾기 종목 상위 5개) =====
   const newsHeldStocks = useMemo(
@@ -320,6 +321,7 @@ export default function DesktopPage() {
                 acctSel={acctSel}
                 summary={summary}
                 liveValue={view.totalValue}
+                totalLiveValue={totalView.totalValue}
                 heldStocks={newsHeldStocks}
                 favStocks={newsFavStocks}
                 onSelectStock={selectStock}
