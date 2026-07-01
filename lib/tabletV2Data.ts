@@ -81,8 +81,13 @@ interface RawSnapshot {
 }
 
 interface RawCashIncome {
+  id?: number;
+  income_date: string;
   account?: string;
+  income_type?: string;
   amount: number;
+  ticker?: string;
+  stock_name?: string;
 }
 
 export function useTabletV2Data(): TabletV2DataResult {
@@ -314,7 +319,7 @@ export function useTabletV2Data(): TabletV2DataResult {
         }
       }
       for (const c of cashIncomes) {
-        trades.push({ id: undefined, date: c.income_date, acct: c.account || "", type: "현금소득", stockName: (c as any).stock_name || (c as any).income_type || "현금소득", ticker: (c as any).ticker || undefined, qty: 0, unit: Math.round(c.amount).toLocaleString("ko-KR") + "원", transferAmount: c.amount });
+        trades.push({ id: undefined, date: c.income_date, acct: c.account || "", type: "현금소득", stockName: c.stock_name || c.income_type || "현금소득", ticker: c.ticker || undefined, qty: 0, unit: Math.round(c.amount).toLocaleString("ko-KR") + "원", transferAmount: c.amount });
       }
       trades.sort((a, b) => b.date.localeCompare(a.date));
       setAllTrades(trades);
