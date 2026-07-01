@@ -204,12 +204,9 @@ export function useTabletV2Data(): TabletV2DataResult {
         s.trades.sort((a, b) => b.date.localeCompare(a.date));
       }
 
-      // 4. 계좌별 예수금 맵 (현금소득 포함)
+      // 4. 계좌별 예수금 맵 (cash_income은 등록 시 cash_balance에 이미 반영됨)
       const cashMap: Record<string, number> = {};
       for (const b of cashBalances) cashMap[b.account] = b.balance;
-      for (const c of cashIncomes) {
-        if (c.account) cashMap[c.account] = (cashMap[c.account] || 0) + c.amount;
-      }
 
       // 5. snapshots → PerfPoint[] (날짜 오름차순)
       const sortedSnaps = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
@@ -315,6 +312,9 @@ export function useTabletV2Data(): TabletV2DataResult {
         } else if (t.account_transfer) {
           trades.push({ id: t.id, date: t.trade_date, acct: t.account, type: t.account_transfer as "입금"|"출금", stockName: "-", qty: 0, unit: Math.round(t.transfer_amount ?? 0).toLocaleString("ko-KR") + "원", transferAmount: t.transfer_amount || undefined });
         }
+      }
+      for (const c of cashIncomes) {
+        trades.push({ id: undefined, date: c.income_date, acct: c.account || "", type: "현금소득", stockName: (c as any).stock_name || (c as any).income_type || "현금소득", ticker: (c as any).ticker || undefined, qty: 0, unit: Math.round(c.amount).toLocaleString("ko-KR") + "원", transferAmount: c.amount });
       }
       trades.sort((a, b) => b.date.localeCompare(a.date));
       setAllTrades(trades);

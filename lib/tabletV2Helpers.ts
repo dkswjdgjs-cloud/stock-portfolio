@@ -244,7 +244,7 @@ export interface TradeRow {
   id?: number;
   date: string;
   acct: string;
-  type: "매수" | "매도" | "입금" | "출금";
+  type: "매수" | "매도" | "입금" | "출금" | "현금소득";
   stockName: string;
   ticker?: string;
   qty: number;

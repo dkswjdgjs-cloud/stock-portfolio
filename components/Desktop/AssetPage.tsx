@@ -300,7 +300,7 @@ export default function AssetPage({
               <span style={{ ...NUM, fontSize: 14 }}>{t.date}</span>
               <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.stockName}</span>
               <span style={{ fontSize: 14 }}>{t.acct}</span>
-              <span style={{ fontSize: 12, fontWeight: 600, textAlign: "center", padding: "2px 0", borderRadius: 5, color: t.type === "매수" ? C.red : t.type === "매도" ? C.blue : t.type === "입금" ? C.green : C.sec, background: t.type === "매수" ? "rgba(255,59,48,0.10)" : t.type === "매도" ? "rgba(0,122,255,0.10)" : t.type === "입금" ? "rgba(52,199,89,0.10)" : "rgba(142,142,147,0.10)" }}>{t.type}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, textAlign: "center", padding: "2px 0", borderRadius: 5, color: t.type === "매수" ? C.red : t.type === "매도" ? C.blue : t.type === "입금" ? C.green : t.type === "현금소득" ? C.orange : C.sec, background: t.type === "매수" ? "rgba(255,59,48,0.10)" : t.type === "매도" ? "rgba(0,122,255,0.10)" : t.type === "입금" ? "rgba(52,199,89,0.10)" : t.type === "현금소득" ? "rgba(255,149,0,0.10)" : "rgba(142,142,147,0.10)" }}>{t.type}</span>
               <span style={{ ...NUM, fontSize: 14, textAlign: "right" }}>{t.qty}주</span>
               <span style={{ ...NUM, fontSize: 14, textAlign: "right" }}>{t.unit}</span>
               <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
