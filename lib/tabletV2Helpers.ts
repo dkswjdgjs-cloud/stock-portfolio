@@ -254,6 +254,7 @@ export interface TradeRow {
   transferAmount?: number;
   profitLoss?: number;
   profitRate?: number;
+  incomeType?: string;
 }
 
 export function allTradesOf(stocks: MockStock[], acctSel: string): TradeRow[] {
