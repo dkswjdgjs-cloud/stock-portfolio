@@ -15,8 +15,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const token = await getKisToken();
+    // 한국 시간 기준 날짜 (UTC로 계산하면 오전 9시 전에는 하루 전 날짜가 됨)
+    const kstDate = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(d).replace(/-/g, '');
     const today = new Date();
-    const endDate = today.toISOString().slice(0, 10).replace(/-/g, '');
+    const endDate = kstDate(today);
     const startDate = new Date(today);
 
     if (range === '1M') startDate.setMonth(today.getMonth() - 1);
@@ -25,7 +27,7 @@ export async function GET(request: NextRequest) {
     else if (range === '3Y') startDate.setFullYear(today.getFullYear() - 3);
 
     const periodCode = range === '3Y' ? 'M' : range === '1Y' ? 'W' : 'D';
-    const startStr = startDate.toISOString().slice(0, 10).replace(/-/g, '');
+    const startStr = kstDate(startDate);
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -39,7 +41,6 @@ export async function GET(request: NextRequest) {
       const url = `${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${ticker}&FID_INPUT_DATE_1=${startStr}&FID_INPUT_DATE_2=${endDate}&FID_PERIOD_DIV_CODE=${periodCode}&FID_ORG_ADJ_PRC=0`;
       const res = await fetch(url, { headers });
       const data = await res.json();
-      console.log('KIS chart response:', JSON.stringify(data).slice(0, 500));
       const chartData = (data.output2 || data.output || []).map((item: any) => ({
         date: item.stck_bsop_date,
         open: parseFloat(item.stck_oprc || '0'),
@@ -51,9 +52,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ chartData });
     } else {
       headers['tr_id'] = 'HHDFS76240000';
+      // GUBN: 0=일, 1=주, 2=월 (국내와 같은 기간 단위로 맞춤)
+      const gubn = periodCode === 'M' ? '2' : periodCode === 'W' ? '1' : '0';
       const exchanges = ['NAS', 'NYS', 'AMS'];
       for (const excd of exchanges) {
-        const url = `${KIS_BASE_URL}/uapi/overseas-price/v1/quotations/dailyprice?AUTH=&EXCD=${excd}&SYMB=${ticker}&GUBN=0&BYMD=${endDate}&MODP=0`;
+        const url = `${KIS_BASE_URL}/uapi/overseas-price/v1/quotations/dailyprice?AUTH=&EXCD=${excd}&SYMB=${ticker}&GUBN=${gubn}&BYMD=${endDate}&MODP=0`;
         const res = await fetch(url, { headers });
         const data = await res.json();
         if (data.output2?.length > 0) {
@@ -64,7 +67,7 @@ export async function GET(request: NextRequest) {
             low: parseFloat(item.low || '0'),
             close: parseFloat(item.clos || '0'),
             volume: parseFloat(item.tvol || '0'),
-          })).reverse();
+          })).filter((d: { date: string }) => d.date >= startStr).reverse();
           return NextResponse.json({ chartData });
         }
       }
