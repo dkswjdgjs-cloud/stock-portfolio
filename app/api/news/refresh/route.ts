@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { calcHoldings } from "@/lib/calcHoldings";
 import { fetchAndCurateNews } from "@/lib/newsCuration";
 import { setCachedNews } from "@/lib/newsCache";
+import { internalAuthHeaders } from "@/lib/auth";
 
 const CACHE_DISPLAY_COUNT = 20;
 
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
 
   let names: string[] = [];
   try {
-    const txRes = await fetch(`${baseUrl}/api/transactions`);
+    const txRes = await fetch(`${baseUrl}/api/transactions`, { headers: internalAuthHeaders() });
     const transactions = await txRes.json();
     const holdings = calcHoldings(transactions, "전체").filter((h) => h.quantity > 0);
     names = [...new Set(holdings.map((h) => h.stock_name))].filter((n) => n && n !== "-");
