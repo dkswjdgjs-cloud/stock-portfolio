@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { internalAuthHeaders } from '@/lib/auth';
 
 export async function GET() {
   try {
@@ -17,7 +18,7 @@ export async function GET() {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const res = await fetch(baseUrl + '/api/snapshot-save', { method: 'POST' });
+    const res = await fetch(baseUrl + '/api/snapshot-save', { method: 'POST', headers: internalAuthHeaders() });
     const data = await res.json();
     return NextResponse.json(data);
 
