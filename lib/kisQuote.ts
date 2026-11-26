@@ -29,7 +29,7 @@ export interface Quote {
 
 const exchangeCache = new Map<string, string>();
 
-export async function getUSDKRWRate(): Promise<number> {
+async function getUSDKRWRate(): Promise<number> {
   try {
     const cached = await redis.get<number>('usd_krw_rate');
     if (cached) return cached;
