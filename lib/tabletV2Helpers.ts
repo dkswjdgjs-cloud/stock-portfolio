@@ -1,5 +1,5 @@
 ﻿// =============================================================
-// tablet-v2 stateless 헬퍼 + 타입 + 상수
+// GLOW stateless 헬퍼 + 타입 + 상수
 // 이전 lib/tabletV2Mock.ts에서 데이터 상수(STOCKS/CASH/PERF_DAYS/ACCOUNTS/AGG)를
 // 제거하고, 그것들을 인자로 받는 stateless 함수만 남긴 버전.
 // 실데이터는 lib/tabletV2Data.ts의 useTabletV2Data() hook에서 공급.

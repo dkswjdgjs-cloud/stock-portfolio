@@ -1,5 +1,5 @@
 ﻿// =============================================================
-// tablet-v2 실데이터 fetch hook
+// GLOW 실데이터 fetch hook (/Desktop)
 // /api/transactions, /api/cash-balance, /api/snapshot, /api/stock 호출 후
 // tabletV2Helpers의 타입에 맞게 변환해 반환.
 // =============================================================
