@@ -59,3 +59,21 @@
 .glow-v2 ::-webkit-scrollbar { width: 6px; }
 .glow-v2 ::-webkit-scrollbar-thumb { background: var(--glow-ter); border-radius: 3px; }
 .glow-v2 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ===== 휴대폰 (폭 767px 이하) — 데스크탑 레이아웃을 한 줄로 접는다 ===== */
+@media (max-width: 767px) {
+  .glow-v2 [data-m="pad"] { padding: 16px 16px 32px !important; }
+  .glow-v2 [data-m="wrap"] { flex-wrap: wrap !important; row-gap: 10px; column-gap: 10px; }
+  .glow-v2 [data-m="wrap"] button { white-space: nowrap; }
+  .glow-v2 [data-m="stack"] { grid-template-columns: 1fr !important; }
+  .glow-v2 [data-m="autoh"] { height: auto !important; }
+  .glow-v2 [data-m="col"] { flex-direction: column !important; gap: 16px !important; align-items: center; }
+  .glow-v2 [data-m="donut"] { align-self: center !important; }
+  .glow-v2 [data-m="price"] { font-size: 34px !important; }
+  /* 거래 내역: 계좌·수량 열을 숨기고 남은 열을 좁힌다 */
+  .glow-v2 [data-m="trow"], .glow-v2 [data-m="trow0"] { grid-template-columns: 90px minmax(0, 1fr) 44px 78px 56px !important; column-gap: 6px !important; }
+  .glow-v2 [data-m="trow"] { padding-left: 16px !important; padding-right: 16px !important; }
+  .glow-v2 [data-m="tbody"] { padding-left: 16px !important; padding-right: 16px !important; }
+  .glow-v2 [data-m="trow"] > :nth-child(3), .glow-v2 [data-m="trow"] > :nth-child(5),
+  .glow-v2 [data-m="trow0"] > :nth-child(3), .glow-v2 [data-m="trow0"] > :nth-child(5) { display: none !important; }
+}

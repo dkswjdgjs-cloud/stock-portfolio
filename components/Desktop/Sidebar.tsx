@@ -7,7 +7,7 @@ import { AcctDropdown, HeaderMenu, Segment, StarButton } from "./ui";
 
 export default function Sidebar({
   open, view, tab, onTab, acctSel, onAcct, selected, onPick, onHome,
-  query, onQuery, listMode, onListMode, favs, onToggleFav, favStocks, rtConnected, onCashEdit,
+  query, onQuery, listMode, onListMode, favs, onToggleFav, favStocks, rtConnected, onCashEdit, fullWidth = false,
 }: {
   open: boolean;
   view: PortfolioView;
@@ -27,6 +27,8 @@ export default function Sidebar({
   favStocks: MockStock[];
   rtConnected: boolean;
   onCashEdit?: (acct: string, current: number) => void;
+  /** 휴대폰: 화면 전체 너비로 표시 */
+  fullWidth?: boolean;
 }) {
   const isSearching = query.trim().length > 0;
   const [apiResults, setApiResults] = useState<{ticker:string;name:string;market:string}[]>([]);
@@ -170,11 +172,11 @@ export default function Sidebar({
   return (
     <aside
       style={{
-        width: open ? 375 : 0, flexShrink: 0, overflow: "hidden",
+        width: open ? (fullWidth ? "100%" : 375) : 0, flexShrink: 0, overflow: "hidden",
         background: C.bgSidebar, borderRight: open ? `0.5px solid ${C.sep}` : "none",
-        transition: "width .34s cubic-bezier(.32,.72,.25,1)",
+        transition: fullWidth ? "none" : "width .34s cubic-bezier(.32,.72,.25,1)",
       }}>
-      <div style={{ width: 375, height: "100%", overflowY: "auto", padding: "20px 16px 24px", boxSizing: "border-box" }}>
+      <div style={{ width: fullWidth ? "100%" : 375, height: "100%", overflowY: "auto", padding: "20px 16px 24px", boxSizing: "border-box" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <h1 style={{ margin: 0, fontSize: 34, fontWeight: 700, letterSpacing: "-0.026em", cursor: "pointer" }}
             onClick={() => { onHome(); onListMode("보유"); onQuery(""); }}>

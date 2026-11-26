@@ -13,7 +13,31 @@ import PerfPage from "@/components/Desktop/PerfPage";
 import StockDetail from "@/components/Desktop/StockDetail";
 import { SidebarToggle } from "@/components/Desktop/ui";
 
+// 휴대폰 화면(폭 767px 이하)인지. 화면 회전·창 크기 변경에도 따라간다.
+function useIsPhone(): boolean {
+  const [isPhone, setIsPhone] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsPhone(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isPhone;
+}
+
+const MOBILE_TABS = [
+  { label: "종목", view: "list" as const, page: -1 },
+  { label: "포트폴리오", view: "main" as const, page: 0 },
+  { label: "자산배분", view: "main" as const, page: 1 },
+  { label: "성과 추이", view: "main" as const, page: 2 },
+];
+const MOBILE_BAR_H = 56;
+
 export default function DesktopPage() {
+  const isPhone = useIsPhone();
+  // 휴대폰에서는 종목 목록과 본문을 한 번에 하나만 보여준다
+  const [mView, setMView] = useState<"list" | "main">("list");
   const [tab, setTab] = useState("시세");
   const [acctSel, setAcctSel] = useState("전체");
   const [selected, setSelected] = useState<string | null>(null);
@@ -189,7 +213,7 @@ export default function DesktopPage() {
     if (id) setSelected(id);
   };
 
-  const sbBtn = <SidebarToggle open={sbOpen} onToggle={() => setSbOpen((o) => !o)} />;
+  const sbBtn = isPhone ? null : <SidebarToggle open={sbOpen} onToggle={() => setSbOpen((o) => !o)} />;
 
   // 즐겨찾기 모드 빈 상태
   const showFavEmpty = !sel && listMode === "즐겨찾기" && !query.trim();
@@ -229,9 +253,11 @@ export default function DesktopPage() {
         height: "100dvh", display: "flex", overflow: "hidden",
         fontFamily: FONT, background: C.bgGrouped, color: C.label,
         letterSpacing: "-0.022em",
+        paddingBottom: isPhone && !sel ? `calc(${MOBILE_BAR_H}px + env(safe-area-inset-bottom))` : 0,
       }}>
       <Sidebar
-        open={sbOpen}
+        open={isPhone ? mView === "list" && !sel : sbOpen}
+        fullWidth={isPhone}
         view={view}
         tab={tab}
         onTab={setTab}
@@ -251,7 +277,7 @@ export default function DesktopPage() {
         onCashEdit={openCashEdit}
       />
 
-      {sel && selH ? (
+      {isPhone && mView === "list" && !sel ? null : sel && selH ? (
         <div style={{ flex: 1, minWidth: 0, height: "100%", overflowY: "auto" }}>
           <StockDetail
             key={sel.id}
@@ -294,7 +320,7 @@ export default function DesktopPage() {
         <div style={{ flex: 1, minWidth: 0, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px 0", flexShrink: 0, background: C.bgGrouped }}>
             {sbBtn}
-            <div style={{ display: "inline-flex", background: "rgba(120,120,128,0.12)", borderRadius: 9, padding: 2 }}>
+            <div style={{ display: isPhone ? "none" : "inline-flex", background: "rgba(120,120,128,0.12)", borderRadius: 9, padding: 2 }}>
               {["포트폴리오", "자산배분", "성과 추이"].map((label, p) => (
                 <button key={label} onClick={() => setPage(p)}
                   style={{
@@ -350,6 +376,27 @@ export default function DesktopPage() {
             </div>
           )}
         </div>
+      )}
+      {isPhone && !sel && (
+        <nav style={{
+          position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 1000,
+          height: `calc(${MOBILE_BAR_H}px + env(safe-area-inset-bottom))`,
+          paddingBottom: "env(safe-area-inset-bottom)", boxSizing: "border-box",
+          display: "flex", background: C.bgSidebar, borderTop: `0.5px solid ${C.sep}`,
+        }}>
+          {MOBILE_TABS.map((t) => {
+            const active = t.view === "list" ? mView === "list" : mView === "main" && page === t.page;
+            return (
+              <button key={t.label}
+                onClick={() => { setMView(t.view); if (t.page >= 0) setPage(t.page); }}
+                style={{
+                  flex: 1, border: "none", background: "transparent", cursor: "pointer",
+                  fontFamily: "inherit", fontSize: 13, fontWeight: active ? 700 : 500,
+                  color: active ? C.blue : C.sec,
+                }}>{t.label}</button>
+            );
+          })}
+        </nav>
       )}
       {cashModal && (
         <div

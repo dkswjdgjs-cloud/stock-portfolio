@@ -85,7 +85,7 @@ export default function PerfPage({
   };
 
   return (
-    <main style={{ padding: "20px 28px 40px" }}>
+    <main data-m="pad" style={{ padding: "20px 28px 40px" }}>
       <h1 style={{ margin: 0, fontSize: 34, fontWeight: 700, letterSpacing: "-0.026em" }}>성과 추이</h1>
       {last ? (
         <p style={{ margin: "3px 0 0", fontSize: 15, color: C.sec }}>
@@ -98,11 +98,11 @@ export default function PerfPage({
         <p style={{ margin: "3px 0 0", fontSize: 15, color: C.sec }}>스냅샷 데이터가 아직 없습니다.</p>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "20px 0 10px" }}>
+      <div data-m="wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "20px 0 10px" }}>
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>
           {mode === "누적" ? `누적 추이 · ${aggSel}` : `${mode}별 수익금`}
         </h2>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div data-m="wrap" style={{ display: "flex", gap: 10 }}>
           <Segment compact items={["누적", "년", "월", "일"]} value={mode} onChange={(m) => setMode(m as PerfMode)} />
           {mode === "누적" && (
             <Segment compact items={["일별", "월별", "분기별", "년도별"]} value={aggSel} onChange={(a) => setAggSel(a as AggUnit)} />
@@ -121,7 +121,7 @@ export default function PerfPage({
         ) : null}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+      <div data-m="wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>결산 내역</h2>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button onClick={openSave} style={{ fontSize: 13, fontWeight: 600, color: "#fff", background: C.blue, borderRadius: 8, padding: "5px 13px", border: "none", cursor: "pointer" }}>
