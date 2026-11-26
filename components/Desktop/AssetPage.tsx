@@ -57,7 +57,7 @@ export default function AssetPage({
   const [incomeSaving, setIncomeSaving] = useState(false);
   const setIF = (k: string, v: string) => setIncomeForm(f => ({ ...f, [k]: v }));
   const [editId, setEditId] = useState<number | null>(null);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TradeRow | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState(INIT_FORM());
   const [saving, setSaving] = useState(false);
@@ -90,12 +90,28 @@ export default function AssetPage({
     } finally { setSaving(false); }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (t: TradeRow) => {
+    if (t.id == null) return;
     setDeleting(true);
     try {
-      const res = await fetch('/api/transactions?id=' + id, { method: 'DELETE' });
-      if (!res.ok) throw new Error(await res.text());
-      setDeleteId(null); onRefresh();
+      if (t.type === "현금소득") {
+        // 1) cash_income 삭제
+        const res = await fetch('/api/cash-income?id=' + t.id, { method: 'DELETE' });
+        if (!res.ok) throw new Error(await res.text());
+        // 2) 등록 시 더했던 금액만큼 현금성자산 잔액에서 차감
+        const cbRes = await fetch('/api/cash-balance');
+        const cbData: { account: string; balance: number }[] = await cbRes.json();
+        const cur = cbData.find(b => b.account === t.acct);
+        await fetch('/api/cash-balance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ account: t.acct, balance: (cur?.balance ?? 0) - (t.transferAmount ?? 0) }),
+        });
+      } else {
+        const res = await fetch('/api/transactions?id=' + t.id, { method: 'DELETE' });
+        if (!res.ok) throw new Error(await res.text());
+      }
+      setDeleteTarget(null); onRefresh();
     } catch (e) { console.error(e); }
     finally { setDeleting(false); }
   };
@@ -304,10 +320,10 @@ export default function AssetPage({
               <span style={{ ...NUM, fontSize: 14, textAlign: "right" }}>{t.qty}주</span>
               <span style={{ ...NUM, fontSize: 14, textAlign: "right" }}>{t.unit}</span>
               <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
-                <button onClick={(e) => { e.stopPropagation(); openEdit(t); }}
+                {t.type !== "현금소득" && <button onClick={(e) => { e.stopPropagation(); openEdit(t); }}
                   style={{ width: 26, height: 26, borderRadius: 6, border: "none", background: C.fill, color: C.sec, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                  title="수정">✎</button>
-                <button onClick={(e) => { e.stopPropagation(); setDeleteId(t.id ?? null); }}
+                  title="수정">✎</button>}
+                <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(t); }}
                   style={{ width: 26, height: 26, borderRadius: 6, border: "none", background: "rgba(255,59,48,0.10)", color: C.red, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                   title="삭제">✕</button>
               </div>
@@ -347,16 +363,20 @@ export default function AssetPage({
       </div>
 
       {/* 삭제 확인 모달 */}
-      {deleteId !== null && (
+      {deleteTarget !== null && (
         <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}
-          onClick={(e) => { if (e.target === e.currentTarget) setDeleteId(null); }}>
+          onClick={(e) => { if (e.target === e.currentTarget) setDeleteTarget(null); }}>
           <div style={{ background: C.card, borderRadius: 18, padding: "28px 32px", minWidth: 300, boxShadow: "0 20px 60px rgba(0,0,0,0.3)", textAlign: "center" }}>
-            <p style={{ margin: "0 0 6px", fontSize: 17, fontWeight: 700 }}>거래 내역 삭제</p>
-            <p style={{ margin: "0 0 24px", fontSize: 14, color: C.sec }}>이 거래를 삭제하면 복구할 수 없습니다.</p>
+            <p style={{ margin: "0 0 6px", fontSize: 17, fontWeight: 700 }}>{deleteTarget.type === "현금소득" ? "현금소득 삭제" : "거래 내역 삭제"}</p>
+            <p style={{ margin: "0 0 24px", fontSize: 14, color: C.sec }}>
+              {deleteTarget.type === "현금소득"
+                ? <>삭제하면 복구할 수 없고, {deleteTarget.acct} 예수금에서<br />{Math.round(deleteTarget.transferAmount ?? 0).toLocaleString("ko-KR")}원이 함께 차감됩니다.</>
+                : "이 거래를 삭제하면 복구할 수 없습니다."}
+            </p>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-              <button onClick={() => setDeleteId(null)}
+              <button onClick={() => setDeleteTarget(null)}
                 style={{ padding: "9px 22px", borderRadius: 10, border: "none", background: C.fill, color: C.label, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>취소</button>
-              <button onClick={() => deleteId && handleDelete(deleteId)} disabled={deleting}
+              <button onClick={() => handleDelete(deleteTarget)} disabled={deleting}
                 style={{ padding: "9px 22px", borderRadius: 10, border: "none", background: C.red, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", opacity: deleting ? 0.6 : 1 }}>
                 {deleting ? "삭제 중..." : "삭제"}
               </button>
