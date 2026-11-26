@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { calcHoldings } from "./calcHoldings";
 import {
   ACCT_LIST_EX_ALL,
@@ -90,40 +90,85 @@ interface RawCashIncome {
   stock_name?: string;
 }
 
-export function useTabletV2Data(): TabletV2DataResult {
-  const [stocks, setStocks] = useState<MockStock[]>([]);
-  const [cash, setCash] = useState<Record<string, number>>({});
-  const [perfDays, setPerfDays] = useState<PerfPoint[]>([]);
-  const [accounts, setAccounts] = useState<AcctPerf[]>([]);
-  const [acctInvested, setAcctInvested] = useState<Record<string, number>>({});
-  const [allTrades, setAllTrades] = useState<import("./tabletV2Helpers").TradeRow[]>([]);
-  const [summary, setSummary] = useState<PortfolioSummary>({
-    currValue: 0, totalInvested: 0,
-    cumulativeProfit: 0, cumulativeReturn: 0,
-    annualProfit: 0, annualReturn: 0, annualBase: 0,
-    monthlyProfit: 0, monthlyReturn: 0, monthlyBase: 0,
-    dailyProfit: 0, dailyReturn: 0, dailyBase: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// ===== 원본 데이터 + 시세 =====
+interface Quote {
+  price: number;
+  dailyChange: number;
+  prevClose: number;
+  exchangeRate: number;
+}
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [txRes, balRes, snapRes, incRes] = await Promise.all([
-        fetch("/api/transactions"),
-        fetch("/api/cash-balance"),
-        fetch("/api/snapshot"),
-        fetch("/api/cash-income"),
-      ]);
-      const [transactions, cashBalances, snapshots, cashIncomes] = (await Promise.all([
-        txRes.json(),
-        balRes.json(),
-        snapRes.json(),
-        incRes.json(),
-      ])) as [RawTx[], RawCashBalance[], RawSnapshot[], RawCashIncome[]];
+interface RawData {
+  transactions: RawTx[];
+  cashBalances: RawCashBalance[];
+  snapshots: RawSnapshot[];
+  cashIncomes: RawCashIncome[];
+  prices: Record<string, Quote>; // "KR:005930" / "US:AAPL"
+}
 
+interface Computed {
+  stocks: MockStock[];
+  cash: Record<string, number>;
+  perfDays: PerfPoint[];
+  accounts: AcctPerf[];
+  acctInvested: Record<string, number>;
+  allTrades: import("./tabletV2Helpers").TradeRow[];
+  summary: PortfolioSummary;
+}
+
+function quoteKey(s: { code: string; currency: "KRW" | "USD" }): string {
+  return `${s.currency === "USD" ? "US" : "KR"}:${s.code}`;
+}
+
+// ===== 마지막으로 받은 데이터를 브라우저에 저장 → 다음 접속 때 화면을 즉시 표시 =====
+const CACHE_KEY = "glow-data-cache-v1";
+
+function readCache(): RawData | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw) as RawData;
+    if (!Array.isArray(d.transactions) || !d.prices) return null;
+    return d;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(d: RawData) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(d));
+  } catch {}
+}
+
+async function getJsonArray<T>(url: string, label: string): Promise<T[]> {
+  const res = await fetch(url);
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !Array.isArray(data)) {
+    const reason = data && typeof data === "object" && "error" in data ? String(data.error) : `HTTP ${res.status}`;
+    throw new Error(`${label}을(를) 불러오지 못했습니다 (${reason})`);
+  }
+  return data as T[];
+}
+
+async function fetchQuotes(stocks: MockStock[]): Promise<Record<string, Quote | null>> {
+  if (!stocks.length) return {};
+  try {
+    const res = await fetch("/api/stock/batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: stocks.map((s) => ({ ticker: s.code, market: s.currency === "USD" ? "US" : "KR" })) }),
+    });
+    if (!res.ok) return {};
+    const d = await res.json();
+    return (d?.quotes ?? {}) as Record<string, Quote | null>;
+  } catch {
+    return {};
+  }
+}
+
+function compute(raw: RawData): Computed {
+      const { transactions, cashBalances, snapshots, cashIncomes, prices } = raw;
       // 1. 계좌별 calcHoldings로 종목별 보유 추출 (같은 ticker는 holdings에 계좌 키로 누적)
       const stocksMap = new Map<string, MockStock>();
       for (const acct of ACCT_LIST_EX_ALL) {
@@ -156,36 +201,26 @@ export function useTabletV2Data(): TabletV2DataResult {
 
       const stocksArr = Array.from(stocksMap.values());
 
-      // 2. 실시간 가격 fetch (병렬, 실패해도 다른 종목은 진행)
-      await Promise.all(
-        stocksArr.map(async (s) => {
-          try {
-            const market = s.currency === "USD" ? "US" : "KR";
-            const r = await fetch(`/api/stock?ticker=${s.code}&market=${market}`);
-            const d = await r.json();
-            const price = Number(d.price) || 0;
-            const dayChg = Number(d.dailyChange) || 0;
-            s.price = price;
-            if (s.currency === "USD") {
-              // 해외 종목: API가 내려준 전일종가(prevClose)로 현재가 - 전일종가 직접 계산
-              const prevClose = Number(d.prevClose) || 0;
-              s.dayPct = prevClose > 0 ? ((price - prevClose) / prevClose) * 100 : 0;
-            } else {
-              const prev = price - dayChg;
-              s.dayPct = prev > 0 ? (dayChg / prev) * 100 : 0;
-            }
-            // USD 종목: KIS 응답의 실시간 환율 보관 (없으면 FX 폴백)
-            if (s.currency === "USD" && d.exchangeRate) {
-              s.exchangeRate = Number(d.exchangeRate);
-            }
-            // 일일 등락 금액 (KRW 환산)
-            const rate = s.exchangeRate || FX;
-            s.dailyChangeKRW = s.currency === "USD" ? dayChg * rate : dayChg;
-          } catch {
-            // 가격 실패 시 0으로 두고 다음 종목 진행
-          }
-        }),
-      );
+
+      // 2. 시세 적용 (조회 실패한 종목은 마지막으로 알던 가격 유지, 아예 없으면 0)
+      for (const s of stocksArr) {
+        const q = prices[quoteKey(s)];
+        if (!q) continue;
+        const price = Number(q.price) || 0;
+        const dayChg = Number(q.dailyChange) || 0;
+        s.price = price;
+        if (s.currency === "USD") {
+          // 해외 종목: 전일종가(prevClose)로 현재가 - 전일종가 직접 계산
+          const prevClose = Number(q.prevClose) || 0;
+          s.dayPct = prevClose > 0 ? ((price - prevClose) / prevClose) * 100 : 0;
+          if (q.exchangeRate) s.exchangeRate = Number(q.exchangeRate);
+        } else {
+          const prev = price - dayChg;
+          s.dayPct = prev > 0 ? (dayChg / prev) * 100 : 0;
+        }
+        const rate = s.exchangeRate || FX;
+        s.dailyChangeKRW = s.currency === "USD" ? dayChg * rate : dayChg;
+      }
 
       // 3. transactions에서 종목별 거래 내역 채우기 (날짜 내림차순)
       for (const t of transactions) {
@@ -297,13 +332,13 @@ export function useTabletV2Data(): TabletV2DataResult {
       const dailyReturn = currValue > 0 ? (totalDailyProfit / (currValue - totalDailyProfit)) * 100 : 0;
 
       const dailyBase = currValue - totalDailyProfit;
-      setSummary({
+      const summary: PortfolioSummary = {
         currValue, totalInvested,
         cumulativeProfit, cumulativeReturn,
         annualProfit, annualReturn, annualBase,
         monthlyProfit, monthlyReturn, monthlyBase,
         dailyProfit: totalDailyProfit, dailyReturn, dailyBase,
-      });
+      };
 
       // 8. 전체 거래 내역 (매수/매도/입금/출금 모두 포함)
       const trades: import("./tabletV2Helpers").TradeRow[] = [];
@@ -322,7 +357,7 @@ export function useTabletV2Data(): TabletV2DataResult {
         trades.push({ id: c.id, date: c.income_date, acct: c.account || "", type: "현금소득", stockName: c.stock_name || c.income_type || "현금소득", ticker: c.ticker || undefined, qty: 0, unit: Math.round(c.amount).toLocaleString("ko-KR") + "원", transferAmount: c.amount, incomeType: c.income_type });
       }
       trades.sort((a, b) => b.date.localeCompare(a.date));
-      setAllTrades(trades);
+
 
       // 계좌별 누적 투입금
       const investedMap: Record<string, number> = {};
@@ -331,12 +366,57 @@ export function useTabletV2Data(): TabletV2DataResult {
           .filter((t) => t.account === acct && t.account_transfer)
           .reduce((sum, t) => t.account_transfer === "입금" ? sum + (t.transfer_amount || 0) : sum - (t.transfer_amount || 0), 0);
       }
-      setAcctInvested(investedMap);
 
-      setStocks(stocksArr);
-      setCash(cashMap);
-      setPerfDays(perf);
-      setAccounts(accts);
+
+
+
+
+
+
+      return { stocks: stocksArr, cash: cashMap, perfDays: perf, accounts: accts, acctInvested: investedMap, allTrades: trades, summary };
+}
+
+export function useTabletV2Data(): TabletV2DataResult {
+  const [data, setData] = useState<Computed>({
+    stocks: [], cash: {}, perfDays: [], accounts: [], acctInvested: {}, allTrades: [],
+    summary: {
+      currValue: 0, totalInvested: 0,
+      cumulativeProfit: 0, cumulativeReturn: 0,
+      annualProfit: 0, annualReturn: 0, annualBase: 0,
+      monthlyProfit: 0, monthlyReturn: 0, monthlyBase: 0,
+      dailyProfit: 0, dailyReturn: 0, dailyBase: 0,
+    },
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const pricesRef = useRef<Record<string, Quote>>({});
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [transactions, cashBalances, snapshots, cashIncomes] = await Promise.all([
+        getJsonArray<RawTx>("/api/transactions", "거래내역"),
+        getJsonArray<RawCashBalance>("/api/cash-balance", "예수금"),
+        getJsonArray<RawSnapshot>("/api/snapshot", "스냅샷"),
+        getJsonArray<RawCashIncome>("/api/cash-income", "현금소득"),
+      ]);
+
+      // 1차: 최신 거래내역 + 마지막으로 알던 시세로 바로 표시
+      // (시세를 한 번도 받은 적 없는 종목이 있으면 0원으로 보이지 않게 시세를 기다린다)
+      const base = { transactions, cashBalances, snapshots, cashIncomes, prices: pricesRef.current };
+      const first = compute(base);
+      if (first.stocks.every((s) => pricesRef.current[quoteKey(s)])) setData(first);
+
+      // 2차: 시세를 한 번에 받아서 갱신 (실패한 종목은 이전 시세 유지)
+      const quotes = await fetchQuotes(first.stocks);
+      const prices = { ...pricesRef.current };
+      for (const [k, q] of Object.entries(quotes)) if (q) prices[k] = q;
+      pricesRef.current = prices;
+
+      const raw = { ...base, prices };
+      setData(compute(raw));
+      writeCache(raw);
       setLoading(false);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "데이터 로드 실패";
@@ -346,18 +426,20 @@ export function useTabletV2Data(): TabletV2DataResult {
   }, []);
 
   useEffect(() => {
+    // 저장해 둔 데이터가 있으면 네트워크를 기다리지 않고 먼저 화면을 띄운다
+    const cached = readCache();
+    if (cached) {
+      pricesRef.current = cached.prices;
+      try {
+        setData(compute(cached));
+      } catch {}
+    }
     load();
   }, [load]);
 
   return {
-    stocks,
-    acctInvested,
-    allTrades,
-    cash,
-    perfDays,
-    agg: buildAgg(perfDays),
-    accounts,
-    summary,
+    ...data,
+    agg: buildAgg(data.perfDays),
     loading,
     error,
     refresh: load,
