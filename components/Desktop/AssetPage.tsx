@@ -197,21 +197,21 @@ export default function AssetPage({
 
   return (
     <>
-      <main style={{ height: "100%", overflowY: "auto", padding: "20px 28px 40px", boxSizing: "border-box" }}>
+      <main data-m="pad" style={{ height: "100%", overflowY: "auto", padding: "20px 28px 40px", boxSizing: "border-box" }}>
         <h1 style={{ margin: 0, fontSize: 34, fontWeight: 700, letterSpacing: "-0.026em", marginBottom: 10 }}>
           자산배분{acctSel !== "전체" ? ` · ${acctSel}` : ""}
         </h1>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
+        <div data-m="stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
           {/* 왼쪽: 자산 배분 */}
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>자산 배분</h2>
               <Segment compact items={["종목별", "섹터별", "국가별"]} value={pieMode} onChange={(m) => { setPieMode(m); setPieActive(null); }} />
             </div>
-            <div style={{ background: C.card, borderRadius: 16, padding: 22, height: 385, boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", gap: 40, flex: 1, minHeight: 0 }}>
-                <div style={{ position: "relative", width: 300, height: 300, flexShrink: 0, alignSelf: "flex-start" }}>
+            <div data-m="autoh" style={{ background: C.card, borderRadius: 16, padding: 22, height: 385, boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
+              <div data-m="col" style={{ display: "flex", gap: 40, flex: 1, minHeight: 0 }}>
+                <div data-m="donut" style={{ position: "relative", width: 300, height: 300, flexShrink: 0, alignSelf: "flex-start" }}>
                   <Donut items={pieItems} active={pieActive} size={300}
                     onPick={(key) => setPieActive((p) => (p === key ? null : key))} />
                   <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", pointerEvents: "none" }}>
@@ -295,12 +295,12 @@ export default function AssetPage({
               style={{ width: 30, height: 30, borderRadius: "50%", border: "none", background: C.fill, color: C.sec, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>✕</button>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "104px 1fr 110px 58px 64px 104px 60px", gap: 8, padding: "9px 24px", background: C.fill }}>
+        <div data-m="trow" style={{ display: "grid", gridTemplateColumns: "104px 1fr 110px 58px 64px 104px 60px", gap: 8, padding: "9px 24px", background: C.fill }}>
           {["날짜", "종목", "계좌", "구분", "수량", "단가", ""].map((h) => (
             <span key={h} style={{ fontSize: 12, fontWeight: 600, color: C.sec, textAlign: h === "수량" || h === "단가" ? "right" : "left" }}>{h}</span>
           ))}
         </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "0 24px 20px" }}>
+        <div data-m="tbody" style={{ flex: 1, overflowY: "auto", padding: "0 24px 20px" }}>
           {filteredTrades.map((t, i) => {
             // 매수: 현재가 기반 미실현 손익
             const currPrice = t.ticker ? priceMap.get(t.ticker) ?? 0 : 0;
@@ -312,7 +312,7 @@ export default function AssetPage({
             return (
             <div key={i} onClick={() => isClickable ? setTradeTap(tradeTap === i ? null : i) : null}
               style={{ cursor: isClickable ? "pointer" : "default" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "104px 1fr 110px 58px 64px 104px 60px", gap: 8, alignItems: "center", padding: "12px 0", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
+              <div data-m="trow0" style={{ display: "grid", gridTemplateColumns: "104px 1fr 110px 58px 64px 104px 60px", gap: 8, alignItems: "center", padding: "12px 0", borderTop: i ? `0.5px solid ${C.sep}` : "none" }}>
               <span style={{ ...NUM, fontSize: 14 }}>{t.date}</span>
               <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.stockName}</span>
               <span style={{ fontSize: 14 }}>{t.acct}</span>
@@ -405,7 +405,7 @@ export default function AssetPage({
               )}
             </div>
             {(formTab === "trade" || editId) ? (
-              <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px" }}>
+              <div data-m="stack" style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px" }}>
                 <div>
                   <label style={LBL}>날짜</label>
                   <input type="date" value={form.trade_date} onChange={e => setF('trade_date', e.target.value)} style={INP} />
@@ -473,7 +473,7 @@ export default function AssetPage({
                 </div>
               </div>
             ) : (
-              <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px" }}>
+              <div data-m="stack" style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px" }}>
                 <div>
                   <label style={LBL}>날짜</label>
                   <input type="date" value={incomeForm.income_date} onChange={e => setIF('income_date', e.target.value)} style={INP} />

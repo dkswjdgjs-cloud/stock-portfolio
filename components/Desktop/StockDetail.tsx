@@ -116,7 +116,7 @@ export default function StockDetail({
         </button>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <div data-m="wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 34, fontWeight: 700, letterSpacing: "-0.026em" }}>{stock.name}</h1>
           <p style={{ margin: "3px 0 0", fontSize: 15, color: C.sec }}>
@@ -139,9 +139,9 @@ export default function StockDetail({
         )}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "12px 0 18px" }}>
+      <div data-m="wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "12px 0 18px" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-          <span style={{ ...NUM, fontSize: 44, fontWeight: 700, letterSpacing: "-0.03em" }}>
+          <span data-m="price" style={{ ...NUM, fontSize: 44, fontWeight: 700, letterSpacing: "-0.03em" }}>
             {fmtPrice(stock)}{stock.currency === "KRW" ? "원" : ""}
           </span>
           <span style={{ ...NUM, fontSize: 17, fontWeight: 600, color: dailyChangeColor(stock) }}>
