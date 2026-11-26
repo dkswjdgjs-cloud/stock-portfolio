@@ -1,4 +1,4 @@
-// ===== GLOW tablet-v2 디자인 토큰 (CSS 변수 참조) =====
+// ===== GLOW 디자인 토큰 (CSS 변수 참조) =====
 export const C = {
   bgGrouped: "var(--glow-bg-grouped)",
   bgSidebar: "var(--glow-bg-sidebar)",
